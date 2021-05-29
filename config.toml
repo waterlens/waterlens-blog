@@ -2,6 +2,7 @@ baseURL = "http://waterlens.moe/"
 languageCode = "en-us"
 title = "Waterlens' Blog"
 theme = "cactus"
+description = "This is Waterlens' blog. He is interested in many topics, including compiler construction and optimization / programming language theory / computer architecture"
 disqusShortname = "waterlens"
 
 [params]
