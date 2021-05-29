@@ -2,10 +2,30 @@ baseURL = "http://waterlens.moe/"
 languageCode = "en-us"
 title = "Waterlens' Blog"
 theme = "cactus"
-description = "This is Waterlens' blog. He is interested in many topics, including compiler construction and optimization / programming language theory / computer architecture"
+googleAnalytics = "UA-198163789-1"
 disqusShortname = "waterlens"
+copyright = "Waterlens"
+
+[[menu.main]]
+name = "Home"
+url = "/"
+weight = 1
+
+[[menu.main]]
+name = "All posts"
+url = "/posts"
+weight = 2
+
+[[menu.main]]
+name = "About"
+url = "/about"
+weight = 3
 
 [params]
+  description = "This is Waterlens' blog."
+  mainSection = "posts"
+  showAllPostsOnHomePage = true
+  rss = true
   [params.comments]
     enabled = true
 
