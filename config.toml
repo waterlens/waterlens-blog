@@ -6,6 +6,13 @@ googleAnalytics = "UA-198163789-1"
 disqusShortname = "waterlens"
 copyright = "Waterlens"
 
+[markup]
+  [markup.highlight]
+    codeFences = false
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+
 [[menu.main]]
 name = "Home"
 url = "/"
