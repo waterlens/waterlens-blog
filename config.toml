@@ -2,3 +2,16 @@ baseURL = "http://waterlens.moe/"
 languageCode = "en-us"
 title = "Waterlens' Blog"
 theme = "cactus"
+disqusShortname = "waterlens"
+
+[params]
+  [params.comments]
+    enabled = true
+
+[[params.social]]
+  name = "github"
+  link = "https://github.com/waterlens"
+
+[[params.social]]
+  name = "twitter"
+  link = "https://twitter.com/water_lens"
