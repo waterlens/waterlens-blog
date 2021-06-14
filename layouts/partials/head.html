@@ -13,10 +13,10 @@
     {{ .Scratch.Set "colortheme" .Site.Params.Colortheme }}
   {{ end }}
   {{ $colortheme := .Scratch.Get "colortheme" }}
+  <link rel="stylesheet" href="{{ $colortheme | printf "css/style-%s.css" | absURL }}">
   <!-- Custom Prism Highlighting -->
   <link href="/css/prism.css" rel="stylesheet" />
   <script src="/js/prism.js"></script>
-  <link rel="stylesheet" href="{{ $colortheme | printf "css/style-%s.css" | absURL }}">
   <!-- Remove Ads -->
   <style>
     iframe[src*=ads-iframe] {
