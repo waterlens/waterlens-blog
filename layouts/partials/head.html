@@ -22,9 +22,6 @@
     iframe[title*=Disqus][sandbox*=allow] {
       display: none !important;
     }
-    div[id*=disqus][style*=margin] {
-      display: none !important;
-    }
   </style>
   <!-- Custom CSS -->
   {{ range .Site.Params.css }} <link rel="stylesheet" href="{{ . | absURL }}"> {{ end }}
