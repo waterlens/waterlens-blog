@@ -17,8 +17,8 @@
   <link rel="stylesheet" href="{{ $colortheme | printf "css/style-%s.css" | absURL }}">
   <!-- Custom prism.js highlighter -->
   {{ if .IsPage }}
-    <link href="/css/prism.css" rel="stylesheet"/>
-    <script defer src="/js/prism.js"></script>
+    <link href={{ "css/prism.css" | absURL }} rel="stylesheet"/>
+    <script defer src={{ "js/prism.js" | absURL }}></script>
   {{ end }}
   <!-- Hide element when printing -->
   <style>
