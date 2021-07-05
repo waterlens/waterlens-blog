@@ -33,8 +33,10 @@ weight = 3
   mainSection = "posts"
   showAllPostsOnHomePage = true
   rss = true
-  [params.comments]
-    enabled = true
+  logo = "images/logo.svg"
+
+[params.comments]
+  enabled = true
 
 [[params.social]]
   name = "github"
