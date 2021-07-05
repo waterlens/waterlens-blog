@@ -15,11 +15,19 @@
   {{ end }}
   {{ $colortheme := .Scratch.Get "colortheme" }}
   <link rel="stylesheet" href="{{ $colortheme | printf "css/style-%s.css" | absURL }}">
-  <!-- Custom Prism Highlighting -->
+  <!-- Custom prism.js highlighter -->
   {{ if .IsPage }}
     <link href="/css/prism.css" rel="stylesheet"/>
     <script defer src="/js/prism.js"></script>
   {{ end }}
+  <!-- Hide element when printing -->
+  <style>
+    @media print {
+      [noprint] {
+        display: none !important;
+      }
+    }
+  </style>
   <!-- Remove Ads -->
   <style>
     iframe[title*=Disqus][sandbox*=allow] {

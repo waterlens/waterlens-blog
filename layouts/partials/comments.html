@@ -11,7 +11,7 @@
 {{ $enable_comments := .Scratch.Get "enable_comments" }}
 {{ if $enable_comments }}
   {{ if (or (not (isset .Site.Params.Comments "engine")) (eq .Site.Params.Comments.Engine "disqus")) }}
-    <div class="blog-post-comments">
+    <div noprint class="blog-post-comments">
         <div id="disqus_thread" style="min-height: 20px;">
           <script type="text/javascript">
 
