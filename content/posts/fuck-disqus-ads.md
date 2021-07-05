@@ -20,9 +20,9 @@ iframe[src*=ads-iframe] {
 to this one
 
 <pre><code class="language-css match-braces rainbow-braces">
-  iframe[title*=Disqus][sandbox*=allow] {
-    display: none !important;
-  }
+iframe[title*=Disqus][sandbox*=allow] {
+  display: none !important;
+}
 </code></pre>
 
 Have a nice profit, Disqus!
