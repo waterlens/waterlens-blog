@@ -4,7 +4,6 @@ title = "Waterlens' Blog"
 theme = "cactus"
 googleAnalytics = "UA-198163789-1"
 disqusShortname = "waterlens"
-copyright = "Waterlens"
 
 [markup]
   [markup.highlight]
@@ -19,14 +18,19 @@ url = "/"
 weight = 1
 
 [[menu.main]]
-name = "All posts"
+name = "Posts"
 url = "/posts"
 weight = 2
 
 [[menu.main]]
+name = "Tags"
+url = "/tags"
+weight = 3
+
+[[menu.main]]
 name = "About"
 url = "/about"
-weight = 3
+weight = 4
 
 [params]
   description = "This is Waterlens' blog."
@@ -34,6 +38,9 @@ weight = 3
   showAllPostsOnHomePage = true
   rss = true
   logo = "images/logo.svg"
+  googleAnalyticsAsync = true
+  showReadTime = true
+  colortheme = "white"
 
 [params.comments]
   enabled = true

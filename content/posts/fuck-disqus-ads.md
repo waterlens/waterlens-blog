@@ -1,6 +1,8 @@
 ---
 title: "Fuck Disqus Ads"
 date: 2021-06-30T11:19:29+08:00
+tags:
+  - disqus
 ---
 
 The Disqus never give up its efforts to pollute my blog with trolling ads. I mean, if they are intent on throwing rubbish at users, they had better choose those ads more appropriately.
