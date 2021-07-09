@@ -11,7 +11,7 @@
   {{ template "_internal/twitter_cards.html" . }}
 
   {{- $options := (dict "targetPath" "css/styles.css" "outputStyle" "compressed") -}}
-  {{- $styles := resources.Get "scss/style.scss" | resources.ExecuteAsTemplate "scss/style.scss" .  | resources.ToCSS $options | resources.Fingerprint "sha512" }}
+  {{- $styles := resources.Get "scss/style.scss" | resources.ExecuteAsTemplate "scss/style.scss" .  | resources.ToCSS $options }}
   <link rel="stylesheet" href="{{ $styles.Permalink }}" integrity="{{ $styles.Data.Integrity }}">
 
   <!-- Custom prism.js highlighter -->
