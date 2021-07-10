@@ -12,12 +12,12 @@
 
   {{- $options := (dict "targetPath" "css/styles.css" "outputStyle" "compressed" "enableSourceMap" true) -}}
   {{- $styles := resources.Get "scss/style.scss" | resources.ExecuteAsTemplate "scss/style.scss" .  | resources.ToCSS $options }}
-  <link rel="stylesheet" href="{{ $styles.Permalink }}" integrity="{{ $styles.Data.Integrity }}">
+  <link rel="stylesheet" href="{{ $styles.RelPermalink }}">
 
   <!-- Custom prism.js highlighter -->
   {{ if .IsPage }}
-    <link href={{ "css/prism.css" | absURL }} rel="stylesheet"/>
-    <script defer src={{ "js/prism.js" | absURL }}></script>
+    <link href={{ "css/prism.css" | relURL }} rel="stylesheet"/>
+    <script defer src={{ "js/prism.js" | relURL }}></script>
   {{ end }}
   <!-- Fix inner code block font -->
   <style>
@@ -40,7 +40,7 @@
     }
   </style>
   <!-- Custom CSS -->
-  {{ range .Site.Params.css }} <link rel="stylesheet" href="{{ . | absURL }}"> {{ end }}
+  {{ range .Site.Params.css }} <link rel="stylesheet" href="{{ . | relURL }}"> {{ end }}
   {{ `
     <!--[if lt IE 9]>
       <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
@@ -51,7 +51,7 @@
   {{ partial "favicon.html" . }}
   {{ if .Site.Params.rss }}
   {{ with .OutputFormats.Get "RSS" }}
-    {{ printf `<link href="%s" rel="%s" type="%s" title="%s" />` .Permalink .Rel .MediaType.Type $.Site.Title | safeHTML }}
+    {{ printf `<link href="%s" rel="%s" type="%s" title="%s" />` .RelPermalink .Rel .MediaType.Type $.Site.Title | safeHTML }}
   {{ end }}
   {{ end }}
   {{ if .Site.GoogleAnalytics }}

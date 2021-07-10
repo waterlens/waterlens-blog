@@ -1,4 +1,4 @@
-baseURL = "http://waterlens.moe/"
+baseURL = "https://waterlens.moe/"
 languageCode = "en-us"
 title = "Waterlens' Blog"
 theme = "cactus"
