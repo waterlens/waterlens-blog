@@ -1,0 +1,25 @@
+@font-face {
+  font-style: normal;
+  font-family: "Waterlens SansSerif";
+  font-display: swap;
+  src:
+      local("-apple-system"),
+      local("BlinkMacSystemFont"),
+      local("Roboto")
+      local("Helvetica Neue"),
+      local("Segoe UI"),
+      local("Arial"),
+      local("sans-serif");
+};
+
+@font-face {
+  font-style: normal;
+  font-family: "Waterlens Mono";
+  font-display: swap;
+  src: 
+      local("Consolas"),
+      local("Monaco"),
+      local("Andale Mono"),
+      local("Ubuntu Mono")
+      local("monospace");
+};
