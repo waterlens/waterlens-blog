@@ -1,4 +1,4 @@
-on: push
+on: [push, workflow_dispatch]
 jobs:
   git-sync:
     runs-on: ubuntu-latest
