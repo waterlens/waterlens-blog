@@ -1,0 +1,12 @@
+on: push
+jobs:
+  git-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: git-sync
+        uses: wei/git-sync@v3
+        with:
+          source_repo: "https://waterlens:${{ secrets.MIRRORPAT }}@github.com/waterlens/waterlens-blog.git"
+          source_branch: "main"
+          destination_repo: "https://waterlens:${{ secrets.MIRRORPAT }}@github.com/waterlens/yangrq-blog.git"
+          destination_branch: "main"
