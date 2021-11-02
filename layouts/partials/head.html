@@ -2,6 +2,7 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>{{ if .IsPage }} {{ .Title }} | {{ end }}{{ .Site.Title }}</title>
+  <link rel = 'canonical' href = '{{ .Permalink }}'>
   {{ with .Site.Params.description }}<meta name="description" content="{{ . }}">{{ end }}
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="all,follow">
@@ -9,7 +10,11 @@
   <meta name="theme-color" content="#2bbc8a">
   {{ template "_internal/opengraph.html" . }}
   {{ template "_internal/twitter_cards.html" . }}
-
+  {{ .Scratch.Set "colortheme" "white"}}
+  {{ if .Site.Params.Colortheme }}
+    {{ .Scratch.Set "colortheme" .Site.Params.Colortheme }}
+  {{ end }}
+  {{ $colortheme := .Scratch.Get "colortheme" }}
   {{- $options := (dict "targetPath" "css/styles.css" "outputStyle" "compressed" "enableSourceMap" true) -}}
   {{- $styles := resources.Get "scss/style.scss" | resources.ExecuteAsTemplate "scss/style.scss" .  | resources.ToCSS $options }}
   <link rel="stylesheet" href="{{ $styles.RelPermalink }}">

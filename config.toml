@@ -2,7 +2,6 @@ baseURL = "https://waterlens.moe/"
 languageCode = "en-us"
 title = "Waterlens' Blog"
 theme = "cactus"
-googleAnalytics = "UA-198163789-1"
 disqusShortname = "waterlens"
 
 [markup]
@@ -38,7 +37,6 @@ weight = 4
   showAllPostsOnHomePage = true
   rss = true
   logo = "images/logo.svg"
-  googleAnalyticsAsync = true
   showReadTime = true
   colortheme = "white"
 
