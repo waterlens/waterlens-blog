@@ -38,3 +38,4 @@ weight = 4
   logo = "images/logo.svg"
   showReadTime = true
   colortheme = "white"
+  disablecopy = true
