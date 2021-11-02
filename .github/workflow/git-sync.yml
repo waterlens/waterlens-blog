@@ -8,5 +8,5 @@ jobs:
         with:
           source_repo: "https://waterlens:${{ secrets.MIRRORPAT }}@github.com/waterlens/waterlens-blog.git"
           source_branch: "main"
-          destination_repo: "https://waterlens:${{ secrets.MIRRORPAT }}@github.com/waterlens/yangrq-blog.git"
+          destination_repo: "https://waterlens:${{ secrets.MIRRORPAT }}@github.com/waterlens/mirror-blog.git"
           destination_branch: "main"
