@@ -238,7 +238,9 @@ template <typename ST, typename B, typename C> struct ceval<ST, CWhile<B, C>> {
                                     CSeq<C, CWhile<B, C>>, CSkip>::result;
 };
 ```
-## Simple Check
+## Trivial Check
+
+This is a simple program to calculate the factorial of 6.
 
 ```lua
 x = 6
@@ -248,6 +250,8 @@ while x != 0 do
   x -= 1
 end
 ```
+
+Transform it into the "template like":
 
 ```cpp
 using init = CSeq<CAsgn<X, ANum<S<S<S<S<S<S<O>>>>>>>>, CAsgn<Y, ANum<One>>>;
