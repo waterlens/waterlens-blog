@@ -243,11 +243,11 @@ template <typename ST, typename B, typename C> struct ceval<ST, CWhile<B, C>> {
 This is a simple program to calculate the factorial of 6.
 
 ```lua
-x = 6
-y = 1
-while x != 0 do
-  y *= x
-  x -= 1
+x = 6;
+y = 1;
+while !(x = 0) do
+  y = x * y;
+  x = x - 1
 end
 ```
 
