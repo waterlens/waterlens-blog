@@ -3,6 +3,7 @@
   font-family: "Waterlens SansSerif";
   font-display: swap;
   src:
+      local("Open Sans"),
       local("-apple-system"),
       local("BlinkMacSystemFont"),
       local("Helvetica Neue"),
@@ -14,7 +15,8 @@
   font-style: normal;
   font-family: "Waterlens Mono";
   font-display: swap;
-  src: 
+  src:
+      local("Inconsolata"),
       local("Consolas"),
       local("Monaco"),
       local("Menlo"),
