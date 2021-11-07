@@ -19,7 +19,7 @@ Inductive direction : Type :=
 	| west.
 ```
 
-If you want to operate the enumeration, you are likely to use the **pattern match**.
+If you want to operate the enumeration, you are likely to use the **pattern matching**.
 ```coq
 Definition opposite_direction (d: direction) : direction :=
 	match d with
