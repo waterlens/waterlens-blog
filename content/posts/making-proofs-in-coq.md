@@ -10,7 +10,7 @@ tags: [coq]
 ### Enumeration
 
 Let's start with the **enumeration**.
-We will define a new **type** direction, which contains a set of values.
+We will define a new **type** direction, which contains a set of values (constructors).
 ```coq
 Inductive direction : Type :=
 	| north
@@ -45,4 +45,38 @@ Proof.
 Qed.
 ```
 
-####
+#### Tuple
+
+A tuple is a finite ordered sequence of elements.
+In the coq language, we can use a contructor with some parameters to create a tuple type.
+
+```coq
+Inductive vec3 : Type :=
+	| nat3 (x y z: nat).
+```
+
+The destruction of a tuple type can also be done by pattern matching
+
+```coq
+Definition is_zero_vec3 (v : vec3) : bool :=
+	match v with
+	| (nat3 0 0 0) => true
+	| (nat3 _ _ _) => false
+	end.
+
+Example vec3_example1 :
+	is_zero_vec3 (nat3 0 0 0) = true.
+Proof.
+	simpl.
+	reflexivity.
+Qed.
+
+Example vec3_example2 :
+	is_zero_vec3 (nat3 1 1 1) = false.
+Proof.
+	simpl.
+	reflexivity.
+Qed.
+```
+#### Natural Number
+
