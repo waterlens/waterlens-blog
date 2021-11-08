@@ -80,3 +80,24 @@ Qed.
 ```
 #### Natural Number
 
+```Coq
+Module MyNat.
+```
+
+A natural number can be represented in a inductive way:
+
+```Coq
+Inductive nat : Type :=
+	| O
+	| S (n : nat).
+```
+
+The advantages of such a definition are not obvious now, but you will find them in the following sections. 
+
+The definition tells how the `nat` is built:
+* **`O`** is a constructor making a `nat`.
+* if **`n`** is a `nat`, then **`S n`** also is a `nat`.
+
+```coq
+End MyNat.
+```
