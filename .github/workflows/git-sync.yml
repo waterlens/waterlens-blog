@@ -3,6 +3,9 @@ jobs:
   git-sync:
     runs-on: ubuntu-latest
     steps:
+      - name: sleep-1m
+        run: sleep 1m
+        shell: bash
       - name: git-sync
         uses: wei/git-sync@v3
         with:
