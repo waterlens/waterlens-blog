@@ -1,7 +1,7 @@
 ---
 title: "Making Proofs in Coq"
 date: 2021-11-03T11:58:34+08:00
-draft: true
+draft: false
 tags: [coq]
 ---
 
@@ -48,7 +48,7 @@ Qed.
 #### Tuple
 
 A tuple is a finite ordered sequence of elements.
-In the coq language, we can use a contructor with some parameters to create a tuple type.
+In the coq language, we can use a constructor with some parameters to create a tuple type.
 
 ```coq
 Inductive vec3 : Type :=
@@ -101,3 +101,5 @@ The definition tells how the `nat` is built:
 ```coq
 End MyNat.
 ```
+
+To be continued...
