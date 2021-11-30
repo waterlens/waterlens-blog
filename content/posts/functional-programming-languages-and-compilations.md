@@ -2,20 +2,53 @@
 title: "An Overview of Functional Programming Languages and Compilations"
 date: 2021-11-17T22:53:08+08:00
 draft: true
+mathjax: true
 ---
 
-# 函数式编程语言及其编译的概述
+# 函数式编程语言及其编译：概述
 
 ## 介绍
 
-函数式编程（下称FP）脱胎于Lambda Calculus，和其他不同的编程范式相比，它的最典型特征是高阶函数的应用。除此之外，一部分FP语言拥有一个更加复杂而强大的类型系统，并为此需要依赖与之匹配的类型推断、检查能力。相比于命令式的编程语言千篇一律的按值调用、按引用调用，FP语言在求值策略的选择上更加灵活（尽管对于某种特定的FP语言，求值策略很有可能是一致的）而复杂。由于和LC的历史渊源，FP语言对“重复“、“分治”这些概念的实现，常常青睐于递归，而不是基于改变归纳变量的状态的“循环”、“迭代”。与非FP语言相比，FP语言往往强调较少的副作用乃至避免副作用。此外，还有自动柯里化、模式匹配等等特性。这些FP的特征，极大地改变了FP语言的编译实现。某些特性或功能，诸如高阶函数、递归、Continuation、自动柯里化等，如果编译器不能高效地实现，那么会导致FP语言实现的程序的运行效率的极度下降。而类型系统的实现，还兼具了理论上的一些困难抉择。
+函数式编程（下称 FP）脱胎于 Lambda Calculus（下称 LC），和其他不同的编程范式相比，它的最典型特征是高阶函数的应用。除此之外，一部分 FP 语言拥有一个更加复杂而强大的类型系统，并为此需要依赖与之匹配的类型推断、检查能力。相比于命令式的编程语言千篇一律的按值调用，FP 语言在求值策略的选择上更加灵活（尽管对于某种特定的 FP 语言，求值策略很有可能是一致的）而复杂。由于和 LC 的历史渊源，FP 语言对 “重复” 这一概念的实现，常常青睐于递归，而不是基于改变归纳变量的状态的 “循环”、“迭代”。与非 FP 语言相比，FP 语言往往强调较少的副作用乃至避免副作用。此外，还有自动柯里化、模式匹配等等特性。这些 FP 的特征，极大地改变了 FP 语言的编译实现。某些特性或功能，诸如高阶函数、递归、Continuation、自动柯里化等，如果编译器不能高效地实现，那么会导致 FP 语言实现的程序的运行效率的极度下降。而类型系统的实现，还兼具了理论上的一些困难抉择。
 
-当我们谈论编译时，我们需要考虑的是，
+我们谈论编译这个概念时，需要注意的是它所描述的过程：将某种编程语言写成的源代码转换成另一种目标语言。广义来说目标语言的选取是任意的，因此不用拘泥于机器语言、汇编语言。因此在接下来的内容中，编译的目标语言可能是抽象的，也有可能是某种现有的编程语言，或者更加底层的语言。
 
-## 经典理论
+## 中间表示
 
-## 前沿研究
+在进行编译时，编译器往往依赖一种或多种，对文本形式源代码中所指代的语言结构的表示方法，并在此基础上对这些结构进行变换或者将其映射到更为基础的结构。使用不同 IR 的编译器通常在编译的流程上存在着明显差异。
 
-## 具体应用
+- $\lambda$ 演算
+在 FP 语言中，最为常见的表示方法很显然是 LC 自身（以及它的变体）。这一做法的好处是十分显然的：FP 语言的特性和 LC 息息相关，这种特性所对应理论的形式化的描述也很可能是由某种拓展后的 LC 写成的，因此可以轻松地将源语言中的结构映射到更熟悉的结构上去，进而应用更通用的变换、优化手段。典型地来说，OCaml 编译器的 Clambda 和优化器所用的 Flambda 就使用了此类表示。
 
-## 参考资料
+接下来所要介绍的中间表示形式大多是或等价于某种具有特定形式的 LC：
+
+- CPS 形式的 IR
+CPS, Continuation-Passing-Style，和直接风格相对应，在这种 “风格” 的表示中，函数、过程的 Continuation 需要被显式传递。通过 CPS 变换，我们可以将非 CPS 的表示转换为一种 CPS 表示。通过这种转换，程序的控制流以 Continuation 的形式暴露在外，从而更加便于编译器通过一系列普通的 $\beta$-规约 与 $\eta$-变换 优化程序结构 [^1]。尽管如此，原始的 CPS 形式的表示也存在很多问题，比如原始程序的 CPS 表示会十分复杂而冗长；难以对普通函数的进行统一的表示；难以优化不发生逃逸的跳转；实际实现中，过程记录常被放置到堆内存上，难以充分利用现代硬件的堆栈 保存过程调用的上下文等问题 [^2]。为了解决这些问题，发展出了很多 CPS 的变体。如 Kennedy 提出的 2nd-class Continuation 不再将 Continuation 视为普通的函数 [^3]，从而允许将 Continuation 直接编译为普通的跳转。SML/NJ 使用了 CPS 形式的 IR [^1]。
+
+还有一些 IR 形式，例如：
+
+- ANF 形式的 IR
+这种 IR 的灵感自 CPS 表示 [^4]，但要求函数参数必须是平凡的，非平凡表达式的求值必须由 $let$ 进行绑定。这一形式具有结构上更简单直观（因为仍然使用 Direct Style 而非 CPS，但和 CPS 能力相同）、易于进行机器代码生成的优点。但是存在规约后不再封闭的问题（即 ANF 项的$beta$-规约的结果可能不是一个 ANF 项）[^2]。近年来，SPJ 使用 join point 拓展了 ANF，并成功在 GHC 中实现了这一形式的中间表示 [^9]。
+
+- SSA 形式的 IR
+这是一种在传统语言编译器中十分常见也最为著名的 IR 的形式，但是在 FP 语言编译器中并不常见（至少很少有人提到它）。通常情况下，我们所见到的 SSA 形式的 IR，为不同基本块组成的连通图，其中基本块中主要包含模仿机器指令集的四元式 [^5]。尽管看起来与 CPS 差异巨大，仍然可以证明了 SSA 是 CPS 的一个子集 [^10][^6]。也有 FP 语言的编译器使用这种表示（和通常见到的 SSA IR 不完全相同），如 MLton 优化编译器的 SSA 和 SSA2 [^7]。
+
+- C--/Cmm
+这是一种具体的 IR，常用于向本机代码转换的最后阶段。很多 FP 语言的本机编译器（而不是虚拟机/字节码解释器）使用它。如 OCaml 本机编译器和 GHC 都使用了这一 IR。
+
+## 类型系统
+
+
+[^1]: Appel, A. (1991). Compiling with Continuations. Cambridge: Cambridge University Press.
+[^2]: Cong, Y., Osvald, L., Essertel, G., & Rompf, T. (2019). Compiling with Continuations, or without? Whatever.. Proc. ACM Program. Lang., 3(ICFP).
+[^3]: Kennedy, A. (2007). Compiling with Continuations, Continued. In Proceedings of the 12th ACM SIGPLAN International Conference on Functional Programming (pp. 177–190). Association for Computing Machinery.
+[^4]: Flanagan, C., Sabry, A., Duba, B., & Felleisen, M. (1993). The Essence of Compiling with Continuations. SIGPLAN Not., 28(6), 237–247.
+[^5]: Aho, A., Lam, M., Sethi, R., & Ullman, J. (2006). Compilers: Principles, Techniques, and Tools (2nd Edition). Addison-Wesley Longman Publishing Co., Inc..
+[^6]:Appel, A. (1998). SSA is Functional Programming. SIGPLAN Not., 33(4), 17–20.
+[^7]: IntermediateLanguage. (2021). Retrieved 30 November 2021, from http://mlton.org/IntermediateLanguage
+[^8]:
+[^9]: Maurer, L., Downen, P., Ariola, Z., & Peyton Jones, S. (2017). Compiling without Continuations. SIGPLAN Not., 52(6), 482–494.
+[^10]:Kelsey, R. (1995). A Correspondence between Continuation Passing Style and Static Single Assignment Form. SIGPLAN Not., 30(3), 13–22.
+[^11]:
+[^12]:
+
