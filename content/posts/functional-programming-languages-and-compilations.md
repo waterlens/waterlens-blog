@@ -54,8 +54,8 @@ $$
 \begin{array}{cl}
  \displaystyle\frac{x:\sigma \in \Gamma}{\Gamma \vdash_D x:\sigma}&[\mathtt{Var}]\\\\
  \displaystyle\frac{\Gamma \vdash_D e_0:\tau \rightarrow \tau' \quad\quad \Gamma \vdash_D e_1 : \tau }{\Gamma \vdash_D e_0\ e_1 : \tau'}&[\mathtt{App}]\\\\
- \displaystyle\frac{\Gamma,\;x:\tau\vdash_D e:\tau'}{\Gamma \vdash_D \lambda\ x\ .\ e : \tau \rightarrow \tau'}&[\mathtt{Abs}]\\\\
- \displaystyle\frac{\Gamma \vdash_D e_0:\sigma \quad\quad \Gamma,\,x:\sigma \vdash_D e_1:\tau}{\Gamma \vdash_D \mathtt{let}\ x = e_0\ \mathtt{in}\ e_1 : \tau} &[\mathtt{Let}]\\\\
+ \displaystyle\frac{\Gamma,x:\tau\vdash_D e:\tau'}{\Gamma \vdash_D \lambda\ x\ .\ e : \tau \rightarrow \tau'}&[\mathtt{Abs}]\\\\
+ \displaystyle\frac{\Gamma \vdash_D e_0:\sigma \quad\quad \Gamma,x:\sigma \vdash_D e_1:\tau}{\Gamma \vdash_D \mathtt{let}\ x = e_0\ \mathtt{in}\ e_1 : \tau} &[\mathtt{Let}]\\\\
  \displaystyle\frac{\Gamma \vdash_D e:\sigma' \quad \sigma' \sqsubseteq \sigma}{\Gamma \vdash_D e:\sigma}&[\mathtt{Inst}]\\\\
  \displaystyle\frac{\Gamma \vdash_D e:\sigma \quad \alpha \notin \text{free}(\Gamma)}{\Gamma \vdash_D e:\forall\ \alpha\ .\ \sigma}&[\mathtt{Gen}]\\\\
  \end{array}
@@ -73,8 +73,8 @@ $$
 \begin{array}{cl}
 \displaystyle\frac{x:\sigma \in \Gamma \quad \tau = \mathit{inst}(\sigma)}{\Gamma \vdash_J x:\tau}&[\mathtt{JVar}]\\\\
 \displaystyle\frac{\Gamma \vdash_J e_0:\tau_0 \quad \Gamma \vdash_J e_1 : \tau_1 \quad \tau'=\mathit{newvar} \quad \mathit{unify}(\tau_0,\ \tau_1 \rightarrow \tau') }{\Gamma \vdash_J e_0\ e_1 : \tau'}&[\mathtt{JApp}]\\\\
-\displaystyle\frac{\tau = \mathit{newvar} \quad \Gamma,\;x:\tau\vdash_J e:\tau'}{\Gamma \vdash_J \lambda\ x\ .\ e : \tau \rightarrow \tau'}&[\mathtt{JAbs}]\\\\
-\displaystyle\frac{\Gamma \vdash_J e_0:\tau \quad\quad \Gamma,\,x:\bar{\Gamma}(\tau) \vdash_J e_1:\tau'}{\Gamma \vdash_J \mathtt{let}\ x = e_0\ \mathtt{in}\ e_1 :  \tau'}&[\mathtt{JLet}]
+\displaystyle\frac{\tau = \mathit{newvar} \quad \Gamma,x:\tau\vdash_J e:\tau'}{\Gamma \vdash_J \lambda\ x\ .\ e : \tau \rightarrow \tau'}&[\mathtt{JAbs}]\\\\
+\displaystyle\frac{\Gamma \vdash_J e_0:\tau \quad\quad \Gamma,x:\bar{\Gamma}(\tau) \vdash_J e_1:\tau'}{\Gamma \vdash_J \mathtt{let}\ x = e_0\ \mathtt{in}\ e_1 :  \tau'}&[\mathtt{JLet}]
 \end{array}
 $$
 
