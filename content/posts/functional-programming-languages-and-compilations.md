@@ -47,8 +47,16 @@ CPS, Continuation-Passing-Style，和直接风格相对应，在这种 “风格
 下面首先介绍几种类型系统：
 
 ##### Hindley-Milner 类型系统
-  
-HM 系统 [^11] [^12] 的定型规则如下：
+
+HM 系统是一种经典的类型系统 [^11] [^12]，其主要优点是：
+- 它是完备的
+- 它不需要显式类型标注
+- 它的类型推导算法是可判定的
+
+主要限制是：
+- 不允许用一个多态类型去特化另外一个多态类型
+
+它的定型规则如下：
 
 $$
 \begin{array}{cl}
@@ -61,9 +69,9 @@ $$
  \end{array}
 $$
 
-其中 $\tau$ 是多型变量，$\sigma$ 是单型变量，区别是前者者可以包含零或多个全称量词绑定的类型变量。
+其中 $\tau$ 是简单类型变量，$\sigma$ 是多态类型变量，区别是后者可以包含零或多个全称量词绑定的类型变量。
 
-HM 类型系统的前四条定型规则是十分平凡的，唯一值得注意的是，在 $[\mathtt{Abs}]$ 规则的前提中，$x$ 是以单型的方式引入到环境中的，而在 $[\mathtt{Let}]$ 规则中，$x$ 是以多型的方式引入。因此，在 $let$ 表达式中可以通过应用 $[\mathtt{Inst}]$ 为不同的项规则特化出不同的类型，从而实现 $let$ 多态性。
+HM 类型系统的前四条定型规则是十分平凡的，唯一值得注意的是，在 $[\mathtt{Abs}]$ 规则的前提中，$x$ 是以简单类型的方式引入到环境中的，而在 $[\mathtt{Let}]$ 规则中，$x$ 是以多态类型的方式引入。因此，在 $let$ 表达式中可以通过应用 $[\mathtt{Inst}]$ 为不同的项规则特化出不同的类型，从而实现 $let$ 多态性。
 
 和 TAPL 上介绍的基于约束的定型算法 [^13] 有略微不同的是，HM 类型系统的对象均为未定型的 $\lambda$ 项，而不具有任何显式的类型标注。在其他方面，这两种方法相当一致。HM 类型系统依赖类型推导来实现其多态类型，存在多种算法，如 Algorithm W 和 Algorithm J。两者的主要区别是如何处理 unify 类型过程中的副作用。前者稍显复杂但有利于 Soundness 的证明。
 
@@ -79,10 +87,10 @@ $$
 $$
 
 其中：
-- 第一条规则表明我们可以在将一个多型实例化出一个单型 $\tau$，使得 $\sigma \sqsubseteq \tau$，并在 $\Gamma$ 类型环境中将具有该多型的变量 $x$ 定型为 $\tau$；
+- 第一条规则表明我们可以在将一个多态类型特化出一个简单类型 $\tau$，使得 $\sigma \sqsubseteq \tau$，并在 $\Gamma$ 类型环境中将具有该多态类型的变量 $x$ 定型为 $\tau$；
 - 第二条规则则生成一个新的类型变量 $\tau'$ 来表示可能的应用的结果类型。由 $[\mathtt{App}]$ 规则反演可知，$e_0$ 应该具有形如 $\tau_1 \rightarrow \tau'$ 的类型，因此如果 $\tau_1 \rightarrow \tau'$ 和 $e_0$ 的已知类型 $\tau_0$ 统一，我们则可推出 $e_0\ e_1$ 具有 $\tau'$ 类型（该类型变量应该已经在 unify 操作中被替换成了一个已知的类型）。
 - 第三条规则十分直观，不作描述。
-- 第四条规则中，$\bar{\Gamma}(\tau) = \forall\ \hat{\alpha}\ .\ \tau$ 且 $\hat{\alpha} = \textrm{free}(\tau) - \textrm{free}(\Gamma)$，即，尽可能全称量化在 $\tau$ 中的自由类型变量，但是不能全程量化现有的类型上下文 $\Gamma$ 中的自由类型变量。目的是使得 $let$ 绑定中的 $x$ 具有可能的最泛化的类型。
+- 第四条规则中，$\bar{\Gamma}(\tau) = \forall\ \hat{\alpha}\ .\ \tau$ 且 $\hat{\alpha} = \textrm{free}(\tau) - \textrm{free}(\Gamma)$，即，尽可能全称量化在 $\tau$ 中的自由类型变量，但是不能全称量化现有的类型上下文 $\Gamma$ 的自由类型变量。目的是使得 $let$ 绑定中的 $x$ 具有可能的最泛化的类型。
 
 [^1]: Appel, A. (1991). Compiling with Continuations. Cambridge: Cambridge University Press.
 [^2]: Cong, Y., Osvald, L., Essertel, G., & Rompf, T. (2019). Compiling with Continuations, or without? Whatever.. Proc. ACM Program. Lang., 3(ICFP).
