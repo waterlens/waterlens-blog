@@ -48,15 +48,15 @@ CPS, Continuation-Passing-Style，和直接风格相对应，在这种 “风格
 
 ##### Hindley-Milner 类型系统
 
-HM 系统是一种经典的类型系统 [^11] [^12]，其主要优点是：
+HM 系统是一种经典而应用广泛的类型系统 [^11] [^12]，其主要优点是：
 - 它是完备的
 - 它不需要显式类型标注
 - 它的类型推导算法是可判定的
 
 主要限制是：
-- 不允许用一个多态类型去特化另外一个多态类型
+- 多态类型只能出现在进行 $let$ 绑定时
 
-它的定型规则如下：
+它的定型规则如下 [^8]：
 
 $$
 \begin{array}{cl}
@@ -75,7 +75,7 @@ HM 类型系统的前四条定型规则是十分平凡的，唯一值得注意�
 
 和 TAPL 上介绍的基于约束的定型算法 [^13] 有略微不同的是，HM 类型系统的对象均为未定型的 $\lambda$ 项，而不具有任何显式的类型标注。在其他方面，这两种方法相当一致。HM 类型系统依赖类型推导来实现其多态类型，存在多种算法，如 Algorithm W 和 Algorithm J。两者的主要区别是如何处理 unify 类型过程中的副作用。前者稍显复杂但有利于 Soundness 的证明。
 
-简单起见，我们介绍后者。Algorithm J 存在如下推导规则：
+简单起见，我们介绍后者。Algorithm J 存在如下推导规则 [^8]：
 
 $$
 \begin{array}{cl}
@@ -92,6 +92,45 @@ $$
 - 第三条规则十分直观，不作描述。
 - 第四条规则中，$\bar{\Gamma}(\tau) = \forall\ \hat{\alpha}\ .\ \tau$ 且 $\hat{\alpha} = \textrm{free}(\tau) - \textrm{free}(\Gamma)$，即，尽可能全称量化在 $\tau$ 中的自由类型变量，但是不能全称量化现有的类型上下文 $\Gamma$ 的自由类型变量。目的是使得 $let$ 绑定中的 $x$ 具有可能的最泛化的类型。
 
+##### System F 类型系统
+
+和受限制的 $let$-多态相比，System F 类型系统引入了对类型的抽象和应用的机制。它在定型规则中额外增加了两条规则 [^13]：
+
+$$
+\begin{array}{cl}
+\displaystyle\frac{\Gamma\vdash M\mathbin{:}\forall\alpha.\sigma}{\Gamma\vdash M\tau\mathbin{:}[\alpha\mapsto\tau]\sigma}&[\mathtt{TApp}]\\\\
+\displaystyle\frac{\Gamma,\alpha\vdash M\mathbin{:}\sigma}{\Gamma\vdash\lambda\alpha.M\mathbin{:}\forall\alpha.\sigma}&[\mathtt{TAbs}]
+\end{array}
+$$
+
+这解决了下面示例在 HM 类型系统和为 predicative 的 first-class 多态类型系统中进行类型检查的困难：
+假设类型上下文 $\Gamma$ 中存在以下绑定：
+$$
+\begin{array}{cl}
+\mathtt{id}&:\forall{\alpha}.\alpha\rightarrow{\alpha}\\\\
+\mathtt{omega}&:(\forall{\alpha.\alpha\rightarrow{\alpha}})\rightarrow{\forall{\alpha.\alpha\rightarrow{\alpha}}}\\\\
+\mathtt{apply}&:\forall\gamma.\forall\delta.(\gamma\rightarrow\delta)\rightarrow\gamma\rightarrow\delta
+\end{array}
+$$
+那么在 HM 系统中，我们将无法定型 $\mathtt{omega\ id}$，因为 HM 类型系统的 $[\mathtt{App}]$ 规则的前提不允许待应用的 $\lambda$ 抽象具有多态类型。
+
+而在 predicative 的 first-class 多态系统中，仍然不允许将类型变量替换为另一个多态类型。因此，尽管 $\mathtt{omega\ id}$ 可以定型为 $\forall{\alpha.\alpha\rightarrow{\alpha}}$，我们仍然难以定型 $\mathtt{apply\ omega\ id}$ (不能进行 $[\gamma\mapsto\forall{\alpha.\alpha\rightarrow{\alpha}}][\delta\mapsto\forall{\alpha.\alpha\rightarrow{\alpha}}]$ 式的替换)。
+
+在 System F 中，因为 $\mathtt{[TApp]}$ 规则，于是可以顺利进行类型变量替换从而定型 $\mathtt{apply\ omega\ id}$ 。
+
+然而，这带来了类型推导上的麻烦。
+假设类型上下文 $\Gamma$ 中存在以下绑定：
+$$
+\begin{array}{cl}
+\mathtt{id}&:\forall{\alpha}.\alpha\rightarrow\alpha\\\\
+\mathtt{choose}&:\forall\beta.\beta\rightarrow\beta\rightarrow\beta
+\end{array}
+$$
+
+那么 $\mathtt{choose\ id}$ 究竟应该是 $\forall\beta. (\beta\rightarrow\beta)\rightarrow(\beta\rightarrow\beta)$ 还是 $(\forall{\alpha}.\alpha\rightarrow\alpha)\rightarrow(\forall{\alpha}.\alpha\rightarrow\alpha)$ 呢？（前者可以通过一次额外的类型泛化得到，但是两个类型的比较需要引入子类型，否则我们无法断言它们哪一个是更基础的类型）
+
+可以证明，System F 的类型推导/检查算法是不可判定的 [^14]。实践上而言，使用 System F 类型系统使得编译器必须在某些时候要求用户显式标注类型以继续类型推导。
+
 [^1]: Appel, A. (1991). Compiling with Continuations. Cambridge: Cambridge University Press.
 [^2]: Cong, Y., Osvald, L., Essertel, G., & Rompf, T. (2019). Compiling with Continuations, or without? Whatever.. Proc. ACM Program. Lang., 3(ICFP).
 [^3]: Kennedy, A. (2007). Compiling with Continuations, Continued. In Proceedings of the 12th ACM SIGPLAN International Conference on Functional Programming (pp. 177–190). Association for Computing Machinery.
@@ -99,10 +138,10 @@ $$
 [^5]: Aho, A., Lam, M., Sethi, R., & Ullman, J. (2006). Compilers: Principles, Techniques, and Tools (2nd Edition). Addison-Wesley Longman Publishing Co., Inc..
 [^6]:Appel, A. (1998). SSA is Functional Programming. SIGPLAN Not., 33(4), 17–20.
 [^7]: IntermediateLanguage. (2021). Retrieved 30 November 2021, from http://mlton.org/IntermediateLanguage
-[^8]:
+[^8]: Hindley–Milner type system. (2021, December 14). In Wikipedia. https://en.wikipedia.org/wiki/Hindley-Milner_type_system
 [^9]: Maurer, L., Downen, P., Ariola, Z., & Peyton Jones, S. (2017). Compiling without Continuations. SIGPLAN Not., 52(6), 482–494.
 [^10]: Kelsey, R. (1995). A Correspondence between Continuation Passing Style and Static Single Assignment Form. SIGPLAN Not., 30(3), 13–22.
 [^11]: Hindley, R. (1969). The Principal Type-Scheme of an Object in Combinatory Logic. In Transactions of the American Mathematical Society (Vol. 146, p. 29). JSTOR.
 [^12]: Milner, R. (1978). A theory of type polymorphism in programming. In Journal of Computer and System Sciences (Vol. 17, Issue 3, pp. 348–375). Elsevier BV.
 [^13]: Pierce, B. C. (2002). Types and Programming Languages (1st ed). The MIT Press.
-
+[^14]: Wells, J. B. (1999). Typability and type checking in System F are equivalent and undecidable. Annals of Pure and Applied Logic, 98(1-3), 111–156.
