@@ -23,7 +23,7 @@ mathjax: true
 接下来所要介绍的中间表示形式大多是或等价于某种具有特定形式的 LC：
 
 - CPS 形式的 IR
-CPS, Continuation-Passing-Style，和直接风格相对应，在这种 “风格” 的表示中，函数、过程的 Continuation 需要被显式传递。通过 CPS 变换，我们可以将非 CPS 的表示转换为一种 CPS 表示。通过这种转换，程序的控制流以 Continuation 的形式暴露在外，从而更加便于编译器通过一系列普通的 $\beta$-规约 与 $\eta$-变换 优化程序结构 [^1]。尽管如此，原始的 CPS 形式的表示也存在很多问题，比如原始程序的 CPS 表示会十分复杂而冗长；难以对普通函数的进行统一的表示；难以优化不发生逃逸的跳转；实际实现中，过程记录常被放置到堆内存上，难以充分利用现代硬件的堆栈 保存过程调用的上下文等问题 [^2]。为了解决这些问题，发展出了很多 CPS 的变体。如 Kennedy 提出的 2nd-class Continuation 不再将 Continuation 视为普通的函数 [^3]，从而允许将 Continuation 直接编译为普通的跳转。SML/NJ 使用了 CPS 形式的 IR [^1]。
+CPS, Continuation-Passing-Style，和直接风格相对应，在这种 “风格” 的表示中，函数、过程的 Continuation 需要被显式传递。通过 CPS 变换，我们可以将非 CPS 的表示转换为一种 CPS 表示。通过这种转换，程序的控制流以 Continuation 的形式暴露在外，从而更加便于编译器通过一系列普通的 $\beta$-规约 与 $\eta$-变换 优化程序结构 [^1]。尽管如此，原始的 CPS 形式的表示也存在很多问题，比如原始程序的 CPS 表示会十分复杂而冗长；难以对普通函数的进行统一的表示；难以优化不发生逃逸的跳转；实际实现中，过程记录常被放置到堆内存上，难以充分利用现代硬件的堆栈 保存过程调用的上下文等问题 [^2]。为了解决这些问题，发展出了很多 CPS 的变体。如 Kennedy 提出的 2nd-class Continuation 不再将 Continuation 视为普通的高阶函数 [^3]，从而允许将 Continuation 直接编译为普通的跳转。SML/NJ 使用了 CPS 形式的 IR [^1]。
 
 还有一些 IR 形式，例如：
 
@@ -33,7 +33,7 @@ CPS, Continuation-Passing-Style，和直接风格相对应，在这种 “风格
 - SSA 形式的 IR
 这是一种在传统语言编译器中十分常见也最为著名的 IR 的形式，但是在 FP 语言编译器中并不常见。通常情况下，我们所见到的 SSA 形式的 IR，为不同基本块组成的连通图，其中基本块中主要包含模仿机器指令集的四元式 [^5]。尽管看起来与 CPS 差异巨大，仍然可以证明了 SSA 是 CPS 的一个子集 [^10] [^6]。也有 FP 语言的编译器使用这种表示（和通常见到的 SSA IR 不完全相同），如 MLton 优化编译器的 SSA 和 SSA2 [^7]。
 
-- 图形式的 IR
+- 图式的 IR
 这是一类范围较广的 IR，如 CFG，PDG 等，也可 SSA 形式的 IR 搭配使用。此处由于和本文关系不大，故不做过多赘述。
 
 - C--/Cmm
@@ -44,7 +44,7 @@ CPS, Continuation-Passing-Style，和直接风格相对应，在这种 “风格
 
 尽管一个需要静态类型检查的语言的编译器，可以通过简单地比较用户手动标注的类型和实际类型的等价性来实现这种校验，然而，在具有较复杂的类型系统的语言中，要求代码编写者对所有项都进行类型标注并不现实，这种情况下，一个实用的编译器还需具备类型推导的能力。
 
-下面首先介绍几种类型系统：
+下面首先介绍几种经典的类型系统，然后结合具体的编程语言实现来说明类型系统的应用：
 
 ##### Hindley-Milner 类型系统
 
@@ -108,11 +108,11 @@ $$
 $$
 \begin{array}{cl}
 \mathtt{id}&:\forall{\alpha}.\alpha\rightarrow{\alpha}\\\\
-\mathtt{omega}&:(\forall{\alpha.\alpha\rightarrow{\alpha}})\rightarrow{\forall{\alpha.\alpha\rightarrow{\alpha}}}\\\\
+\mathtt{omega}&:(\forall{\alpha.\alpha\rightarrow{\alpha}})\rightarrow{(\forall{\alpha.\alpha\rightarrow{\alpha}})}\\\\
 \mathtt{apply}&:\forall\gamma.\forall\delta.(\gamma\rightarrow\delta)\rightarrow\gamma\rightarrow\delta
 \end{array}
 $$
-那么在 HM 系统中，我们将无法定型 $\mathtt{omega\ id}$，因为 HM 类型系统的 $[\mathtt{App}]$ 规则的前提不允许待应用的 $\lambda$ 抽象具有多态类型。
+在 HM 系统中，这个类型上下文根本不可能存在，因为 HM 类型系统不允许 $\lambda$ 抽象具有 $(\forall{\alpha.\alpha\rightarrow{\alpha}})\rightarrow{(\forall{\alpha.\alpha\rightarrow{\alpha}})}$ 类型。
 
 而在 predicative 的 first-class 多态系统中，仍然不允许将类型变量替换为另一个多态类型。因此，尽管 $\mathtt{omega\ id}$ 可以定型为 $\forall{\alpha.\alpha\rightarrow{\alpha}}$，我们仍然难以定型 $\mathtt{apply\ omega\ id}$ (不能进行 $[\gamma\mapsto\forall{\alpha.\alpha\rightarrow{\alpha}}][\delta\mapsto\forall{\alpha.\alpha\rightarrow{\alpha}}]$ 式的替换)。
 
@@ -131,6 +131,12 @@ $$
 
 可以证明，System F 的类型推导/检查算法是不可判定的 [^14]。实践上而言，使用 System F 类型系统使得编译器必须在某些时候要求用户显式标注类型以继续类型推导。
 
+##### 编程语言中的类型系统
+
+SML 97 使用 HM 类型系统（不过由于引用的存在，所以有 Value Restriction 限制泛化的发生）。OCaml 同样基于 HM 类型系统，但是加上了不少拓展以支持 OCaml 多样的功能特性。 Haskell 的类型系统发生过不少改变，最新的那个被称为 System FC [^15]（不过目前我无法理解）。
+
+还有很多常用于定理证明的函数式编程语言，使用了一些上文中未介绍的类型系统（很多都含有 Dependent Type，Lambda Cube 的另一个维度，而不是上文中的参数多态维度），如 Agda，Idris，Coq 等。
+
 [^1]: Appel, A. (1991). Compiling with Continuations. Cambridge: Cambridge University Press.
 [^2]: Cong, Y., Osvald, L., Essertel, G., & Rompf, T. (2019). Compiling with Continuations, or without? Whatever.. Proc. ACM Program. Lang., 3(ICFP).
 [^3]: Kennedy, A. (2007). Compiling with Continuations, Continued. In Proceedings of the 12th ACM SIGPLAN International Conference on Functional Programming (pp. 177–190). Association for Computing Machinery.
@@ -145,3 +151,5 @@ $$
 [^12]: Milner, R. (1978). A theory of type polymorphism in programming. In Journal of Computer and System Sciences (Vol. 17, Issue 3, pp. 348–375). Elsevier BV.
 [^13]: Pierce, B. C. (2002). Types and Programming Languages (1st ed). The MIT Press.
 [^14]: Wells, J. B. (1999). Typability and type checking in System F are equivalent and undecidable. Annals of Pure and Applied Logic, 98(1-3), 111–156.
+[^15]: R. A. Eisenberg. System FC, as implemented in GHC. University of Pennsylvania Technical Report MS-CIS-15-09, 2015.
+
