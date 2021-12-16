@@ -131,11 +131,26 @@ $$
 
 可以证明，System F 的类型推导/检查算法是不可判定的 [^14]。实践上而言，使用 System F 类型系统使得编译器必须在某些时候要求用户显式标注类型以继续类型推导。
 
+##### 其他类型系统和类型系统的拓展
+
+尽管这一部分和编程语言设计、静态分析、定理证明、形式化验证等领域关系更大，由于种类多样，也不太可能很好地涵盖在 “编译” 相关的综述中，但是为了这一章节的完整性，因此也不妨稍微提及。
+
+- Dependent Type [^16]
+  依赖类型。在 LC 中，项只依赖项；System F 中，存在多态的项依赖于类型。而在 Lambda P 系统中，存在依赖类型，允许一个类型依赖于项产生。比如说，对于一个长度为 n 的自然数向量，它可以具有 $vector\ n$ 类型。而如果有对应的 $\mathtt{push}$ 函数的话，它的类型签名就会是 $\Pi{n:nat}.\ nat\rightarrow vector\ n \rightarrow vector (n + 1)$。当然，依赖类型也会使得类型检查变得不可判定，所以侧重于通用编程的函数式编程语言往往不会采用这种类型系统。
+
+- Refinement Type [^17]
+  细化类型。有点类似于 Dependent Type，但是并不完全等价。Refinement Type 给类型加上了谓词，例如我们可以表达大于 5 的自然数的类型为 $n_{>5} : nat\ |\ n > 5$。不过从实用的角度考虑，不是所有的类型都能成为谓词，谓词也应该是可判定的。此外可能还需要通过定义 Subtyping 关系来联系带谓词的类型和它们的底层类型。
+
+- Substructural Type System [^16]
+  子结构类型。分为多种，其中以 Linear Type System 和 Affine Type System 较为常见。前者确保对象被且仅被使用一次，而后者确保对象被至多使用一次。
+
 ##### 编程语言中的类型系统
 
-SML 97 使用 HM 类型系统（不过由于引用的存在，所以有 Value Restriction 限制泛化的发生）。OCaml 同样基于 HM 类型系统，但是加上了不少拓展以支持 OCaml 多样的功能特性。 Haskell 的类型系统发生过不少改变，最新的那个被称为 System FC [^15]（不过目前我无法理解）。
+SML 97 使用 HM 类型系统（不过由于引用的存在，所以有 Value Restriction 限制泛化的发生）。OCaml 同样基于 HM 类型系统，但是加上了不少拓展以支持 OCaml 多样的功能特性。 Haskell 的核心类型系统发生过不少改变，最新的那个被称为 System FC [^15]（不过目前我无法理解）。
 
-还有很多常用于定理证明的函数式编程语言，使用了一些上文中未介绍的类型系统（很多都含有 Dependent Type，Lambda Cube 的另一个维度，而不是上文中的参数多态维度），如 Agda，Idris，Coq 等。
+还有很多常用于定理证明的函数式编程语言，使用了 Dependent Type，如 Agda，Idris，Coq 等。
+
+## 基本构造的转换
 
 [^1]: Appel, A. (1991). Compiling with Continuations. Cambridge: Cambridge University Press.
 [^2]: Cong, Y., Osvald, L., Essertel, G., & Rompf, T. (2019). Compiling with Continuations, or without? Whatever.. Proc. ACM Program. Lang., 3(ICFP).
@@ -152,4 +167,5 @@ SML 97 使用 HM 类型系统（不过由于引用的存在，所以有 Value Re
 [^13]: Pierce, B. C. (2002). Types and Programming Languages (1st ed). The MIT Press.
 [^14]: Wells, J. B. (1999). Typability and type checking in System F are equivalent and undecidable. Annals of Pure and Applied Logic, 98(1-3), 111–156.
 [^15]: R. A. Eisenberg. System FC, as implemented in GHC. University of Pennsylvania Technical Report MS-CIS-15-09, 2015.
-
+[^16]: Pierce, B. C. (2004). Advanced Topics in Types and Programming Languages. The MIT Press.
+[^17]: Freeman, T., & Pfenning, F. (1991). Refinement Types for ML. SIGPLAN Not., 26(6), 268–277.
