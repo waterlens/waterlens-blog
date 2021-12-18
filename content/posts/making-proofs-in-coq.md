@@ -7,7 +7,7 @@ tags: [coq]
 
 *This article should be used with a proof assistant for better understanding.*
 
-### Enumeration
+#### Enumeration
 
 Let's start with the **enumeration**.
 We will define a new **type** direction, which contains a set of values (constructors).
