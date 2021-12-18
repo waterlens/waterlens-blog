@@ -3,6 +3,7 @@ title: "An Overview of Functional Programming Languages and Compilations"
 date: 2021-11-17T22:53:08+08:00
 draft: false
 mathjax: true
+tags: [functional programming,compilation,type theory]
 ---
 
 # 函数式编程语言及其编译：概述
@@ -12,6 +13,8 @@ mathjax: true
 函数式编程（下称 FP）脱胎于 Lambda Calculus（下称 LC），和其他不同的编程范式相比，它的最典型特征是高阶函数的应用。除此之外，一部分 FP 语言拥有一个更加复杂而强大的类型系统，并为此需要依赖与之匹配的类型推断、检查能力。相比于命令式的编程语言千篇一律的按值调用，FP 语言在求值策略的选择上更加灵活（尽管对于某种特定的 FP 语言，求值策略很有可能是一致的）而复杂。由于和 LC 的历史渊源，FP 语言对 “重复” 这一概念的实现，常常青睐于递归，而不是基于改变归纳变量的状态的 “循环”、“迭代”。与非 FP 语言相比，FP 语言往往强调较少的副作用乃至避免副作用。此外，还有自动柯里化、模式匹配等等特性。这些 FP 的特征，极大地改变了 FP 语言的编译实现。某些特性或功能，诸如高阶函数、递归、Continuation、自动柯里化等，如果编译器不能高效地实现，那么会导致 FP 语言实现的程序的运行效率的极度下降。而类型系统的实现，还兼具了理论上的一些困难抉择。
 
 我们谈论编译这个概念时，需要注意的是它所描述的过程：将某种编程语言写成的源代码转换成另一种目标语言。广义来说目标语言的选取是任意的，因此不用拘泥于机器语言、汇编语言。因此在接下来的内容中，编译的目标语言可能是抽象的，也有可能是某种现有的编程语言，或者更加底层的语言。
+
+很显然的是，那些观感上较为纯粹的函数式编程语言（比如 ML 系编程语言，Haskell），和具有一些函数式语言特性的语言（比如 Python，JavaScript，C++2a，Rust）的编译过程并不是特别一致 —— 后者会更传统一点。所以，本文会偏向描述和前者有关的编译过程相关的内容。
 
 ## 中间表示
 
@@ -44,9 +47,9 @@ CPS, Continuation-Passing-Style，和直接风格相对应，在这种 “风格
 
 尽管一个需要静态类型检查的语言的编译器，可以通过简单地比较用户手动标注的类型和实际类型的等价性来实现这种校验，然而，在具有较复杂的类型系统的语言中，要求代码编写者对所有项都进行类型标注并不现实，这种情况下，一个实用的编译器还需具备类型推导的能力。
 
-下面首先介绍几种经典的类型系统，然后结合具体的编程语言实现来说明类型系统的应用：
+下面首先介绍几种经典的类型系统：
 
-##### Hindley-Milner 类型系统
+### Hindley-Milner 类型系统
 
 HM 系统是一种经典而应用广泛的类型系统 [^11] [^12]，其主要优点是：
 - 它是完备的
@@ -92,7 +95,7 @@ $$
 - 第三条规则十分直观，不作描述。
 - 第四条规则中，$\bar{\Gamma}(\tau) = \forall\ \hat{\alpha}\ .\ \tau$ 且 $\hat{\alpha} = \textrm{free}(\tau) - \textrm{free}(\Gamma)$，即，尽可能全称量化在 $\tau$ 中的自由类型变量，但是不能全称量化现有的类型上下文 $\Gamma$ 的自由类型变量。目的是使得 $let$ 绑定中的 $x$ 具有可能的最泛化的类型。
 
-##### System F 类型系统
+### System F 类型系统
 
 和受限制的 $let$-多态相比，System F 类型系统引入了对类型的抽象和应用的机制。它在定型规则中额外增加了两条规则 [^13]：
 
@@ -112,7 +115,7 @@ $$
 \mathtt{apply}&:\forall\gamma.\forall\delta.(\gamma\rightarrow\delta)\rightarrow\gamma\rightarrow\delta
 \end{array}
 $$
-在 HM 系统中，这个类型上下文根本不可能存在，因为 HM 类型系统不允许 $\lambda$ 抽象具有 $(\forall{\alpha.\alpha\rightarrow{\alpha}})\rightarrow{(\forall{\alpha.\alpha\rightarrow{\alpha}})}$ 类型。
+在 HM 系统中，这个类型上下文根本不可能存在，因为 HM 类型系统不允许 $\lambda$ 抽象具有 $(\forall\alpha.\alpha\rightarrow\alpha)\rightarrow(\forall\alpha.\alpha\rightarrow\alpha)$ 类型。
 
 而在 predicative 的 first-class 多态系统中，仍然不允许将类型变量替换为另一个多态类型。因此，尽管 $\mathtt{omega\ id}$ 可以定型为 $\forall{\alpha.\alpha\rightarrow{\alpha}}$，我们仍然难以定型 $\mathtt{apply\ omega\ id}$ (不能进行 $[\gamma\mapsto\forall{\alpha.\alpha\rightarrow{\alpha}}][\delta\mapsto\forall{\alpha.\alpha\rightarrow{\alpha}}]$ 式的替换)。
 
@@ -131,7 +134,7 @@ $$
 
 可以证明，System F 的类型推导/检查算法是不可判定的 [^14]。实践上而言，使用 System F 类型系统使得编译器必须在某些时候要求用户显式标注类型以继续类型推导。
 
-##### 其他类型系统和类型系统的拓展
+### 其他类型系统和类型系统的拓展
 
 尽管这一部分和编程语言设计、静态分析、定理证明、形式化验证等领域关系更大，由于种类多样，也不太可能很好地涵盖在 “编译” 相关的综述中，但是为了这一章节的完整性，因此也不妨稍微提及。
 
@@ -144,13 +147,130 @@ $$
 - Substructural Type System [^16]
   子结构类型。分为多种，其中以 Linear Type System 和 Affine Type System 较为常见。前者确保对象被且仅被使用一次，而后者确保对象被至多使用一次。
 
-##### 编程语言中的类型系统
+##### 实际编程语言中的类型系统
 
 SML 97 使用 HM 类型系统（不过由于引用的存在，所以有 Value Restriction 限制泛化的发生）。OCaml 同样基于 HM 类型系统，但是加上了不少拓展以支持 OCaml 多样的功能特性。 Haskell 的核心类型系统发生过不少改变，最新的那个被称为 System FC [^15]（不过目前我无法理解）。
 
 还有很多常用于定理证明的函数式编程语言，使用了 Dependent Type，如 Agda，Idris，Coq 等。
 
-## 基本构造的转换
+## 抽象机与虚拟机
+
+正如在开头介绍中所说，编译的目标是多样的。主要用于原生开发的编程语言往往会被编译到特定、真实的硬件架构的机器指令，比如说 C 和 C++。而为了通用性、兼容性，一些编译器实现则会将编程语言编译到某种**抽象机器**（有时也叫虚拟机）上。对于 FP 语言而言，定义抽象机器的一个额外目的（也是最原始的目的）也许是为了说明对应语言的**语义**，比如说 SECD-Machine [^19]。
+
+从很多角度来看，抽象机简化了编译器的构造：
+- 抽象机可以针对语言的某些特性设计对应的、不太可能在真实硬件上出现的指令。
+- 抽象机可以让编译器避开对于硬件细节的关注。
+- 如果抽象机是实际的执行环境，那么它可以提供语言所需的运行时功能（比如说垃圾回收），以免编译器需要插入特定的处理代码。
+- 如果抽象机是实际的执行环境，那么它可以提供了额外的隔离层次，可以简化安全相关功能的处理。
+
+当然，抽象机也存在着问题，如果各硬件平台的抽象机实现，只是单纯地 “解释” 执行抽象指令，会造成极为严重的性能和效率损失。因此可能需要进一步的步骤：
+- 只是将抽象机作为，方便较高层次抽象的优化的，某种**中间表示**，在完成该阶段后便开始像传统编译器一样，在编译期将抽象指令转换成机器指令。一种简单的做法是将每条抽象指令直接翻译为功能完全一致的机器代码片段，然后拼接起来，这样可以节省解释执行时指令分派的预测和缓存损耗。但是本质上仍然是低效的。
+- 仍然使用抽象机的实现作为**实际的运行时**，但是在运行阶段，可能会结合收集到的 Profile 信息，将虚拟指令实时编译为机器指令。
+- 较好的方法可能是利用现有的传统编译器基础设施，比如说 C 语言编译器、LLVM 或 JVM，将抽象指令编译成 C 语言、LLVM IR 或 JVM 字节码并传递给对应的工具链，然后便可摆脱剩余的工作了。
+
+从结构来看，一个抽象机可能具有内存、程序计数器、虚拟寄存器等结构，和真实的物理机器在概念上十分类似。抽象机程序可能是一串抽象指令，就像汇编语言那样。抽象指令风格迥异，可以是隐式操作运行栈式的，也有像真实机器类似的寄存器操作。
+
+##### 实际编程语言中的抽象机
+
+**运行时环境**
+
+考虑到 Java, Groovy，Kotlin，Scala，Clojure 等语言均使用 JVM 作为运行时，最有名、被广泛使用的抽象机/虚拟机应该是 JVM 了。与之对应的是 .NET 系语言的 CLI。它们都使用了栈机的形式，且抽象层次相对不高（每条指令对应的功能比较简单）。由于和本文主题关系较远，不作过多描述。
+
+**FP 语言的抽象机**
+
+对于 OCaml 和 MoscowML 来说，它们使用了 ZINC-Machine [^20]。另一个 FP 语言，Haskell，它的最著名实现 GHC 使用了 G-Machine [^21] [^23]，并发展为为 Spineless Tagless G-Machine [^22]。G-Machine 的显著特点是它基于**图规约**实现了非严格的求值策略：**惰性求值**。
+
+
+## 代码转换
+实用编译器的编译过程，不外乎通过语法解析器将人类可读的源代码转换为某种抽象的适合于当前阶段的中间表示，随后在这种表示上应用一系列的重写、变换，以进行优化或向底层执行环境贴近。这样的过程也被称作趟（Pass）。高度优化的编译器可能会有很多趟，而简单的编译器只需要很少的趟就可以完成代码生成的工作，代价是牺牲了效率。
+
+尽管不同函数式编程语言的代码形式不尽相同，但是在忽略用户可读的语法后，可以说他们共享着很多较为相似的构造。将不同函数式编程语言的不同语法转换成这些相似构造的过程，受制于篇幅，不可能详尽列举，因此直接忽略。
+
+于是，本节将使用如下的一个极简语言来进行说明如何将它**直接**转化为一种严格求值的**抽象机器的指令**形式 [^18]。限于时间因素，我们假定这个语言的 EBNF 既是它的具体语法，也代表了它的抽象结构（也就是我们可以自由地操作它们）。
+
+```ebnf
+<expr>  = <variable>
+        | <constant>
+        | <primitive> <expr> <expr>
+        | if <expr> then <expr> else <expr>  
+        | <expr> (<expr>+)            
+        | λ <variable>+ . <expr>
+        | let <variable> = <expr> in <expr>
+        | letrec <variable> = <expr>
+                   ...
+                 <variable> = <expr> in <expr>
+<primitive> = + | - | * | / | %
+```
+### 目标抽象机器
+
+##### 架构
+该抽象机器具有一个指令内存，一个程序计数器指示当前正在执行的指令位置；这个抽象机器还有一个堆栈指针 SP 和一个帧指针 FP，后者用于更方便地索引栈上的元素；此外，为了存储分配的值，还有一块堆内存。
+
+##### 数据布局
+
+所有在堆上的值都进行了装箱。值可能具有以下几种不同的类型：
+- 基本值：
+  其中 v 是一个整数。
+  ```plain
+  +---+-----+
+  | B |  v  |
+  +---+-----+
+  ```
+
+- 闭包值：
+  其中 cp 指向了一段有效的代码内存的首地址。gp 指向了一个向量值，其中存储了自由变量的值构成的环境。
+  ```plain
+  +---+------+------+
+  | C |  cp  |  gp  |
+  +---+------+------+
+  ```
+
+- 函数值：
+  其中 cp 指向了一段有效的代码内存的首地址。gp 指向了一个向量值，其中存储了自由变量的值构成的环境。ap 同样指向了一个向量值，存储了已经收集到的参数（因为函数应用是可以柯里化的）
+  ```plain
+  +---+------+------+------+
+  | C |  cp  |  gp  |  ap  |
+  +---+------+------+------+
+  ```
+
+- 向量值：
+  其中 n 是向量值的长度，en 代表该向量的第 n 个元素。
+  ```plain
+  +---+---+------+-------+------+
+  | V | n |  e1  |  ...  |  en  |
+  +---+---+------+-------+------+
+  ```
+
+##### 抽象指令
+
+### 转换方案
+
+```plain
+env: Data -> Stack address
+sl: Stack level
+
+Tv { <c> } env sl =
+    @loadc <c>
+    @box
+
+Tv { <primitive> <e1> <e1> } env sl =
+    Tb { <e1> } env sl
+    @unbox
+    Tb { <e2> } env sl
+    @unbox
+    @op of <primitive>
+
+Tv { if <e1> then <e2> else <e3> } env sl =
+    Tb { <e1> } env sl
+    @unbox
+    @jumpz L1 
+    Tb { <e2> } env sl
+    @jump L2
+L1: Tb { <e3> } env sl
+L2: @unbox
+
+
+```  
 
 [^1]: Appel, A. (1991). Compiling with Continuations. Cambridge: Cambridge University Press.
 [^2]: Cong, Y., Osvald, L., Essertel, G., & Rompf, T. (2019). Compiling with Continuations, or without? Whatever.. Proc. ACM Program. Lang., 3(ICFP).
@@ -169,3 +289,10 @@ SML 97 使用 HM 类型系统（不过由于引用的存在，所以有 Value Re
 [^15]: R. A. Eisenberg. System FC, as implemented in GHC. University of Pennsylvania Technical Report MS-CIS-15-09, 2015.
 [^16]: Pierce, B. C. (2004). Advanced Topics in Types and Programming Languages. The MIT Press.
 [^17]: Freeman, T., & Pfenning, F. (1991). Refinement Types for ML. SIGPLAN Not., 26(6), 268–277.
+[^18]: Wilhelm, R., & Seidl, H. (2010). Compiler Design.
+[^19]: Landin, P. (1964). The Mechanical Evaluation of Expressions. The Computer Journal, 6(4), 308-320.
+[^20]: Leroy, X. (1990). The ZINC experiment: an economical implementation of the ML language (Doctoral dissertation, INRIA).
+[^21]: Johnsson, T. (1984, June). Efficient compilation of lazy evaluation. In Proceedings of the 1984 SIGPLAN symposium on Compiler construction (pp. 58-69).
+[^22]: Jones, S. L. P. (1992). Implementing lazy functional languages on stock hardware: the Spineless Tagless G-machine. Journal of functional programming, 2(2), 127-202.
+[^23]: Peyton Jones, S. L. (1987). The implementation of functional programming languages (prentice-hall international series in computer science). Prentice-Hall, Inc..
+
