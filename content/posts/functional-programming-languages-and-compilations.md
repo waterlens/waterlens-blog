@@ -370,6 +370,15 @@ SML 97 使用 HM 类型系统（不过由于引用的存在，所以有 Value Re
   where tbl' = tbl ++ {<v1> |-> L (sl + 1), ..., <vn> |-> L (sl + n)}
   ```
 
+### 其他结构的转换
+上一小节的转换覆盖了很多基础的函数式编程语言特性，但是没有涵盖模式匹配，代数数据类型等结构的转换。接下来将对此进行一些简短的介绍。
+
+#### 代数数据类型
+在函数式编程语言中，常常使用代数数据类型。理论上而言，代数数据类型表明它们可以通过代数运算（如 +,*）来进行类型的组合。其中最重要的是积类型与和类型。和其背后代数理论的复杂不同，代数数据类型向具体实现的转换相对简单。积类型通常被实现为所组合的原始类型的拼接，可能会重排序以针对现代计算机结构进行优化。和类型可能被实现为 tagged union 的结构，通过提供一个类型标记，以区分不同的类型。
+
+#### 模式匹配
+模式匹配是函数式编程语言中最重要的结构之一，它可以用来检查语言中的项、值是否符合某个特定的模式。在很多语言中，模式匹配被用来解构数据类型。模式匹配实现的一种经典策略是将其转换为一个决策树 [^24]。尽管无法获得最优的决策树，但是有启发式的方法帮助获得较优的决策树 [^25]。对于具有非严格求值策略的语言如 Haskell 来说，实现策略可能会略有不同 [^23]。
+
 [^1]: Appel, A. (1991). Compiling with Continuations. Cambridge: Cambridge University Press.
 [^2]: Cong, Y., Osvald, L., Essertel, G., & Rompf, T. (2019). Compiling with Continuations, or without? Whatever.. Proc. ACM Program. Lang., 3(ICFP).
 [^3]: Kennedy, A. (2007). Compiling with Continuations, Continued. In Proceedings of the 12th ACM SIGPLAN International Conference on Functional Programming (pp. 177–190). Association for Computing Machinery.
@@ -393,4 +402,5 @@ SML 97 使用 HM 类型系统（不过由于引用的存在，所以有 Value Re
 [^21]: Johnsson, T. (1984, June). Efficient compilation of lazy evaluation. In Proceedings of the 1984 SIGPLAN symposium on Compiler construction (pp. 58-69).
 [^22]: Jones, S. L. P. (1992). Implementing lazy functional languages on stock hardware: the Spineless Tagless G-machine. Journal of functional programming, 2(2), 127-202.
 [^23]: Peyton Jones, S. L. (1987). The implementation of functional programming languages (prentice-hall international series in computer science). Prentice-Hall, Inc..
-
+[^24]: Baudinet, M., & MacQueen, D. (1985). Tree pattern matching for ML.
+[^25]: Maranget, L. (2008, September). Compiling pattern matching to good decision trees. In Proceedings of the 2008 ACM SIGPLAN workshop on ML (pp. 35-46).
