@@ -51,3 +51,7 @@ weight = 4
 [[params.social]]
   name = "twitter"
   link = "https://twitter.com/water_lens"
+
+[[params.social]]
+  name = "email"
+  link = "waterlens@waterlens.moe" 
