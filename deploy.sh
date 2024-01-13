@@ -19,16 +19,21 @@ fi
 rm -r public 2> /dev/null
 mkdir -p public
 
+for file in $(find content -type f -print); do
+  echo "Rendering $file to public/${file#content/}"
+  mkdir -p $(dirname "public/${file#content/}")
+  $TERA --template $file --env-only --include-path templates/ -o "public/${file#content/}"
+done
+
 echo "Rendering style.scss"
 $GRASS sass/style.scss public/style.css
-for file in content/*; do
-  echo "Rendering $file"
-  $TERA --template content/$(basename $file) --env-only --include-path templates/ -o public/$(basename $file)
+
+for file in $(find static -type f -print); do
+  echo "Copying $file to public/${file#static/}"
+  mkdir -p $(dirname "public/${file#static/}")
+  cp $file "public/${file#static/}"
 done
-for file in static/*; do
-  echo "Copying $file"
-  cp static/$(basename $file) public/$(basename $file)
-done
+
 for file in public/*.html; do
   echo "Tidying $file"
   $TIDY -m -utf8 -i -w 0 -q $file

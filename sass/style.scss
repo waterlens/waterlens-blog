@@ -1,7 +1,7 @@
 @use 'fonts';
 
 body {
-  font-family: 'Oxygen', 'Noto Serif SC', sans-serif;
+  font-family: 'Oxygen', 'Noto Sans SC', sans-serif;
   font-weight: 400;
   margin-left: auto;
   margin-right: auto;
@@ -31,14 +31,68 @@ hgroup {
   text-align: center;
 }
 
+p {
+  font-size: 1.1rem;
+}
+
+ul {
+  margin-top: -0.9rem;
+  li {
+    text-align: left;
+    font-size: 1.1rem;
+  }
+}
+
 section {
+  h1, h2, h3, h4, h5, h6 {
+    text-align: center;
+  }
   p {
     text-align: left;
   }
   ul {
-    margin-top: -0.9rem;
     li {
+      margin-left: -1rem;
+    }
+  }
+}
+
+.centered {
+  margin-left: auto;
+  margin-right: auto;
+  width: fit-content;
+}
+
+.centered-text {
+  text-align: center;
+}
+
+.light-header {
+  color: #4d4c4c;
+}
+
+article {
+  h1 {
+    font-size: 1.75rem;
+  }
+  h2 {
+    font-size: 1.4rem;
+  }
+  h3 {
+    font-size: 1.2rem;
+  }
+  .main-body {
+    h1, h2, h3, h4, h5, h6 {
       text-align: left;
+    }
+    p {
+      text-align: left;
+    }
+    ul {
+      li {
+        text-align: left;
+        margin-left: -1rem;
+      }
     }
   }
 }

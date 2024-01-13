@@ -1,0 +1,30 @@
+{% extends "base-zh.html" %}
+{% block title %}关于{% endblock title %}
+{% block content %}
+<section>
+  <h2>关于此网站</h2>
+  <div class="centered">
+    <p class="centered-text">
+      这个网站主要是为了分享 Waterlens 的一些愚蠢<del>或聪明</del>的经验想法<br>
+      我不保证本网站的内容一定是正确的或者有用的<br>
+      如果你发现了任何错误，请通过邮件联系我：<br>
+      <code>waterlens at waterlens.moe</code>
+    </p>
+  </div>
+</section>
+<section>
+  <h2>关于我</h2>
+  <div class="centered">
+    <p>我现在是一个研究生，主要对以下内容感兴趣：</p>
+    <ul>
+      <li>编译器构建与优化</li>
+      <li>编程语言理论</li>
+      <li>计算谈体系结构</li>
+    </ul>
+    <p>我喜欢写各种玩具级别的项目，但大多数都尚未完成</p>
+  </div>
+</section>
+<section class="centered">
+  你正在通过 {{ util::checkedBaseURL() }} 访问此网站
+</section>
+{% endblock content %}
