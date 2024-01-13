@@ -1,0 +1,44 @@
+@use 'fonts';
+
+body {
+  font-family: 'Oxygen', 'Noto Serif SC', sans-serif;
+  font-weight: 400;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: min(80rem, calc(100% - 2rem));
+}
+
+a {
+  color: #0060B6;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #00A0C6;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+nav a {
+  margin: 0.2rem;
+}
+
+header, footer {
+  text-align: center;
+}
+
+hgroup {
+  text-align: center;
+}
+
+section {
+  p {
+    text-align: left;
+  }
+  ul {
+    margin-top: -0.9rem;
+    li {
+      text-align: left;
+    }
+  }
+}
