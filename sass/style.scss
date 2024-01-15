@@ -46,12 +46,9 @@ p {
   font-size: 1.1rem;
 }
 
-ul {
-  margin-top: -0.9rem;
-  li {
-    text-align: left;
-    font-size: 1.1rem;
-  }
+ul li {
+  text-align: left;
+  font-size: 1.1rem;
 }
 
 section {
@@ -100,8 +97,8 @@ article {
       text-align: left;
     }
     ul {
+      margin-top: -0.9rem;
       li {
-        text-align: left;
         margin-left: -1rem;
       }
     }
