@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@400;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Waterlens">
+  <meta name="description" content="Waterlens' Articles">
+  <title>How To Have A Personalized (Receive-Only) Email Domain</title>
+  
+</head>
+<body>
+  <article>
+  
+<header>
+  <h1><a href=".">How To Have A Personalized (Receive-Only) Email Domain</a></h1>
+  <h2 class="light-header">Useless But Fun Series 1</h2>
+</header>
+
+  <hr>
+  
+<div class="main-body">
+  <p>
+    I often use the email address <code>&lt;waterlens at waterlens.moe&gt;</code> for communication and registry on 
+    miscellaneous websites. This article is to tell you how to obtain a similar personalized email domain.
+  </p>
+  <section>
+    <h2 id="obtain-a-domain-name"><a href="#obtain-a-domain-name">Obtain A Domain Name</a></h2>
+    <p>Firstly, you need to obtain a domain name, which is the only thing you need to spend money on in this article. I only tried Namesilo and Cloudflare.
+       I suggest to use Cloudflare because their websites are really tidy and their domains are cheap too.
+    </p>
+  </section>
+  <section>
+    <h2 id="modify-nameservers-of-the-domain-name"><a href="#modify-nameservers-of-the-domain-name">Modify Nameservers of the Domain Name</a></h2>
+    <p>This article requires you to modify the nameservers of your domain name after your purchase, no matter which domain service provider you choose.
+       They should be modified to use nameservers provided by Cloudflare because we're going to use its service. So, we should ensure that:</p>
+    <ul>
+      <li>Add your domain name to your Cloudflare account</li>
+      <li>Change the name servers (DNS servers) of the domain name you just purchased to the two provided by Cloudflare in the domain name provider's management panel.
+        (e.g. <code>&lt;dexter.ns.cloudflare.com&gt;</code> and <code>&lt;fatima.ns.cloudflare.com&gt;</code>)
+      </li>
+    </ul>
+  </section>
+  <section>
+    <h2 id="email-routing"><a href="#email-routing">Email Routing</a></h2>
+    <p>
+      It's surely possible to build a mail server directly with a self-purchased domain name and a self-purchased server. But there are many problems with this approach.
+      If your server stops working, your mail service will be interrupted. If your server is unreachable in some places, your mail will not be received.
+      Moreover, although self-built mail servers can be used to send emails, many mail service providers (such as Gmail) may mark these emails as spam.
+    </p>
+    <p>
+      Well, Cloudflare has a very useful feature called email routing, which allows us to create custom email domains for receiving emails (similar to email aliases).
+      I think the beauty of it is Cloudflare's reliable service around the world. The custom email domain created using its email routing feature is very reliable.
+      We can forward emails to reliable mail providers such as Gmail, Outlook, and iCloud.
+    </p>
+    <p>
+      The details of the operation please refer to <a href="https://developers.cloudflare.com/email-routing/">Cloudflare's documentation on email routing</a>.
+    </p>
+  </section>
+</div>
+
+  <hr>
+  <footer>
+    <p>The content on <a property="dct:title" rel="cc:attributionURL" href="/">this website</a>
+    &copy; 2021 - 2024 by <span property="cc:attributionName">Waterlens</span> is licensed under <a href="http://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">CC BY-SA 4.0 <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"><img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"><img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1"></a></p>
+  </footer>
+  </article>
+</body>
+</html>
