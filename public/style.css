@@ -250,6 +250,10 @@ body {
   max-width: min(80rem, 100% - 2rem);
 }
 
+img {
+  max-width: 100%;
+}
+
 code {
   font-family: "Hack", monospace;
 }
@@ -310,6 +314,12 @@ section ul li {
 
 .centered-text {
   text-align: center;
+}
+
+.centered-image {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .light-header {

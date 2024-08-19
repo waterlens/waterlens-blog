@@ -2,24 +2,24 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  {% block head %}
-  {% include "font.html" %}
-  <link rel="stylesheet" href="/style.css">
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="author" content="Waterlens">
-  <meta name="description" content="Waterlens 的主页">
-  <title>{% block title %}{% endblock title %}</title>
-  {% endblock head %}
+{% block head %}
+{% include "font.html" %}
+<link rel="stylesheet" href="/style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="Waterlens">
+<meta name="description" content="Waterlens 的主页">
+<title>{% block title %}{% endblock title %}</title>
+{% endblock head %}
 </head>
 <body>
-  {% block header %}
-  {% include "header-nav-zh.html" %}
-  {% endblock header %}
-  <hr>
-  {% block content %}
-  {% endblock content %}
-  <hr>
-  {% include "footer-zh.html" %}
+{% block header %}
+{% include "header-nav-zh.html" %}
+{% endblock header %}
+<hr>
+{% block content %}
+{% endblock content %}
+<hr>
+{% include "footer-zh.html" %}
 </body>
 </html>
