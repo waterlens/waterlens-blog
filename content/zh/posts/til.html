@@ -1,0 +1,124 @@
+{% extends "post-zh.html" %}
+{% block title %}今天我学到了{% endblock title %}
+{% block header %}
+<header>
+  <h1><a href=".">今天我学到了</a></h1>
+  <h2 class="light-header">记录零散知识的页面</h2>
+</header>
+{% endblock header %}
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous"
+    onload="renderMathInElement(document.body);"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.0.2/dist/mermaid.min.js"
+    onload="mermaid.initialize({ startOnLoad: true });"></script>
+<div class="main-body">
+  <!-- 
+    frequently used tags:
+      <p> for paragraph
+      <code> for inline code
+      <h2> for title in the article
+      <section> for a section
+      <ul> for unordered list
+      <li> for list item
+    frequently used attributes:
+      id for anchor
+      href for hyperlink
+    use #id to link to an anchor
+  -->
+  <p>不定时更新，记录我在浏览网页、阅读论文、逛社媒时看到的细碎知识和技巧。</p>
+  <section>
+    <h2 id="date-20240824">
+      <a href="#date-20240824">
+        2024 年 8 月 24 日
+      </a>
+    </h2>
+
+    <p>关键词：SIMD, SWAR, Parsing</p>
+    <p>
+      问：给定二进制串 \(00010010\)，如何获取两个 1 之间的位全置为 1 的二进制串？
+    </p>
+    <p>
+      答：使用 \(\oplus\) 操作计算前缀和：
+      $$
+               00010010 
+        \oplus 00100100
+        \oplus 01001000
+        \oplus 10010000
+        \oplus 00100000
+        \oplus 01000000
+        \oplus 10000000 =
+               00001110
+      $$
+      这一操作也等价于 Carry-less Multiplication 或 Xor Multiplication。
+    </p>
+    <p>
+      问：给定二进制串 \(00110100\), 如何判断一或多个 1 的起点（终点）？
+    </p>
+    <p>
+      答：左（右）移取反后按位与即可。
+      $$ 
+        \~~(00110100 \verb|<<| 1)~\&~00110100 = 10010111~\&~00110100 = 00010100 \\
+        \~~(00110100 \verb|>>| 1)~\&~00110100 = 11100101~\&~00110100 = 00100100
+      $$
+    </p>
+    <p>关于内联优化：有一个 <code>g x</code>，其中我们将 <code>j x</code> 视为一个汇合点</p>
+    <pre>
+      <code>
+g x = let j x = f x
+      in case x of A → j 1
+                   B → j 2
+      </code>
+    </pre>
+    <p>如果在另一个函数 <code>a</code> 中我们调用 <code>h (g x)</code>，那么在内联 <code>g</code> 后可能会想到将的调用推入 <code>g</code> 的分支：</p>
+    <pre>
+      <code>
+a x = h (g x)
+→
+a x = let j x = f x
+      in case x of A → h (j 1)
+                   B → h (j 2)
+      </code>
+    </pre>
+    <p>但这样我们就失去了对汇合点可以尾调用的性质。为了避免这种情况，我们需要将 h 直接推入汇合点。</p>
+    <pre>
+      <code>
+a x = let j x = h (f x)
+      in case x of A → j 1
+                   B → j 2
+      </code>
+    </pre>
+    <p>从另一个角度理解（将跳转到汇合点视为跳转到一个 basic block）：</p>
+    <pre class="mermaid">
+flowchart TD;
+he(h _) --> ge
+ge(g x = case x) -->|case A| cA(j 1)
+ge -->|case B| cB(j 2)
+cA --> gexit(f x)
+cB --> gexit
+    </pre>
+    <p>
+      正确的变换会产生如下的控制流图：
+    </p>
+    <pre class="mermaid">
+flowchart TD;
+he(h _) --> gexit(f x)
+ge(g x = case x) -->|case A| cA(j 1)
+ge -->|case B| cB(j 2)
+cA --> he
+cB --> he
+    </pre>
+    <p>而只推一半意味着（在保证是跳转到汇合点而不是调用函数的前提下）会产生如下的不可能存在的控制流图：</p>
+    <pre class="mermaid">
+flowchart TD;
+gexit(f x) -->|case A?| heA(h _)
+gexit --> |case B| heB(h _)
+ge(g x = case x) -->|case A| cA(j 1)
+ge -->|case B| cB(j 2)
+cA --> gexit
+cB --> gexit
+    </pre>
+  </section>
+</div>
+{% endblock content %}
