@@ -40,6 +40,68 @@
     use #id to link to an anchor
   -->
       <p>不定时更新，记录我在浏览网页、阅读论文、逛社媒时看到的细碎知识和技巧。</p>
+      <p>使用倒序方式记录。</p>
+      <section>
+        <h2 id="date-20240826"><a href="#date-20240826">2024 年 8 月 26 日</a></h2>
+        <h3>OCaml 的一些新加入或即将加入的语言特性</h3>
+        <p>OCaml 这个语言就是有一点神奇，说古老也古老，但是这几年在 Jane Street 财主的扶持下也开始加了很多有意思的新特性，这里简单总结一下。</p>
+        <h4>代数效果</h4>
+        <p>重量级特性，介绍的文本有很多，就不多说了。</p>
+        <h4>模态内存管理</h4>
+        <p>名字来源自 <em>Graded Modal Calculus 分级模态演算</em>，具体是啥咱也不知道。</p>
+        <p>在这个类型系统里有三个<em>Mode 模式</em>，分别为 Affinity, Uniqueness, 和 Locality</p>
+        <ul>
+          <li>Affinity: Many | Once</li>
+          <li>Uniqueness: Unique | Shared</li>
+          <li>Locality: Global | Local</li>
+        </ul>
+        <p>模式作为类型修饰符的时候，可以放到函数类型的箭头的任意一侧，或者同时两侧。如果没有模式的修饰符，则认为有遗留/默认模式 （分别为 many, shared, global, 对应经典 OCaml 的行为。如 <code>graph @ local -&gt; string @ unique</code></p>
+        <p>模式也可以附着于变量绑定时的模式上，如 <code>let f (x @ unique) = ... in ...</code></p>
+        <p>但是在没有函数箭头时使用是没有意义的，如 <code>type t = string @ shared</code></p>
+        <p>同时定义三个模态 many, shared, global 来表示模式三元组间的变换</p>
+        <pre>
+<code>shared (a, u, l) = (a, shared, l)
+many (a, u, l) = (many, u, l)
+global (a, u, l) = (a, shared, global)</code>
+    </pre>
+        <p>注意到这里 global 模态会同时将 uniqueness 变为 shared，这是为了允许借用 borrowing 存在的健全性考虑的。</p>
+        <p>可以给 record 的 field 标注模态，如 <code>type 'a shared = { s : 'a @@ shared }</code>。</p>
+        <p>如果 record r 本身具有模式 m，且 field f 具有模态 n，则称 r.f 具有模式 n(m)。</p>
+        <h4>Uniqueness</h4>
+        <p>其中 uniqueness 允许安全的进行 in-place 更新，也就是最近很火的 reuse。 这里不等同于传统 OCaml 的 mut 关键词带来的可变性。 基于 uniqueness 的可变性在语义上仍然是函数式的，不会引起外部状态的改变。</p>
+        <p>有一个示例如下：</p>
+        <pre>
+<code>type 'a list = Nil | Cons of { hd : 'a; tl : 'a list }
+let rec rev_append xs acc =
+  match xs with
+  | Nil -&gt; acc
+  | Cons x_xs -&gt; rev_append x_xs.tl (Cons { overwrite x_xs with tl = acc })</code>
+    </pre>
+        <p>上述片段如果传入的列表并不是 <code>unique</code> 的话，则是有问题的，因此我们希望 <code>reverse</code> 具有如下类型：</p>
+        <pre>
+<code>let reverse xs = rev_append xs Nil</code>
+<code>val reverse : 'a list @ unique -&gt; 'a list @ unique</code>
+    </pre>
+        <p>这里的 unique 表明，在任意时间，程序里只存在一个对 unique 值的引用。</p>
+        <p>Uniqueness 是一个 <em>深</em> 属性，也就是说 unique 值的各个组成部分必须也是 unique 的。</p>
+        <h4>Affinity</h4>
+        <p>需要注意到光有 uniqueness 是不够的，因为我们仍然轻松构造出有问题的代码。</p>
+        <pre>
+<code>let rejected =
+  let xs @ unique : int list = [1;2;3] in
+  let f = fun zs -&gt; rev_append xs zs in
+  let ys = f [4] in
+  let zs = f [5] (* Oh no! zs and ys refer to the same memory! *)
+  in ...</code>
+    </pre>
+        <p>例如这里的函数闭包 <code>f</code>，持有了唯一的对 <code>xs</code> 的引用； 即便我们让 <code>f</code> 亦为 unique，我们也不能阻止对 unique 调用两次，最终获得预期之外的结果（因为 xs 被反转了两次）。</p>
+        <p>因此引入了 affinity，我们使用此模式来限制对值使用的次数。</p>
+        <p>它和 uniqueness 的核心区别在于，uniqueness 是对过去的总结；而 affinity 是对未来的限制。</p>
+        <p>为了让上文代码正确，我们选择让 f 变为 once 模式，从而拒绝以上代码。</p>
+        <pre>
+<code>... let f @ once = fun zs -&gt; rev_append xs zs in ...</code>
+    </pre>
+      </section>
       <section>
         <h2 id="date-20240824"><a href="#date-20240824">2024 年 8 月 24 日</a></h2>
         <p>关键词：SIMD, SWAR, Parsing</p>
