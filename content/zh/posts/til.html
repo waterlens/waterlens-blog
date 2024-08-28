@@ -66,7 +66,7 @@ global (a, u, l) = (a, shared, global)</code>
     <p>
       如果 record r 本身具有模式 m，且 field f 具有模态 n，则称 r.f 具有模式 n(m)。
     </p>
-    <h4>Uniqueness</h4>
+    <h4>Uniqueness 单一性</h4>
     <p>
       其中 uniqueness 允许安全的进行 in-place 更新，也就是最近很火的 reuse。
       这里不等同于传统 OCaml 的 mut 关键词带来的可变性。
@@ -87,7 +87,7 @@ let rec rev_append xs acc =
     </pre>
     <p>这里的 unique 表明，在任意时间，程序里只存在一个对 unique 值的引用。</p>
     <p>Uniqueness 是一个 <em>深</em> 属性，也就是说 unique 值的各个组成部分必须也是 unique 的。</p>
-    <h4>Affinity</h4>
+    <h4>Affinity 仿射性</h4>
     <p>
       需要注意到光有 uniqueness 是不够的，因为我们仍然轻松构造出有问题的代码。
     </p>
@@ -109,6 +109,40 @@ let rec rev_append xs acc =
     <pre>
 <code>... let f @ once = fun zs -> rev_append xs zs in ...</code>
     </pre>
+    <h4>Locality 局部性</h4>
+    <p>最后一个模式为 locality, 用于控制值的生命周期不能超过当前 region。</p>
+    <p>如果能确保这一性质，那就自然地可以将不逃逸出 region 的值分配在 stack 上，获取一定的性能优势并降低对 GC 的压力。</p>
+    <p><strong>Borrowing 借用</strong></p>
+    <p>由于现在我们可以确保值不会逃逸出区域，我们可以在某个 region 内安全地借用一个 unique 的值。</p>
+    <p>例如我们可以定义如下的 <code>borrow</code> 函数</p>
+    <pre>
+<code>val borrow : 'a @ unique -> ('a @ local -> 'b) -> ('a * 'b shared) @ unique
+let borrow x f =
+  let result = f &amp;x in
+  x, { s = result }</code>
+    </pre>
+    <p>
+      之前我们提到 global 隐含了 shared, 这是为了避免我们将一个 unique 值放入具有 global 模态的 record field,
+      然后又将其作为 unique 值提取出来，从而导致 unsound 的程序语义。
+    </p>
+    <h4><code>or_null</code> 类型</h4>
+    <p>很多语言都会使用可以为 <code>null</code> 的值来作为 <code>option</code> 类型的一种替代品，但是对于 <code>int option option</code> 这种嵌套类型来说只有一个 <code>null</code> 就显得无能为力了。</p>
+    <p>那如果反其道而行之，我们只需要一个 <code>null</code>，应该如何设计对应的类型呢？这个 <code>or_null</code> 类型的设计很好地体现了相关的一些考量。</p>
+    <p>
+      为了区分我们是否还可以使用 <code>null</code>，我们将类型分为两类，一种被称作 no-null type，
+      也就是说其对应的底层表示中并没有使用和 <code>null</code> 相同的模式（例如为一个全 0 的值），
+      例如 <code>string, int</code> 等。
+      另一种是 with-null type，和上述内容刚好相反。
+      所以对于 <code>'a or_null</code> 类型，我们希望 <code>'a</code> 是 no-null 的。
+    </p>
+    <p>在拥有 <code>or_null</code> 类型后，自然地我们可以利用 OCaml 里全 0 表示并不对应任何值的现状，使用该模式表示 <code>null</code>，有效减少了堆分配。</p>
+    <p>
+      不过在抽象类型和类型参数的默认类别应该是 no-null 还是 with-null 的问题上，还有一些问题需要澄清。
+      另外 OCaml 的 float array 非常特别，也需要特殊处理。
+    </p>
+    <h4>扁平化字段</h4>
+    <p>这是一个比较简单的改动，允许用户手动指定一些 field 为未装箱或不需要扫描的。代价是牺牲了 generic 的 compare 操作。</p>
+    <p>实现上需要在对象头里记录一个数值指定需要扫描的 field 数量。此外需要 layout 重排，将不需要 scan 和需要 scan 的 field 分为两个区域。</p>
   </section>
   <section>
     <h2 id="date-20240824">
