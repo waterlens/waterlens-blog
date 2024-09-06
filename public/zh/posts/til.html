@@ -42,6 +42,19 @@
       <p>不定时更新，记录我在浏览网页、阅读论文、逛社媒时看到的细碎知识和技巧。</p>
       <p>使用倒序方式记录。</p>
       <section>
+        <h2 id="date-20240905"><a href="#date-20240905">2024 年 9 月 5 日</a></h2>
+        <h3>可快照数据结构</h3>
+        <p>ICFP 24 的论文 <a href="https://dl.acm.org/doi/pdf/10.1145/3674637">Snapshottable Stores</a> 描述了一种可快照的数据结构。</p>
+        <p>这里可快照的意思就是，可在任意时刻去保存数据结构的一个状态，称之为快照，并允许之后将数据结构恢复到这一快照对应的状态。这两个操作都应该是相对廉价的。（否则你总是可以复制整个数据结构并在之后进行替换，但这样操作的时间和空间开销都太大了！）</p>
+        <p>本文只考虑了对可变引用的快照。对于不可变引用，其本身就是可持久化的，因此并不需要做特殊的处理。尽管如此，还有有一些可以拓展的地方，比如对可变数组的修改等。</p>
+        <p>核心算法来自于 Baker 的 Version Tree (1978)。我们需要一个树状的 store 结构来记录历史信息。快照也就是特定时刻的版本树，捕获快照只需要记录特定时刻的树根即可。</p>
+        <p>对任意可变引用 \([r \mapsto x_1]\)，若要更新其新值为 \(x_2\)，我们创建一个新树根 <code>new_root = ref Mem</code>，将旧树根代表的节点对应内容更新为 <span class="no-wrap"><code>Diff(r,</code> \(x_1\)<code>, new_root)</code></span>，同时将 Store 的树根更新为 new_root。因为我们已经记录了引用之前指向的值，此时即可覆写引用指向新值 \(x_2\)。</p>
+        <p>恢复快照可以分为两种情况，其中一种为快照即是当前状态，所以我们什么都不需要做。</p>
+        <p>另一种情况下，快照的节点指向了一棵子树（包含快照后所做的修改历史），引用的新值即为快照树节点中记录的值。此外，我们需要遍历历史，将这一历史<strong>反向</strong>链接。也就是说， 对于修改链 <span class="no-wrap">\([r \mapsto x_1][r \mapsto x_2][r \mapsto x_3]\)</span>，若要恢复到 \(x_2\) 状态，我们会生成一个新的树，包含有两条链，分别为 <span class="no-wrap">\([r \mapsto x_1][r \mapsto x_2]\)</span> 和 <span class="no-wrap">\([r \mapsto x_3][r \mapsto x_2]\)</span>。</p>
+        <p>以上内容大致概括了 Baker 的工作，而这篇 ICFP 24 的新贡献包括一个被称作 Record Elision 的重要优化。</p>
+        <h4>Record Elision</h4>
+        <p>其核心思想是，如果我们可以确定两次 <code>set</code> 间并没有快照发生，那我们根本不需要分别为两次 <code>set</code> 创建对应的日志节点，而是共享一个节点。</p>
+        <p>为此我们需要为引用、快照、树节点和 store 树都增加一个 field 记录当前代数。如果进行了快照，则递增代数。当进行 <code>set</code> 操作时，我们先检查当前树根的代数，如果发现相等，则直接进入 fast path，更新引用即可。否则进入 slow path，更新引用、记录修改并更新代数。</p>
         <h2 id="date-20240826"><a href="#date-20240826">2024 年 8 月 26 日</a></h2>
         <h3>OCaml 的一些新加入或即将加入的语言特性</h3>
         <p>OCaml 这个语言就是有一点神奇，说古老也古老，但是这几年在 Jane Street 财主的扶持下也开始加了很多有意思的新特性，这里简单总结一下。</p>
@@ -115,11 +128,14 @@ let borrow x f =
     </pre>
         <p>之前我们提到 global 隐含了 shared, 这是为了避免我们将一个 unique 值放入具有 global 模态的 record field, 然后又将其作为 unique 值提取出来，从而导致 unsound 的程序语义。</p>
         <h4><code>or_null</code> 类型</h4>
-        <p>很多语言都会使用可以为 <code>null</code> 的值来作为 <code>option</code> 类型的一种替代品，但是对于 <code>int option option</code> 这种嵌套来说只有一个 <code>null</code> 就显得无能为力了。</p>
+        <p>很多语言都会使用可以为 <code>null</code> 的值来作为 <code>option</code> 类型的一种替代品，但是对于 <code>int option option</code> 这种嵌套类型来说只有一个 <code>null</code> 就显得无能为力了。</p>
         <p>那如果反其道而行之，我们只需要一个 <code>null</code>，应该如何设计对应的类型呢？这个 <code>or_null</code> 类型的设计很好地体现了相关的一些考量。</p>
         <p>为了区分我们是否还可以使用 <code>null</code>，我们将类型分为两类，一种被称作 no-null type， 也就是说其对应的底层表示中并没有使用和 <code>null</code> 相同的模式（例如为一个全 0 的值）， 例如 <code>string, int</code> 等。 另一种是 with-null type，和上述内容刚好相反。 所以对于 <code>'a or_null</code> 类型，我们希望 <code>'a</code> 是 no-null 的。</p>
         <p>在拥有 <code>or_null</code> 类型后，自然地我们可以利用 OCaml 里全 0 表示并不对应任何值的现状，使用该模式表示 <code>null</code>，有效减少了堆分配。</p>
         <p>不过在抽象类型和类型参数的默认类别应该是 no-null 还是 with-null 的问题上，还有一些问题需要澄清。 另外 OCaml 的 float array 非常特别，也需要特殊处理。</p>
+        <h4>扁平化字段</h4>
+        <p>这是一个比较简单的改动，允许用户手动指定一些 field 为未装箱或不需要扫描的。代价是牺牲了 generic 的 compare 操作。</p>
+        <p>实现上需要在对象头里记录一个数值指定需要扫描的 field 数量。此外需要 layout 重排，将不需要 scan 和需要 scan 的 field 分为两个区域。</p>
       </section>
       <section>
         <h2 id="date-20240824"><a href="#date-20240824">2024 年 8 月 24 日</a></h2>
