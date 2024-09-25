@@ -42,6 +42,113 @@
       <p>不定时更新，记录我在浏览网页、阅读论文、逛社媒时看到的细碎知识和技巧。</p>
       <p>使用倒序方式记录。</p>
       <section>
+        <h2 id="date-20240925"><a href="#date-2024-0925">2024 年 9 月 25 日</a></h2>
+        <h3>Cranelift 中的指令选择 DSL (ISLE)</h3>
+        <p>Cranelift 编译器项目中有一个名为“指令选择降低表达式”的 DSL, 也就是 ISLE, 用于解决指令选择过程中最为常见的、对中间语言进行模式匹配并将其重写为更低层级语言（例如，特定架构的机器语言）的问题。</p>
+        <p>作者表示这一 DSL 的设计融合了很多来自术语重写系统和 Prolog 的想法。尽管如此，这一语言和现有的术语重写系统 (Term Rewriting System) 并不完全相同，因为它具有一个“强大”的类型系统， 允许不同项具有不同类型（例如可以为和类型）。</p>
+        <p>在这里，我不想过多谈论它的设计哲学，而是转向这一语言本身的定义与规范。</p>
+        <p>在 ISLE 中，我们用 S-表达式表示一个术语：</p>
+        <pre>
+<code>(a (b c 1 2) (d) (e 3 4))</code>
+    </pre>
+        <p>每个术语要么为一个原语；要么为一个构造；要么为一个提取。构造由构造器和参数组成。参数也是术语。构造器可以接受元数个参数。类似地，提取由提取器和参数组成，其中参数为模式。</p>
+        <p>TRS 的核心为一套规则集，我们可以使用规则集中某个最“合适”的规则来转换术语到另一个术语，直到满足某些条件。类似地，在 ISLE 中也同样定义了规则与规则集的概念。</p>
+        <p>一条规则会被分为两个部分，其中左侧被称作模式，右侧被称作表达式。术语被看待为构造还是提取，取决于它出现在规则的哪一侧。</p>
+        <p>例如，可以在 ISLE 中编写一条规则如下所示：</p>
+        <pre>
+<code>(rule
+;; left-hand side (pattern): if the input matches this ...
+(A (B _ x) (C y))
+;; ... then rewrite to this:
+(D x y))</code>
+    </pre>
+        <p>其中，左侧模式可以由以下内容归纳定义得出</p>
+        <ul>
+          <li>通配符<code>_</code></li>
+          <li>整数常量</li>
+          <li>导入的外部符号常量 <code>$...</code></li>
+          <li>变量捕获（标识符），其中第一次出现为捕获语义，之后出现则表示应该匹配与第一次捕获相等的值</li>
+          <li>命名的子模式 <code>name @ PAT</code></li>
+          <li>子模式连接 <code>(and PAT1 PAT2 ...)</code>, 表示任何子模式都和术语匹配，该模式才能匹配成功。</li>
+          <li>术语提取 <code>(etor PAT1 PAT2 ...)</code></li>
+        </ul>
+        <p>而右侧的表达式则允许以下内容</p>
+        <ul>
+          <li>整数和符号常量</li>
+          <li>布尔变量（使用 Scheme 语法）</li>
+          <li>在模式中被绑定的变量</li>
+          <li>术语构造 <code>(ctor EXPR1 EXPR2 ...)</code></li>
+          <li>变量绑定 <code>(let ((var1 type1 EXPR1) (var2 type2 EXPR2) ...) BODY ...)</code></li>
+        </ul>
+        <p>ISLE 使用启发式方法决定应用适用规则中的某一条。 例如，当多条规则匹配同一个术语时，会优先选择更具体的那条，也就是说，如果规则 1 已经完成匹配，而规则 2 有相同前缀，但可以继续执行后续匹配并成功，则选择规则 2 进行重写。</p>
+        <p>如果确实需要，也可以手动指定优先级。优先级为一个有符号整数，数值大小表示优先级高低，默认情况下规则的优先级为 0。</p>
+        <p>ISLE 中存在类型。</p>
+        <p>类型要么是一个原语（如整数类型或者导入的类型），要么是一个枚举（和类型）</p>
+        <pre>
+<code>(type u32 (primitive u32))
+(type MyType
+  (enum
+    (A (x u32) (y u32))
+    (B (z u32)
+    C)))
+(type MyType2 extern (enum (A)))
+</code>
+    </pre>
+        <p>对应地，我们可以在 ISLE 中声明构造器、参数和返回值的类型。</p>
+        <pre>
+<code>(decl Term1 (u32 u32) MyType)
+(decl Term2 () u32)
+</code>
+    </pre>而在定义枚举时，其变体也会被隐式声明为构造器，例如上述枚举会自动等价于以下内容的构造器：
+        <pre>
+<code>(decl MyType.A (u32 u32) MyType)
+(decl MyType.B (u32) MyType)
+(decl MyType.C () MyType)
+
+(decl MyType2.A () MyType2)
+</code>
+    </pre>
+        <p>由于一种类型的术语只能被重写为同一类型的另一术语，因此可能会让人困惑，如何将其中一种类型的术语转换为另外一种类型的术语</p>
+        <p>对此的解决方案是定义一个顶级的构造器作为“驱动程序”</p>
+        <pre>
+<code>(type T1 ...)
+(type T2 ...)
+
+(decl Translate (T1) T2)
+
+(rule (Translate (T1.A ...))
+      (T2.X ...))
+(rule (Translate (T1.B ...))
+      (T2.Y ...))</code>
+    </pre>
+        <p>构造器和提取器都分为外部和内部。在上文中提到的 <code>decl</code> 声明的是内部构造器。</p>
+        <p>我们可以使用如下方法声明内部提取器。</p>
+        <pre>
+<code>
+(decl A (u32 u32) T)
+(extractor (A pat1 pat2)
+           (and
+             (extractArg1 pat1)
+             (extractArg2 pat2)))
+</code>
+    </pre>
+        <p>其作用类似于语法宏，也就是任何模式 <code class="no-wrap">(A PAT1 PAT2)</code> 都会被拓展为 <code class="no-wrap">(and (extractArg1 PAT1) (extractArg2 PAT2))</code></p>
+        <p>而外部构造器、提取器，则对应宿主语言中的一个函数。</p>
+        <p>如果构造器具有类型 <code class="no-wrap">T1 -&gt; T2</code>, 则要求宿主语言中也有一个相同类型的函数； 如果提取器具有类型 <code class="no-wrap">T1 -&gt; T2</code>，则要求宿主语言中具有对应的 <code class="no-wrap">T2 -&gt; Option[T1]</code> 类型的函数，其中 <code>Option</code> 可以用来表示提取（匹配）是否成功。</p>
+        <p>外部提取器可以被声明为 infallible 的，可以提高生成代码的效率。在这种情况下，对应的外部函数具有签名 <code>T2 -&gt; T1</code></p>
+        <p>除此之外，ISLE 具有一些语法糖：</p>
+        <p>rule 被允许包含子匹配，其语法如下：</p>
+        <pre>
+<code>(rule LHS_PATTERN
+  (if-let PAT2 EXPR2)
+  (if-let PAT3 EXPR3)
+  ...
+  RHS)
+    </code></pre>
+        <p>匹配过程变为，在完成主模式匹配后，依次评估表达式并尝试用对应的子模式进行匹配，如果不成功，则该规则匹配失败。</p>
+        <p>由于在匹配过程中会发生函数调用，因此我们要求表达式是纯的。由于无法自动确定外部构造器的纯度，因此需要手动进行 pure 标记来确保表达式是无副作用的。</p>
+        <p>partial 用于标注会失败的外部构造器。这里和外部提取器的区别是，它可以被用在表达式侧来提前结束规则的匹配。（问题：通配符可以匹配失败的构造么？）</p>
+        <p><code>if-let</code>可以被进一步省略为 <code>if</code>，其中要求对应表达式返回结果 <code>#t | #f</code></p>
         <h2 id="date-20240905"><a href="#date-20240905">2024 年 9 月 5 日</a></h2>
         <h3>可快照数据结构</h3>
         <p>ICFP 24 的论文 <a href="https://dl.acm.org/doi/pdf/10.1145/3674637">Snapshottable Stores</a> 描述了一种可快照的数据结构。</p>
