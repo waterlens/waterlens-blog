@@ -33,10 +33,12 @@ for file in $(find resource/typst -type f -print0 | xargs -0); do
   $TYPST compile -f svg $file "public/resource/$NAME"
 done
 
-for file in $(find content -type f -print0 | xargs -0); do
-  echo "Rendering $file to public/${file#content/}"
-  mkdir -p $(dirname "public/${file#content/}")
-  $TERA --template $file --env-only --include-path templates/ -o "public/${file#content/}"
+for file in $(find content \( -name '*.adoc' \)  -print0 | xargs -0); do
+  output=${file#content/}
+  outfile="${output%.*}.html"
+  echo "Rendering $file to public/$outfile"
+  mkdir -p $(dirname "public/$outfile")
+  asciidoctor -b w-html -r ./w-asciidoc/convert.rb $file -o "public/$outfile"
 done
 
 echo "Rendering style.scss"

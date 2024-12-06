@@ -1,0 +1,35 @@
+= xref:.[+++[ Waterlens' Home Page ]+++]
+:author: Waterlens
+:pagetitle: About me
+:description: About waterlens
+:showtitle:
+:shownav:
+:lang: en
+
+[.centered]
+[discrete]
+== About this website
+
+[.centered]
+--
+[.centered-text]
+这个网站主要是为了分享 Waterlens 的一些愚蠢 [.line-through]#或聪明# 的经验想法。 +
+我不保证本网站的内容一定是正确的或者有用的。 +
+如果你发现了任何错误，请通过邮件联系我： +
+`waterlens at waterlens.moe`
+--
+
+[.centered]
+[discrete]
+== 关于我
+
+[.centered]
+--
+我现在是一个研究生，主要对以下内容感兴趣：
+
+* 编译器构建与优化。
+* 编程语言理论。
+* 计算机体系结构。
+
+我喜欢写各种玩具项目。
+--

@@ -1,0 +1,17 @@
+= xref:.[+++[ Waterlens 的主页 ]+++]
+:author: Waterlens
+:pagetitle: Waterlens 的文章
+:description: Waterlens 的文章
+:showtitle:
+:shownav:
+:lang: zh-hans
+
+[.centered]
+[discrete]
+== 所有文章
+
+[.centered]
+* xref:/zh/posts/til.html[今天我学到了]
+* xref:/zh/posts/cp0.html[Compiler Pass 0 优化简析]
+* xref:/zh/posts/essay-1.html[随记 (一)]
+* xref:/zh/posts/personal-email-domain.html[如何拥有个性化的（仅接收）电子邮件域名 - 无用但有趣的事（一）]

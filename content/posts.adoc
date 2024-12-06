@@ -1,0 +1,14 @@
+= xref:.[+++[ Waterlens' Home Page ]+++]
+:author: Waterlens
+:pagetitle: Waterlens' Posts
+:description: Waterlens' Posts
+:showtitle:
+:shownav:
+:lang: en
+
+[.centered]
+[discrete]
+== All Posts
+
+[.centered]
+* xref:/posts/personal-email-domain.html[How To Have A Personalized (Receive-Only) Email Domain - Useless But Fun Series 1]

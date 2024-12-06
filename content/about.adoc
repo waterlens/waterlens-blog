@@ -1,0 +1,35 @@
+= xref:.[+++[ Waterlens' Home Page ]+++]
+:author: Waterlens
+:pagetitle: About me
+:description: About waterlens
+:showtitle:
+:shownav:
+:lang: en
+
+[.centered]
+[discrete]
+== About this website
+
+[.centered]
+--
+[.centered-text]
+This website is by Waterlens for him to have a place to write whatever stupid [.line-through]#or smart#. +
+It's not guaranteed that the content on this website is correct or useful. +
+If you find any mistakes, please reach me via email: +
+`waterlens at waterlens.moe`
+--
+
+[.centered]
+[discrete]
+== About me
+
+[.centered]
+--
+I'm a master student who is interested in the following topics:
+
+* Compiler construction and optimization.
+* Programming language theory.
+* Computer architecture.
+
+I like to write toy projects.
+--

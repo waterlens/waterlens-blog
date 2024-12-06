@@ -1,0 +1,14 @@
+= xref:/zh/[+++[ Waterlens 的主页 ]+++]
+:author: Waterlens
+:pagetitle: Waterlens 的主页
+:description: Waterlens 的主页
+:showtitle:
+:shownav:
+:lang: zh-hans
+
+[.centered]
+[discrete]
+== 这是哪里？
+
+[.centered]
+_我也不知道，就请随便逛逛吧！_

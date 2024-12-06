@@ -1,0 +1,3 @@
+[submodule "w-asciidoc"]
+	path = w-asciidoc
+	url = git@github.com:waterlens/w-asciidoc.git
