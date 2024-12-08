@@ -1,0 +1,104 @@
+= xref:.[Incremental Computation]
+:showtitle:
+:lang: en
+:stem: latexmath
+
+This post summarizes some content that I learned from https://www.janestreet.com/tech-talks/seven-implementations-of-incremental/[Jane Street's talk on incremental computation].
+
+== 7 versions of an incremental library.
+
+=== Problem on recombinant graphs
+Multiple recomputations.
+Changing the order of iterating the graph (BFS or DFS) doesn't fundamentally tackle the problem. +
+Solution:
+
+.Two-pass stablization
+1. Update feed forward.
+2. Mark the whole transitive closure of changed nodes as dirty.
+3. Propagate until all dirty nodes are clear.
+
+The tricky thing is that users not only know dirty nodes, but also know how many inputs are dirty.
+Recompute only when the number of dirty inputs are dropped to zero.
+
+=== Problem on GC
+Dependence pointers are from input to output, so if inputs are live, outputs are live.
+However, from the logical perspective, users only care specific outputs of the computation graph and necessary nodes for these outputs.
+There should be an approach to collect unnessary parts in the graph. +
+Solution:
+
+.Pointers in cooperation with the garbage collector
+1. Up-pointers to track dependence relations among values for stablization.
+2. Down-pointers for updating reference count.
+
+Keep reference counts by external held nodes. Give a sentinel to external held nodes.
+The sentinel contains a finalizer that updates the reference counting when arriving or removing.
+
+=== Problem on cutting off
+
+Cutting off means skipping the computation of unchanged nodes.
+The naive 2-pass approach doesn't work well because in the pass 1 we can't see computed values to determine which inputs are really necessay.
+Keeping a list of cutoff nodes seems to works but it actually doesn't work for graphs with deep nested cutoffs. It can cause exponentially recomputation.
+
+[NOTE]
+.Improvement 1 - v2
+====
+Topologically sort the graph, and in its order you always have the value recomputed at most once and know its value when determining the cutoff. Use a heap to get nodes in the topological order.
+
+How to get the topo-sort result?
+Use timestamps to naturally get the topological order because new values depend on old values and never conversely.
+But when you allocate new values in the bind, it's not correct to give it the latest timestamp. Instead, it should be given the timestamp less than the bind, but greater than any other values less the bind. +
+Easy solution: just sparsely allocate integers and insert between them if necessary. Redistribute if we don't have the space.
+====
+
+== Look back to the GC
+
+Another big problem is that relying garbage collector to collect is bad because parts that considered garbage in the graph still involve in every computation even they will be recycled in the future.
+
+[NOTE]
+.Improvement 2 - v3
+====
+A simple solution is to explicitly track the observable parts in the graph.
+The values tracked are called observers. Like things are alive by the transitive closure of reference relations,
+the nodes needed are also the transitive closure of observing relations, but the direction is in opposite.
+====
+
+Solution:
+
+.Track the observable worlds
+- Add a way in the API to indicate what is observed
+- Keep a ref-count of what's observed
+- Eagerly track what needs to be computed
+
+[quote]
+*A observer is a dual of a variable.*
+
+Users can and must cancel the observation manually before the GC can recycle the unnessary nodes if they want to maximalize the efficiency.
+
+== Look at the original algorithm - v4
+
+In the Umut Acar's original algorithm, he used `bind` to implement `map`, not very efficient.
+Extra invariants that should be kept in mind (?)
+
+== Integrate them all - v5
+
+All tricks in v2 and v3 are put into this version, including the timestamp.
+However, in practice, an excellent programmer may cache a subgraph and use it later.
+This violates the assumption of the timestamp, which leads to an infinite loop.
+To mitigate the problem, there is a dynamic topological sort algorithm to serve as a backup
+when a back edge is found. It's effective but not very efficient because the use of heap.
+
+== Eliminating heap from the system - v6
+
+The key observation to improve the speed is that it's not necessay to keep a total order.
+The partial order can be enough in this case. So in the implementation there's a concept of
+pseudo height, almost like a height but never goes down, which is easier to compute.
+
+After this change, this version is still slightly slower than v1 but with a prettier semantics.
+
+== Eliminating sentinels - v7
+
+Use observers to substitute most sentinels. Reduce the cost of keeping finalizers.
+
+== Other improvements - v8
+
+Use GADT to eliminate unnessary closures.
