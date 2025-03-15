@@ -1,0 +1,35 @@
+= xref:.[Adapton]
+:showtitle:
+:lang: en
+:stem: latexmath
+
+This post summarizes some content that I learned from https://xxx[Adapton].
+
+.Two phase change propagation
+1. Dirtying
+2. Propagation
+
+.Dirtying
+[source, text]
+----
+function dirty(node)
+  foreach edge ∈ node.incomingset do
+    if not edge.dirty then
+      edge.dirty = true;
+      dirty(edge.source);
+----
+
+.Propagation
+[source, text]
+----
+function propagate(node)
+  foreach edge ∈ node.outgoinglist do
+  if edge.dirty then
+    edge.dirty = false;
+    if edge.target is athunk then
+      propagate(edge.target);
+    if edge.label != edge.target.value then
+      node.outgoinglist = [];
+      evaluate(node);
+      return;
+----
