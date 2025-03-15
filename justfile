@@ -59,3 +59,6 @@ cp-assets:
     mkdir -p $(dirname "public/${file#static/}")
     cp $file "public/${file#static/}"
   done
+
+live-server:
+  live-server public/
