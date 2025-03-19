@@ -93,6 +93,294 @@
           </div>
         </div>
       </section>
+      <section class="sect1">
+        <h2 id="date-20240925"><a href="#date-20240925">2024 年 9 月 25 日</a></h2>
+        <h3 id="_cranelift_中的指令选择_dsl_isle" class="discrete">Cranelift 中的指令选择 DSL (ISLE)</h3>
+        <p>Cranelift 编译器项目中有一个名为“指令选择降低表达式”的 DSL, 也就是 ISLE, 用于解决指令选择过程中最为常见的、对中间语言进行模式匹配并将其重写为更低层级语言（例如，特定架构的机器语言）的问题。</p>
+        <p>作者表示这一 DSL 的设计融合了很多来自术语重写系统和 Prolog 的想法。尽管如此，这一语言和现有的术语重写系统 (Term Rewriting System) 并不完全相同，因为它具有一个“强大”的类型系统，允许不同项具有不同类型（例如可以为和类型）。</p>
+        <p>在这里，我不想过多谈论它的设计哲学，而是转向这一语言本身的定义与规范。</p>
+        <p>在 ISLE 中，我们用 S-表达式表示一个术语：</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlight"><code class="language-scheme" data-lang="scheme">(a (b c 1 2) (d) (e 3 4))</code></pre>
+          </div>
+        </div>
+        <p>每个术语要么为一个原语；要么为一个构造；要么为一个提取。构造由构造器和参数组成。参数也是术语。构造器可以接受元数个参数。类似地，提取由提取器和参数组成，其中参数为模式。</p>
+        <p>TRS 的核心为一套规则集，我们可以使用规则集中某个最“合适”的规则来转换术语到另一个术语，直到满足某些条件。类似地，在 ISLE 中也同样定义了规则与规则集的概念。</p>
+        <p>一条规则会被分为两个部分，其中左侧被称作模式，右侧被称作表达式。术语被看待为构造还是提取，取决于它出现在规则的哪一侧。</p>
+        <p>例如，可以在 ISLE 中编写一条规则如下所示：</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlight"><code class="language-scheme" data-lang="scheme">(rule
+  ;; left-hand side (pattern): if the input matches this ...
+  (A (B _ x) (C y))
+  ;; ... then rewrite to this:
+  (D x y))</code></pre>
+          </div>
+        </div>
+        <p>其中，左侧模式 <code>PAT</code> 被归纳地定义为：</p>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>通配符 <code>_</code></p>
+            </li>
+            <li>
+              <p>整数常量</p>
+            </li>
+            <li>
+              <p>导入的外部符号常量 <code>$…​</code></p>
+            </li>
+            <li>
+              <p>变量捕获（标识符），其中第一次出现为捕获语义，之后出现则表示应该匹配与第一次捕获相等的值</p>
+            </li>
+            <li>
+              <p>命名的子模式 <code>name @ PAT</code></p>
+            </li>
+            <li>
+              <p>子模式连接 <code>(and PAT1 PAT2 …​)</code></p>
+            </li>
+            <li>
+              <p>术语提取 <code>(etor PAT1 PAT2 …​)</code></p>
+            </li>
+          </ul>
+        </div>
+        <p>而右侧的表达式则允许以下内容： * 整数和符号常量 * 布尔变量（使用 Scheme 语法） * 术语构造 <code>(ctor EXP1 EXP2 …​)</code> * 变量绑定 <code>(let ((var1 type1 EXP1) (var2 type2 EXP2) …​) BODY …​)</code></p>
+        <p>ISLE 使用启发式方法决定应用适用规则中的某一条。 例如，当多条规则匹配同一个术语时，会优先选择更具体的那条，也就是说，如果规则 1 已经完成匹配，而规则 2 有相同前缀，但可以继续执行后续匹配并成功，则选择规则 2 进行重写。</p>
+        <p>如果确实需要，也可以手动指定优先级。优先级为一个有符号整数，数值大小表示优先级高低，默认情况下规则的优先级为 0。</p>
+        <p>ISLE 中存在类型。</p>
+        <p>类型要么是一个原语（如整数类型或者导入的类型），要么是一个枚举（和类型）</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlight"><code class="language-scheme" data-lang="scheme">(type u32 (primitive u32))
+  (type MyType
+    (enum
+      (A (x u32) (y u32))
+      (B (z u32)
+      C)))
+  (type MyType2 extern (enum (A)))</code></pre>
+          </div>
+        </div>
+        <p>对应地，我们可以在 ISLE 中声明构造器、参数和返回值的类型。</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlight"><code class="language-scheme" data-lang="scheme">(decl Term1 (u32 u32) MyType)
+(decl Term2 () u32)</code></pre>
+          </div>
+        </div>
+        <p>而在定义枚举时，其变体也会被隐式声明为构造器，例如上述枚举会自动等价于以下内容的构造器：</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlight"><code class="language-scheme" data-lang="scheme">(decl MyType.A (u32 u32) MyType)
+(decl MyType.B (u32) MyType)
+(decl MyType.C () MyType)
+
+(decl MyType2.A () MyType2)</code></pre>
+          </div>
+        </div>
+        <p>由于一种类型的术语只能被重写为同一类型的另一术语，因此可能有人会困惑，如何将其中一种类型的术语转换为另外一种类型的术语。</p>
+        <p>对此的解决方案是，定义一个顶级的构造器作为“驱动程序”。</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlight"><code class="language-scheme" data-lang="scheme">(type T1 ...)
+(type T2 ...)
+
+(decl Translate (T1) T2)
+
+(rule (Translate (T1.A ...))
+      (T2.X ...))
+(rule (Translate (T1.B ...))
+      (T2.Y ...))</code></pre>
+          </div>
+        </div>
+        <p>构造器和提取器都分为外部和内部。在上文中提到的 ·decl&lt;/code&gt; 声明的是内部构造器。</p>
+        <p>我们可以使用如下方法声明内部提取器。</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlight"><code class="language-scheme" data-lang="scheme">(decl A (u32 u32) T)
+(extractor (A pat1 pat2)
+           (and
+             (extractArg1 pat1)
+             (extractArg2 pat2)))</code></pre>
+          </div>
+        </div>
+        <p>其作用类似于语法宏，也就是任何模式 <code>(A PAT1 PAT2)</code> 都会被拓展为 <code>(and (extractArg1 PAT1) (extractArg2 PAT2))</code>。</p>
+        <p>而外部构造器、提取器，则对应宿主语言中的一个函数。</p>
+        <p>如果构造器具有类型 <code>T1 → T2</code>, 则要求宿主语言中也有一个相同类型的函数； 如果提取器具有类型 <code>T1 → T2</code>，则要求宿主语言中具有对应的 <code>T2 → Option[T1]</code> 类型的函数，其中 <code>Option</code> 可以用来表示提取（匹配）是否成功。</p>
+        <p>外部提取器可以被声明为 infallible 的，可以提高生成代码的效率。在这种情况下，对应的外部函数具有签名 <code>T2 → T1</code>。</p>
+        <p>除此之外，ISLE 具有一些语法糖：</p>
+        <p>rule 被允许包含子匹配，其语法如下：</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlight"><code class="language-scheme" data-lang="scheme">(rule LHS_PATTERN
+  (if-let PAT2 EXPR2)
+  (if-let PAT3 EXPR3)
+  ...
+  RHS)</code></pre>
+          </div>
+        </div>
+        <p>匹配过程变为，在完成主模式匹配后，依次评估表达式并尝试用对应的子模式进行匹配，如果不成功，则该规则匹配失败。</p>
+        <p>由于在匹配过程中会发生函数调用，因此我们要求表达式是纯的。由于无法自动确定外部构造器的纯度，因此需要手动进行 pure 标记来确保表达式是无副作用的。</p>
+        <p>partial 用于标注会失败的外部构造器。这里和外部提取器的区别是，它可以被用在表达式侧来提前结束规则的匹配。（问题：通配符可以匹配失败的构造么？）</p>
+        <p><code>if-let</code> 可以被进一步省略为 <code>if</code>，其中要求对应表达式返回结果 <code>#t | #f</code>。</p>
+      </section>
+      <section class="sect1">
+        <h2 id="date-20240905"><a href="#date-20240905">2024 年 9 月 5 日</a></h2>
+        <h3 id="_可快照数据结构" class="discrete">可快照数据结构</h3>
+        <p>ICFP 24 的论文 <a href="https://dl.acm.org/doi/pdf/10.1145/3674637">Snapshottable Stores</a> 描述了一种可快照的数据结构。</p>
+        <p>这里可快照的意思就是，可在任意时刻去保存数据结构的一个状态，称之为快照，并允许之后将数据结构恢复到这一快照对应的状态。这两个操作都应该是相对廉价的。（否则你总是可以复制整个数据结构并在之后进行替换，但这样操作的时间和空间开销都太大了！）</p>
+        <p>文章只考虑了对可变引用的快照。对于不可变引用，其本身就是可持久化的，因此并不需要做特殊的处理。尽管支持可变引用已经满足了很多需求，还有有一些可以拓展的地方，比如对可变数组的修改等。</p>
+        <p>核心算法来自于 Baker 的 Version Tree (1978)。我们需要一个树状的 store 结构来记录历史信息。快照也就是特定时刻的版本树，捕获快照只需要记录特定时刻的树根即可。</p>
+        <p>对任意可变引用 \([r \mapsto x_1]\)，若要更新其新值为 \(x_2\)，我们创建一个新树根 <code>new_root = ref Mem</code>，将旧树根代表的节点对应内容更新为 <code>Diff(r, x_1, new_root)</code>，同时将 Store 的树根更新为 <code>new_root</code>。因为我们已经记录了引用之前指向的值，此时即可覆写引用指向新值 \(x_2\)。</p>
+        <p>恢复快照可以分为两种情况，其中一种为快照即是当前状态，所以我们什么都不需要做。</p>
+        <p>另一种情况下，快照的节点指向了一棵子树（包含快照后所做的修改历史），引用的新值即为快照树节点中记录的值。此外，我们需要遍历历史，将这一历史 <strong>反向</strong> 链接。也就是说， 对于修改链 \([r \mapsto x_1][r \mapsto x_2][r \mapsto x_3]\)，若要恢复到 \(x_2\) 状态，我们会生成一个新的树，包含有两条链，分别为\([r \mapsto x_1][r \mapsto x_2]\) 和 \([r \mapsto x_3][r \mapsto x_2]\)。</p>
+        <p>以上内容大致概括了 Baker 的工作，而这篇 ICFP 24 的新贡献包括一个被称作 Record Elision 的重要优化。</p>
+        <p>其核心思想是，如果我们可以确定两次 <code>set</code> 间并没有快照发生，那我们根本不需要分别为两次 <code>set</code> 创建对应的日志节点，而是共享一个节点。</p>
+        <p>为此我们需要为引用、快照、树节点和 store 树都增加一个 field 记录当前代数。如果进行了快照，则递增代数。当进行 <code>set</code> 操作时，我们先检查当前树根的代数，如果发现相等，则直接进入 fast path，更新引用即可。否则进入 slow path，更新引用、记录修改并更新代数。</p>
+      </section>
+      <section class="sect1">
+        <h2 id="date-20240826"><a href="#date-20240826">2024 年 8 月 26 日</a></h2>
+        <h3 id="_ocaml_的一些新加入或即将加入的语言特性" class="discrete">OCaml 的一些新加入或即将加入的语言特性。</h3>
+        <p>OCaml 这个语言就是有一点神奇，说古老也古老，但是这几年在 Jane Street 财主的扶持下也开始加了很多有意思的新特性，这里简单总结一下。</p>
+        <h4 id="_代数效果" class="discrete">代数效果</h4>
+        <p>重量级特性，介绍的文本有很多，就不多说了。</p>
+        <h4 id="_模态内存管理" class="discrete">模态内存管理</h4>
+        <p>名字来源自 <strong>Graded Modal Calculus 分级模态演算</strong>，具体是啥咱也不知道。</p>
+        <p>在这个系统里有三个 <strong>模式 (Mode)</strong>，分别为 Affinity, Uniqueness, 和 Locality。</p>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>Affinity: Many | Once</p>
+            </li>
+            <li>
+              <p>Uniqueness: Unique | Shared</p>
+            </li>
+            <li>
+              <p>Locality: Local | Global</p>
+            </li>
+          </ul>
+        </div>
+        <p>模式作为类型修饰符的时候，可以放到函数类型的箭头的任意一侧，或者同时两侧。如果没有模式的修饰符，则认为是遗留/默认模式（分别为 many, shared, global, 对应经典 OCaml 的行为）。</p>
+        <p>如 <code>graph @ local → string @ unique</code></p>
+        <p>模式也可以附着于变量绑定时的模式上，如 <code>let f (x @ unique) = …​ in …​</code></p>
+        <p>但是在没有函数箭头时使用是没有意义的，如 <code>type t = string @ shared</code></p>
+        <p>同时定义三个模态 many, shared, global 来表示模式三元组间的变换。</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">shared (a, u, l) = (a, shared, l)
+many (a, u, l) = (many, u, l)
+global (a, u, l) = (a, shared, global)</code></pre>
+          </div>
+        </div>
+        <p>注意到这里 global 模态会同时将 uniqueness 变为 shared，这是为了允许借用 borrowing 存在的健全性考虑的。</p>
+        <p>可以给 record 的 field 标注模态，如 <code>type 'a shared = { s : 'a @@ shared }</code>。</p>
+        <p>如果 record r 本身具有模式 m，且 field f 具有模态 n，则称 r.f 具有模式 n(m)。</p>
+        <h5 id="_uniqueness_单一性" class="discrete">Uniqueness 单一性</h5>
+        <p>其中 uniqueness 允许安全的进行 in-place 更新，也就是最近很火的 reuse。 这里不等同于传统 OCaml 的 mut 关键词带来的可变性。 基于 uniqueness 的可变性在语义上仍然是函数式的，不会引起外部状态的改变。</p>
+        <p>有一个示例如下：</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">type 'a list = Nil | Cons of { hd : 'a; tl : 'a list }
+let rec rev_append xs acc =
+  match xs with
+  | Nil -&gt; acc
+  | Cons x_xs -&gt; rev_append x_xs.tl (Cons { overwrite x_xs with tl = acc })</code></pre>
+          </div>
+        </div>
+        <p>上述片段如果传入的列表并不是 unique 的话，则是有问题的，因此我们希望 reverse 具有如下类型：</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">let reverse xs = rev_append xs Nil
+val reverse : 'a list @ unique -&gt; 'a list @ unique</code></pre>
+          </div>
+        </div>
+        <p>这里的 unique 表明，在任意时间，程序里只存在一个对 unique 值的引用。</p>
+        <p>Uniqueness 是一个 <strong>深</strong> 属性，也就是说 unique 值的各个组成部分必须也是 unique 的。</p>
+        <h5 id="_affinity_仿射性" class="discrete">Affinity 仿射性</h5>
+        <p>需要注意到光有 uniqueness 是不够的，因为我们仍然轻松构造出有问题的代码。</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">let rejected =
+  let xs @ unique : int list = [1;2;3] in
+  let f = fun zs -&gt; rev_append xs zs in
+  let ys = f [4] in
+  let zs = f [5] (* Oh no! zs and ys refer to the same memory! *)
+  in ...</code></pre>
+          </div>
+        </div>
+        <p>例如这里的函数闭包 <code>f</code>，持有了唯一的对 <code>xs</code> 的引用； 即便我们让 <code>f</code> 亦为 unique，我们也不能阻止对 unique 调用两次，最终获得预期之外的结果（因为 xs 被反转了两次）。</p>
+        <p>因此引入了 affinity，我们使用此模式来限制对值使用的次数。 它和 uniqueness 的核心区别在于，uniqueness 是对过去的总结；而 affinity 是对未来的限制。</p>
+        <p>为了让上文代码正确，我们选择让 f 变为 once 模式，从而拒绝以上代码。</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">... let f @ once = fun zs -&gt; rev_append xs zs in ...</code></pre>
+          </div>
+        </div>
+        <h5 id="_locality_局部性" class="discrete">Locality 局部性</h5>
+        <p>最后一个模式为 locality, 用于控制值的生命周期不能超过当前 region。</p>
+        <p>如果能确保这一性质，那就自然地可以将不逃逸出 region 的值分配在 stack 上，获取一定的性能优势并降低对 GC 的压力。</p>
+        <h6 id="_borrowing_借用" class="discrete">Borrowing 借用</h6>
+        <p>由于现在我们可以确保值不会逃逸出区域，我们可以在某个 region 内安全地借用一个 unique 的值。</p>
+        <p>例如我们可以定义如下的 <code>borrow</code> 函数。</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">val borrow : 'a @ unique -&gt; ('a @ local -&gt; 'b) -&gt; ('a * 'b shared) @ unique
+let borrow x f =
+  let result = f &amp;x in
+  x, { s = result }</code></pre>
+          </div>
+        </div>
+        <p>之前我们提到 global 隐含了 shared, 这是为了避免我们将一个 unique 值放入具有 global 模态的 record field, 然后又将其作为 unique 值提取出来，从而导致 unsound 的程序语义。</p>
+        <h4 id="_or_null_类型" class="discrete"><code>or_null</code> 类型</h4>
+        <p>很多语言都会使用可以为 <code>null</code> 的值来作为 option 类型的一种替代品，但是对于 int option option 这种嵌套类型来说只有一个 <code>null</code> 就显得无能为力了。</p>
+        <p>那如果反其道而行之，我们只需要一个 <code>null</code>，应该如何设计对应的类型呢？这个 <code>or_null</code> 类型的设计很好地体现了相关的一些考量。</p>
+        <p>为了区分我们是否还可以使用 <code>null</code>，我们将类型分为两类，一种被称作 <code>no-null</code> type， 也就是说其对应的底层表示中并没有使用和 <code>null</code> 相同的模式（例如为一个全 0 的值），例如 string, int 等。 另一种是 <code>with-null</code> type，和上述内容刚好相反。 所以对于 <code>'a or_null</code> 类型，我们希望 <code>'a</code> 是 <code>no-null</code> 的。</p>
+        <p>在拥有 <code>or_null</code> 类型后，自然地我们可以利用 OCaml 里全 0 表示并不对应任何值的现状，使用该模式表示 <code>null</code>，有效减少了堆分配。</p>
+        <p>不过在抽象类型和类型参数的默认类别应该是 <code>no-null</code> 还是 <code>with-null</code> 的问题上，还有一些问题需要澄清。 另外 OCaml 的 <code>float array</code> 非常特别，也需要特殊处理。</p>
+        <h4 id="_扁平化字段" class="discrete">扁平化字段</h4>
+        <p>这是一个比较简单的改动，允许用户手动指定一些 field 为未装箱或不需要扫描的。代价是牺牲了 generic 的 compare 操作。 实现上需要在对象头里记录一个数值指定需要扫描的 field 数量。此外需要 layout 重排，将不需要 scan 和需要 scan 的 field 分为两个区域。</p>
+      </section>
+      <section class="sect1">
+        <h2 id="date-20240824"><a href="#date-20240824">2024 年 8 月 24 日</a></h2>
+        <p>关键词：SIMD, SWAR, Parsing</p>
+        <p>问：给定二进制串 \(00010010\)，如何获取两个 1 之间的位全置为 1 的二进制串？</p>
+        <p>答：使用 \(\oplus\) 操作计算前缀和：</p>
+        <p>\[ 00010010 \oplus 00100100 \oplus 01001000 \oplus 10010000 \oplus 00100000 \oplus 01000000 \oplus 10000000 = 00001110 \]</p>
+        <p>这一操作也等价于 Carry-less Multiplication 或 Xor Multiplication。</p>
+        <p>问：给定二进制串 \(00110100\), 如何判断一或多个 1 的起点（终点）？</p>
+        <p>答：左（右）移取反后按位与即可。</p>
+        <div class="stem">
+          <div class="content">
+            \[\~~(00110100 \verb|&lt;&lt;| 1)~\&amp;~00110100 = 10010111~\&amp;~00110100 = 00010100 \\ \~~(00110100 \verb|&gt;&gt;| 1)~\&amp;~00110100 = 11100101~\&amp;~00110100 = 00100100\]
+          </div>
+        </div>
+        <p>关于内联优化：有一个 <code>g x</code>，其中我们将 <code>j x</code> 视为一个汇合点</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlight"><code class="language-haskell" data-lang="haskell">g x = let j x = f x
+      in case x of A -&gt; j 1
+                   B -&gt; j 2</code></pre>
+          </div>
+        </div>
+        <p>如果在另一个函数 <code>a</code> 中我们调用 <code>h (g x)</code>，那么在内联 <code>g</code> 后可能会想到将的调用推入 <code>g</code> 的分支：</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlight"><code class="language-haskell" data-lang="haskell">a x = h (g x)
+→
+a x = let j x = f x
+      in case x of A -&gt; h (j 1)
+                   B -&gt; h (j 2)</code></pre>
+          </div>
+        </div>
+        <p>如果这样我们就失去了对汇合点可以尾调用的性质。为了避免这种情况，我们需要将 <code>h</code> 直接推入汇合点。</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlight"><code class="language-haskell" data-lang="haskell">a x = let j x = h (f x)
+      in case x of A -&gt; j 1
+                   B -&gt; j 2</code></pre>
+          </div>
+        </div>
+        <p>（这里曾经有一些控制流图，但是懒得迁移了）</p>
+      </section>
     </div>
     <hr>
     <footer>
