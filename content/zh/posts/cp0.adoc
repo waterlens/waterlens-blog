@@ -162,7 +162,7 @@ image::/resource/cp0/cp0-Iref.svg[I ref x, 52rem]
 === 常量折叠
 
 [.centered]
-image::/resource/cp0/cp0-fold.svg[fold, 40rem]
+image::/resource/cp0/cp0-fold.svg[fold, 50rem]
 
 fold 可以分为两种情况：
 
