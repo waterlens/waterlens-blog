@@ -7,11 +7,7 @@ clean:
 
 render-typ:
   #!/usr/bin/env sh
-  if command -v typst >/dev/null 2>&1 ; then
-    TYPST=typst
-  else
-    TYPST=./typst
-  fi
+  TYPST=typst
   for file in $(find resource/typst -type f -print0 | xargs -0); do
     NAME=${file#resource/typst/}
     NAME="${NAME%.typ}.svg"
@@ -32,21 +28,13 @@ render-adoc:
 
 make-css:
   #!/usr/bin/env sh
-  if command -v grass >/dev/null 2>&1 ; then
-    GRASS=grass
-  else
-    GRASS=./grass
-  fi
+  GRASS=grass
   echo "Rendering style.scss"
   $GRASS sass/style.scss public/style.css
 
 tidy:
   #!/usr/bin/env sh
-  if command -v tidy >/dev/null 2>&1 ; then
-    TIDY=tidy
-  else
-    TIDY=./tidy
-  fi
+  TIDY=tidy
   for file in $(find public \( -name '*.html' \) -print0 | xargs -0); do
     echo "Tidying $file"
     $TIDY -config tidy.cfg $file
