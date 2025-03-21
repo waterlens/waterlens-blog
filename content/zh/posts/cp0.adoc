@@ -21,7 +21,7 @@ https://guenchi.github.io/Scheme/doc/Fast%20and%20Effective%20Procedure%20Inlini
 下面我们来具体分析算法本身。首先定义如下核心语言：
 
 [.centered]
-image::/resource/cp0/cp0-core.svg[CP0 核心语言, 26rem]
+image::/resource/cp0/cp0-core.svg[CP0 core language, 26rem]
 
 
 其中 `const` 可以表示布尔值、整数、`void`（原文如此，更严谨地来说为 `unit`）。
@@ -38,7 +38,7 @@ image::/resource/cp0/cp0-core.svg[CP0 核心语言, 26rem]
 存储 \(\sigma\) 里面用于存放一些算法需要的信息。算法函数的定义域（类型签名）如下所示：
 
 [.centered]
-image::/resource/cp0/cp0-domain.svg[定义域, 60rem]
+image::/resource/cp0/cp0-domain.svg[Domain, 60rem]
 其中值得注意的是语境 \(\gamma\)。它被分为以下四种：
 
 * *Test* 表示我们希望得到表达式作为布尔值的结果
@@ -46,7 +46,7 @@ image::/resource/cp0/cp0-domain.svg[定义域, 60rem]
 * *Value* 表示我们希望得到表达式的值
 * *App* 表示我们希望在已知调用点的语境和操作数信息的情况下，处理被调用者，以便评估内联的效果
 
-需要注意的是, *Effect* 以外的 3 种语境也隐含了 *Effect* 的语境（毕竟我们不能无故丢掉副作用）。
+需要注意的是， *Effect* 以外的 3 种语境也隐含了 *Effect* 的语境（毕竟我们不能无故丢掉副作用）。
 
 现在我们来看算法 \(I\) 具体是如何工作的吧。
 

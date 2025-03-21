@@ -46,7 +46,7 @@
         <h2 id="core-lang"><a href="#core-lang">核心语言</a></h2>
         <p>下面我们来具体分析算法本身。首先定义如下核心语言：</p>
         <div class="imageblock centered">
-          <div class="content"><img src="/resource/cp0/cp0-core.svg" alt="CP0 核心语言" style="width: 26rem;"></div>
+          <div class="content"><img src="/resource/cp0/cp0-core.svg" alt="CP0 core language" style="width: 26rem;"></div>
         </div>
         <p>其中 <code>const</code> 可以表示布尔值、整数、<code>void</code>（原文如此，更严谨地来说为 <code>unit</code>）。 <code>ref</code> 用于引用一个变量。 <code>primref</code> 用于引用内置的基本原语。 <code>letrec</code> 则是 Scheme 语言里的常见构造，定义了一组允许相互递归的绑定。</p>
       </section>
@@ -54,7 +54,7 @@
         <h2 id="unrestrained-algorithm"><a href="#unrestrained-algorithm">无限制的优化算法</a></h2>
         <p>对于优化算法 \(I\), 它接受一个输入表达式 \(e\)，一个用于确定执行变换目的的语境 (Context) \(\gamma\)， 一个负责映射变量名的环境 (Environment) \(\rho\)， 以及延续 \(k\) 和存储 \(\sigma\)。延续 \(k\) 的存在是因为描述算法时使用了 Continuation Passing Style (CPS) ，实践中可以用其他方式代替。 存储 \(\sigma\) 里面用于存放一些算法需要的信息。算法函数的定义域（类型签名）如下所示：</p>
         <div class="imageblock centered">
-          <div class="content"><img src="/resource/cp0/cp0-domain.svg" alt="定义域" style="width: 60rem;"></div>
+          <div class="content"><img src="/resource/cp0/cp0-domain.svg" alt="Domain" style="width: 60rem;"></div>
         </div>
         <p>其中值得注意的是语境 \(\gamma\)。它被分为以下四种：</p>
         <div class="ulist">
@@ -73,7 +73,7 @@
             </li>
           </ul>
         </div>
-        <p>需要注意的是, <strong>Effect</strong> 以外的 3 种语境也隐含了 <strong>Effect</strong> 的语境（毕竟我们不能无故丢掉副作用）。</p>
+        <p>需要注意的是， <strong>Effect</strong> 以外的 3 种语境也隐含了 <strong>Effect</strong> 的语境（毕竟我们不能无故丢掉副作用）。</p>
         <p>现在我们来看算法 \(I\) 具体是如何工作的吧。</p>
         <section class="sect2">
           <h3 id="_常量">常量</h3>
