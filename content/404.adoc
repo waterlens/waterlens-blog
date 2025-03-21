@@ -1,0 +1,9 @@
+= Oops !
+:showtitle:
+
+[discrete]
+[.centered]
+= 404
+
+[.centered]
+The requested page was not found.
