@@ -115,7 +115,8 @@ uint32_t clmulr32(uint32_t a, uint32_t b) {
   }
   uint64x2_t n = vandq_u64(l, k);
   {
-    static const uint64_t CRC_ALIGN(16) k_[] = {0x82f63b7880000000ull};
+    static const uint64_t __attribute__((align(16)))
+        k_[] = {0x82f63b7880000000ull};
     k = vld1q_dup_u64(k_);
   }
   uint64x2_t hi = clmul_lo(n, k);
