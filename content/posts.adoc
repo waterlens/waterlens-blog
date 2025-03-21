@@ -11,5 +11,6 @@
 == All Posts
 
 [.centered]
+* xref:/posts/fast-monoid-crc32.html[Fast Monoid CRC32]
 * xref:/posts/incr.html[Incremental Computation]
 

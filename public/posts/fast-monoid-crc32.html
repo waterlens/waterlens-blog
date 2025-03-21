@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11.0.2/dist/mermaid.min.js" onload="mermaid.initialize({ startOnLoad: true });"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="Asciidoctor 2.0.23 with Waterlens HTML Backend 0.1.0">
+  <title>Fast Monoid CRC32</title>
+</head>
+<body>
+  <article>
+    <header>
+      <h1><a href=".">Fast Monoid CRC32</a></h1>
+    </header>
+    <hr>
+    <div id="content">
+      <p>The monoid hashing described in <a href="https://www.schoolofhaskell.com/user/edwardk/parallel-crc">Parallel and Incremental CRCs</a> is useful in some scenarios. A <strong>monoid</strong> hash requires a binary operation that combines the hashes of two snippets, with the result being equivalent to hashing the concatenation of those two snippets. Additionally, there is an identity element that, when combined with any hash, yields the same hash.</p>
+      <p>Though, the naive algorithm described in the original post hasn’t reached the limits of modern hardware. It’s not fast enough!</p>
+      <p>To illustrate this point more clearly, let’s start with a core abstraction for fast monoid CRC32 calculation.</p>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><code>type t</code></p>
+          </li>
+          <li>
+            <p><code>val fold_bytes: [u8] → t</code></p>
+          </li>
+          <li>
+            <p><code>val combine: t → t → t</code></p>
+          </li>
+          <li>
+            <p><code>val identity: t</code></p>
+          </li>
+        </ul>
+      </div>
+      <p>We use <code>fold_bytes: [u8] → t</code> instead of <code>from_byte: u8 → t</code>. While the latter form is more general, many architectures support hardware CRC32 calculations, which makes <code>fold_bytes</code> more efficient.</p>
+      <p>Regarding the abstract type <code>t</code>, a reasonable and dedicated representation includes two polynomials, each fitting into a 32-bit integer. These polynomials store the standard CRC32 value and an additional value that encodes the length \( n \) as \( x^n \bmod p \).</p>
+      <div class="listing">
+        <div class="content">
+          <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">type r32 = u32 (* r32 means bit-(r)eflecting 32-bit polynomial *)
+type t = {
+  crc: r32
+  len: r32
+}</code></pre>
+        </div>
+      </div>
+      <p>The <code>fold_bytes</code> operation defined for this type is straightforward.</p>
+      <div class="listing">
+        <div class="content">
+          <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">let fold_bytes data  =
+  let crc = crc32 data in
+  let len = xnmodp @@ length data in
+  { crc, len }</code></pre>
+        </div>
+      </div>
+      <p>Here, <code>crc32</code> and <code>xnmodp</code> are both primitives used for normal CRC32 calculations. A brilliant implementation can be found at <a href="https://github.com/corsix/fast-crc32">Fast CRC32</a>.</p>
+      <p>According to the original post, the combination is defined as:</p>
+      <div class="listing">
+        <div class="content">
+          <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">let combine m n =
+  let crc = addp32 (mulp32 m.crc n.len) n.crc in
+  let len = mulp32 m.len n.len in
+  { crc, len }</code></pre>
+        </div>
+      </div>
+      <p>This time, we use two primitives: <code>addp32</code> (add 32-bit polynomials) and <code>mulp32</code> (multiply 32-bit polynomials and modulo P). For the addition over polynomial, it’s simply <code>xor</code>. However, polynomial multiplication is more complex. While there are corresponding hardware instructions (<code>clmul</code> on x86-64 and <code>pmull</code> on AArch64), the result must be reduced modulo the CRC32 polynomial P after obtaining the widened product.</p>
+      <p>As a good background, <a href="https://www.corsix.org/content/galois-field-instructions-2021-cpus">Galois field instructions on 2021 CPUs</a> suggested to use crc32 instruction for reduction. However, I chose another approach that explicitly reduces the result with the equation:</p>
+      <div class="stem">
+        <div class="content">
+          \[S \bmod P = (((S * (T / P)) \bmod T) * P) / T\]
+        </div>
+      </div>
+      <p>(still a contribution by @cosrix!)</p>
+      <p>Following the steps in <a href="https://crypto.stackexchange.com/a/114412/126155" class="bare">https://crypto.stackexchange.com/a/114412/126155</a> (sorry, I don’t want to replicate the content to this post!), we have the following code (on aarch64):</p>
+      <div class="listing">
+        <div class="content">
+          <pre class="highlight"><code class="language-c" data-lang="c">uint64x2_t clmul_lo(uint64x2_t a, uint64x2_t b) {
+  uint64x2_t r;
+  __asm("pmull %0.1q, %1.1d, %2.1d\n" : "=w"(r) : "w"(a), "w"(b));
+  return r;
+}
+
+uint64x2_t clmul_hi_e(uint64x2_t a, uint64x2_t b, uint64x2_t c) {
+  uint64x2_t r;
+  __asm("pmull2 %0.1q, %2.2d, %3.2d\neor %0.16b, %0.16b, %1.16b\n"
+        : "=w"(r), "+w"(c)
+        : "w"(a), "w"(b));
+  return r;
+}
+
+uint32_t clmulr32(uint32_t a, uint32_t b) {
+  uint64x2_t aa = vdupq_n_u64(a), bb = vdupq_n_u64(b);
+  uint64x2_t j = vshlq_u64(clmul_lo(aa, bb), vdupq_n_s64(1));
+  uint64x2_t k;
+  {
+    static const uint64_t __attribute__((align(16)))
+                k_[] = {0x90d3d871bd4e27e2ull};
+    k = vld1q_dup_u64(k_);
+  }
+  uint64x2_t l = clmul_lo(j, k);
+  {
+    static const uint64_t __attribute__((align(16)))
+        k_[] = {0xfffffffe00000000ull, (uint64_t)-1ll};
+    k = vld1q_u64(k_);
+  }
+  uint64x2_t n = vandq_u64(l, k);
+  {
+    static const uint64_t CRC_ALIGN(16) k_[] = {0x82f63b7880000000ull};
+    k = vld1q_dup_u64(k_);
+  }
+  uint64x2_t hi = clmul_lo(n, k);
+  uint64x2_t shl = vextq_u64(hi, vdupq_n_u64(0), 1);
+  uint64x2_t r = clmul_hi_e(n, k, shl);
+  return (uint32_t)vgetq_lane_u64(r, 0);
+}</code></pre>
+        </div>
+      </div>
+      <p>Benchmark data shows it’s enough efficient for my application.</p>
+      <p>Now, let’s conclude the definition of the identity for the last piece of the fast monoid CRC32.</p>
+      <div class="listing">
+        <div class="content">
+          <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">let identity = {
+  crc = 0,
+  len = 0x80000000
+}</code></pre>
+        </div>
+      </div>
+    </div>
+    <hr>
+    <footer>
+      <p>The content on <a property="dct:title" rel="cc:attributionURL" href="/">this website</a> © 2021 - 2024 by <span property="cc:attributionName">Waterlens</span> is licensed under <a href="http://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">CC BY-SA 4.0 <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1"></a></p>
+    </footer>
+  </article>
+</body>
+</html>
