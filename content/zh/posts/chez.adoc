@@ -1,0 +1,48 @@
+= xref:.[Chez Scheme 的发展]
+:showtitle:
+:lang: zh-hans
+:stem: latexmath
+
+本文摘自 https://dl.acm.org/doi/10.1145/1159803.1159805[The Development of Chez Scheme]。
+
+[#chez-scheme-1]
+== <<#chez-scheme-1, Chez Scheme 1>>
+- custom linker
+- flat closures
+- stack-based representation of control
+- boxing of assigned variables
+- BiBOP typing with reserved (16-bit) fixnum range (BiBOP, big bag of pages, where memory is broken up into fixed-size segments and a separate segment table is used to identify the type of object contained in each segment)
+- stop-and-copy collector
+- code pointers cached in symbol code-pointer slot
+- peephole optimization
+
+[#chez-scheme-2]
+== <<#chez-scheme-2, Chez Scheme 2>>
+- multiple back ends
+- multiple operating systems
+- automatic closing of files by the collector (坏主意！)
+- optimizing letrec expressions and loops
+- inlining of primitives
+- destination-driven code generation (obviating peephole optimizer): Destination-driven code generation is a simple top-down technique that allows the code generated for a program phrase to depend upon its context in an abstract syntax tree. The context is encapsulated in a data destination and a control destination. The data destination specifies where the value computed by an expression is to be stored, while the control destination specifies where program execution is to resume after computation of the value. (非常像 CP0 原型)
+- faster compiler
+- faster collector
+
+[#chez-scheme-3]
+== <<#chez-scheme-3, Chez Scheme 3>>
+- constant-time continuation operations and stack-overflow recovery (Use segmented stacks. Tracing distinguish tail calls by comparing continuations)
+- various new compiler optimizations
+- faster compilation
+- RISC architecture ports
+
+[#chez-scheme-4]
+== <<#chez-scheme-4, Chez Scheme 4>>
+- hybrid tagging model (tagging pointer mechanism from T dialect, BiBOP to identify whether a value contains a pointer or being mutable)
+- inline allocation (bump allocation)
+- closure length moved from closures to code headers
+- literal references moved from closures to code stream
+- flonum size cut in half
+- generational garbage collection
+- intraprocedural register allocation
+
+[#chez-scheme-5]
+== <<#chez-scheme-5, Chez Scheme 5>>
