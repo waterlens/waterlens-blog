@@ -46,3 +46,31 @@
 
 [#chez-scheme-5]
 == <<#chez-scheme-5, Chez Scheme 5>>
+- local call optimizations (unnecessary `procedure?` checks and indirect jumps -> direct jumps)
+- more compile-time checks
+- improved register allocation (https://dl.acm.org/doi/10.1145/223428.207125[Register allocation using lazy saves, eager restores, and greedy shuffling])
+- improved code generation
+- 25X faster gensym (delay generation until the symbol is printed)
+
+[#chez-scheme-6]
+== <<#chez-scheme-6, Chez Scheme 6>>
+- fast interpreter (为了在编译后的产物里支持 `eval`)
+- letrec optimization
+- procedure inlining (CP0)
+- faster continuation handling (one-shot continuations)
+- improved float printing
+
+CP0 在另外一篇 xref:/zh/posts/chez.html[文章] 里有介绍。
+
+[#chez-scheme-7]
+== <<#chez-scheme-7, Chez Scheme 7>>
+- thread support
+- incompatible record checks
+- letrec/letrec* violation checks
+- compile-time format-string checks and compilation
+- unquote and unquote-splicing extension to zero+ subforms
+- various run-time library and code generation improvements
+- syntax-case performance improvements
+- improved bignum arithmetic speed
+
+感觉后面记得比较流水账，没啥意思。

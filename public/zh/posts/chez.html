@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-hans">
+<head>
+  <meta charset="utf-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11.0.2/dist/mermaid.min.js" onload="mermaid.initialize({ startOnLoad: true });"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="Asciidoctor 2.0.23 with Waterlens HTML Backend 0.1.0">
+  <title>Chez Scheme 的发展</title>
+</head>
+<body>
+  <article>
+    <header>
+      <h1><a href=".">Chez Scheme 的发展</a></h1>
+    </header>
+    <hr>
+    <div id="content">
+      <p>本文摘自 <a href="https://dl.acm.org/doi/10.1145/1159803.1159805">The Development of Chez Scheme</a>。</p>
+      <section class="sect1">
+        <h2 id="chez-scheme-1"><a href="#chez-scheme-1">Chez Scheme 1</a></h2>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>custom linker</p>
+            </li>
+            <li>
+              <p>flat closures</p>
+            </li>
+            <li>
+              <p>stack-based representation of control</p>
+            </li>
+            <li>
+              <p>boxing of assigned variables</p>
+            </li>
+            <li>
+              <p>BiBOP typing with reserved (16-bit) fixnum range (BiBOP, big bag of pages, where memory is broken up into fixed-size segments and a separate segment table is used to identify the type of object contained in each segment)</p>
+            </li>
+            <li>
+              <p>stop-and-copy collector</p>
+            </li>
+            <li>
+              <p>code pointers cached in symbol code-pointer slot</p>
+            </li>
+            <li>
+              <p>peephole optimization</p>
+            </li>
+          </ul>
+        </div>
+      </section>
+      <section class="sect1">
+        <h2 id="chez-scheme-2"><a href="#chez-scheme-2">Chez Scheme 2</a></h2>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>multiple back ends</p>
+            </li>
+            <li>
+              <p>multiple operating systems</p>
+            </li>
+            <li>
+              <p>automatic closing of files by the collector (坏主意！)</p>
+            </li>
+            <li>
+              <p>optimizing letrec expressions and loops</p>
+            </li>
+            <li>
+              <p>inlining of primitives</p>
+            </li>
+            <li>
+              <p>destination-driven code generation (obviating peephole optimizer): Destination-driven code generation is a simple top-down technique that allows the code generated for a program phrase to depend upon its context in an abstract syntax tree. The context is encapsulated in a data destination and a control destination. The data destination specifies where the value computed by an expression is to be stored, while the control destination specifies where program execution is to resume after computation of the value. (非常像 CP0 原型)</p>
+            </li>
+            <li>
+              <p>faster compiler</p>
+            </li>
+            <li>
+              <p>faster collector</p>
+            </li>
+          </ul>
+        </div>
+      </section>
+      <section class="sect1">
+        <h2 id="chez-scheme-3"><a href="#chez-scheme-3">Chez Scheme 3</a></h2>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>constant-time continuation operations and stack-overflow recovery (Use segmented stacks. Tracing distinguish tail calls by comparing continuations)</p>
+            </li>
+            <li>
+              <p>various new compiler optimizations</p>
+            </li>
+            <li>
+              <p>faster compilation</p>
+            </li>
+            <li>
+              <p>RISC architecture ports</p>
+            </li>
+          </ul>
+        </div>
+      </section>
+      <section class="sect1">
+        <h2 id="chez-scheme-4"><a href="#chez-scheme-4">Chez Scheme 4</a></h2>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>hybrid tagging model (tagging pointer mechanism from T dialect, BiBOP to identify whether a value contains a pointer or being mutable)</p>
+            </li>
+            <li>
+              <p>inline allocation (bump allocation)</p>
+            </li>
+            <li>
+              <p>closure length moved from closures to code headers</p>
+            </li>
+            <li>
+              <p>literal references moved from closures to code stream</p>
+            </li>
+            <li>
+              <p>flonum size cut in half</p>
+            </li>
+            <li>
+              <p>generational garbage collection</p>
+            </li>
+            <li>
+              <p>intraprocedural register allocation</p>
+            </li>
+          </ul>
+        </div>
+      </section>
+      <section class="sect1">
+        <h2 id="chez-scheme-5"><a href="#chez-scheme-5">Chez Scheme 5</a></h2>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>local call optimizations (unnecessary <code>procedure?</code> checks and indirect jumps → direct jumps)</p>
+            </li>
+            <li>
+              <p>more compile-time checks</p>
+            </li>
+            <li>
+              <p>improved register allocation (<a href="https://dl.acm.org/doi/10.1145/223428.207125">Register allocation using lazy saves, eager restores, and greedy shuffling</a>)</p>
+            </li>
+            <li>
+              <p>improved code generation</p>
+            </li>
+            <li>
+              <p>25X faster gensym (delay generation until the symbol is printed)</p>
+            </li>
+          </ul>
+        </div>
+      </section>
+      <section class="sect1">
+        <h2 id="chez-scheme-6"><a href="#chez-scheme-6">Chez Scheme 6</a></h2>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>fast interpreter (为了在编译后的产物里支持 <code>eval</code>)</p>
+            </li>
+            <li>
+              <p>letrec optimization</p>
+            </li>
+            <li>
+              <p>procedure inlining (CP0)</p>
+            </li>
+            <li>
+              <p>faster continuation handling (one-shot continuations)</p>
+            </li>
+            <li>
+              <p>improved float printing</p>
+            </li>
+          </ul>
+        </div>
+        <p>CP0 在另外一篇 <a href="/zh/posts/chez.html">文章</a> 里有介绍。</p>
+      </section>
+      <section class="sect1">
+        <h2 id="chez-scheme-7"><a href="#chez-scheme-7">Chez Scheme 7</a></h2>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>thread support</p>
+            </li>
+            <li>
+              <p>incompatible record checks</p>
+            </li>
+            <li>
+              <p>letrec/letrec* violation checks</p>
+            </li>
+            <li>
+              <p>compile-time format-string checks and compilation</p>
+            </li>
+            <li>
+              <p>unquote and unquote-splicing extension to zero+ subforms</p>
+            </li>
+            <li>
+              <p>various run-time library and code generation improvements</p>
+            </li>
+            <li>
+              <p>syntax-case performance improvements</p>
+            </li>
+            <li>
+              <p>improved bignum arithmetic speed</p>
+            </li>
+          </ul>
+        </div>
+        <p>感觉后面记得比较流水账，没啥意思。</p>
+      </section>
+    </div>
+    <hr>
+    <footer>
+      <p><a property="dct:title" rel="cc:attributionURL" href="/zh/index.html">本站</a> 由 <span property="cc:attributionName">Waterlens</span> 创作的一切内容 © 2021 - 2025 在 <a href="http://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">知识共享 署名 - 相同方式共享 4.0 协议 <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1"></a> 之条款下提供。</p>
+    </footer>
+  </article>
+</body>
+</html>

@@ -11,6 +11,7 @@
 == 所有文章
 
 [.centered]
+* xref:/zh/posts/chez.html[Chez Scheme 的发展]
 * xref:/zh/posts/til.html[今天我学到了]
 * xref:/zh/posts/cp0.html[Compiler Pass 0 优化简析]
 * xref:/zh/posts/essay-1.html[随记 (一)]
