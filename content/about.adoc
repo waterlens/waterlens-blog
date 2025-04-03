@@ -33,3 +33,12 @@ I'm a master student who is interested in the following topics:
 
 I like to write toy projects.
 --
+
+[.centered]
+[discrete]
+== One more thing
+
+[.centered]
+--
+This website is built using _Asciidoctor @ Waterlens' HTML5 Backend_.
+--

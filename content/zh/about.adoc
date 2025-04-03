@@ -1,14 +1,14 @@
 = xref:.[+++[ Waterlens' Home Page ]+++]
 :author: Waterlens
-:pagetitle: About me
-:description: About waterlens
+:pagetitle: 关于我
+:description: 关于 waterlens
 :showtitle:
 :shownav:
-:lang: en
+:lang: zh-hans
 
 [.centered]
 [discrete]
-== About this website
+== 关于这个网站
 
 [.centered]
 --
@@ -32,4 +32,13 @@
 * 计算机体系结构。
 
 我喜欢写各种玩具项目。
+--
+
+[.centered]
+[discrete]
+== 还有一件事
+
+[.centered]
+--
+本网站使用 _Asciidoctor @ Waterlens 的 HTML 5 后端_ 构建。
 --

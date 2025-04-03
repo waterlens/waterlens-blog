@@ -248,124 +248,108 @@ When an edit operation e occurs
         <h2 id="_incremental_string_searching">Incremental String Searching</h2>
         <p>1.Meyer, B. 1985. Incremental string matching. Information Processing Letters, 21(5), p.219–227.</p>
         <p>2.Tsuda, K., Fuketa, M., and Aoe, J.I. 1995. An incremental algorithm for string pattern matching machines. International Journal of Computer Mathematics, 58(1-2), p.33–42.</p>
-        <section class="sect3">
-          <h4 id="_implementation_difficulty_3">Implementation Difficulty</h4>
-          <p>The extensions to the AC algorithm are both simple.</p>
-        </section>
-        <section class="sect3">
-          <h4 id="_note_3">Note</h4>
-          <p>The non-incremental version of this problem is to search a set of strings (needles) in a piece of text (haystack). The Aho–Corasick algorithm (a.k.a AC machine algorithm) constructs an automata for needles set before searching in the haystack. By incremental, it means the needles can be subject to expanding as the search proceeds and the automata shouldn’t be fully constructed from scratch. The 2 papers both introduce approaches to incrementally construct the automata.</p>
-          <div class="olist arabic">
-            <ol class="arabic">
-              <li>
-                <p>For Meyer’s work, to incrementally build the automata, the incremental version of the algorithm needs to maintain extra data structures. During the automata construction, AC algorithm keeps the longest proper suffix (lps) for every state in the trie. With the incremental requirement, to update the lps of existing states, there should be a reverse map from the lps to the states. The extra time complexity mainly originates from constructing this structure. It’s O(K * the length of the longest needle * the total length of all needles). K is the size of the character set.</p>
-              </li>
-              <li>
-                <p>For the later work, the authors think maintaining the extra data structure is a main drawback as the time cost and space cost can be large. It’s not clear what the authors exactly do. They can have a worst case time complexity of O(m + the length of the longest needle + the total length of all needles) where m is the number of states in the automata. The worst case happens in some cases like inserting a common prefix of all existing needles.</p>
-              </li>
-            </ol>
-          </div>
-        </section>
+        <h4 id="_implementation_difficulty_3" class="discrete">Implementation Difficulty</h4>
+        <p>The extensions to the AC algorithm are both simple.</p>
+        <h4 id="_note_3" class="discrete">Note</h4>
+        <p>The non-incremental version of this problem is to search a set of strings (needles) in a piece of text (haystack). The Aho–Corasick algorithm (a.k.a AC machine algorithm) constructs an automata for needles set before searching in the haystack. By incremental, it means the needles can be subject to expanding as the search proceeds and the automata shouldn’t be fully constructed from scratch. The 2 papers both introduce approaches to incrementally construct the automata.</p>
+        <div class="olist arabic">
+          <ol class="arabic">
+            <li>
+              <p>For Meyer’s work, to incrementally build the automata, the incremental version of the algorithm needs to maintain extra data structures. During the automata construction, AC algorithm keeps the longest proper suffix (lps) for every state in the trie. With the incremental requirement, to update the lps of existing states, there should be a reverse map from the lps to the states. The extra time complexity mainly originates from constructing this structure. It’s O(K * the length of the longest needle * the total length of all needles). K is the size of the character set.</p>
+            </li>
+            <li>
+              <p>For the later work, the authors think maintaining the extra data structure is a main drawback as the time cost and space cost can be large. It’s not clear what the authors exactly do. They can have a worst case time complexity of O(m + the length of the longest needle + the total length of all needles) where m is the number of states in the automata. The worst case happens in some cases like inserting a common prefix of all existing needles.</p>
+            </li>
+          </ol>
+        </div>
       </section>
       <section class="sect1">
         <h2 id="_incremental_string_comparison">Incremental String Comparison</h2>
         <p>Yusuke Ishida, Shunsuke Inenaga, Ayumi Shinohara, and Masayuki Takeda. 2005. Fully incremental LCS computation. In Proceedings of the 15th international conference on Fundamentals of Computation Theory (FCT'05). Springer-Verlag, Berlin, Heidelberg, 563–574. <a href="https://doi.org/10.1007/11537311_49" class="bare">https://doi.org/10.1007/11537311_49</a></p>
-        <section class="sect3">
-          <h4 id="_implementation_difficulty_4">Implementation Difficulty</h4>
-          <p>It contains 4 sub-algorithms. Each of sub-algorithms may contain one or multiple dynamic programming matrices. The difficulty depends on if the implementers are familiar with dynamic programming.</p>
-        </section>
-        <section class="sect3">
-          <h4 id="_note_4">Note</h4>
-          <p>There is a common metric for string comparison, longest common subsequences (LCS). The incremental computation here means that when knowing LCS(A, B), how to incrementally calculate the LCS after adding a character as a suffix or a prefix to one of the strings. The sub-algorithms have different time complexities and space complexities as follows:</p>
-          <table class="table frame-all grid-all stretch">
-            <colgroup>
-              <col style="width: 50%;">
-              <col style="width: 50%;">
-            </colgroup>
-            <tbody>
-              <tr>
-                <td class="table halign-left valign-top">
-                  <p class="table">Algorithm</p>
-                </td>
-                <td class="table halign-left valign-top">
-                  <p class="table">Time Complexity</p>
-                </td>
-              </tr>
-              <tr>
-                <td class="table halign-left valign-top">
-                  <p class="table"><code>LCS(aA, B)</code></p>
-                </td>
-                <td class="table halign-left valign-top">
-                  <p class="table"><code>O(LCS(A, B))</code></p>
-                </td>
-              </tr>
-              <tr>
-                <td class="table halign-left valign-top">
-                  <p class="table"><code>LCS(Aa, B)</code></p>
-                </td>
-                <td class="table halign-left valign-top">
-                  <p class="table"><code>O(LCS(A, B))</code></p>
-                </td>
-              </tr>
-              <tr>
-                <td class="table halign-left valign-top">
-                  <p class="table"><code>LCS(A, bB)</code></p>
-                </td>
-                <td class="table halign-left valign-top">
-                  <p class="table"><code>O(|A|)</code></p>
-                </td>
-              </tr>
-              <tr>
-                <td class="table halign-left valign-top">
-                  <p class="table"><code>LCS(A, Bb)</code></p>
-                </td>
-                <td class="table halign-left valign-top">
-                  <p class="table"><code>O(|A|)</code></p>
-                </td>
-              </tr>
-              <tr>
-                <td class="table halign-left valign-top">
-                  <p class="table"><code>Total</code></p>
-                </td>
-                <td class="table halign-left valign-top">
-                  <p class="table"><code>O(LCS(A, B)*|A| + |B|)</code></p>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
+        <h4 id="_implementation_difficulty_4" class="discrete">Implementation Difficulty</h4>
+        <p>It contains 4 sub-algorithms. Each of sub-algorithms may contain one or multiple dynamic programming matrices. The difficulty depends on if the implementers are familiar with dynamic programming.</p>
+        <h4 id="_note_4" class="discrete">Note</h4>
+        <p>There is a common metric for string comparison, longest common subsequences (LCS). The incremental computation here means that when knowing LCS(A, B), how to incrementally calculate the LCS after adding a character as a suffix or a prefix to one of the strings. The sub-algorithms have different time complexities and space complexities as follows:</p>
+        <table class="table frame-all grid-all stretch">
+          <colgroup>
+            <col style="width: 50%;">
+            <col style="width: 50%;">
+          </colgroup>
+          <tbody>
+            <tr>
+              <td class="table halign-left valign-top">
+                <p class="table">Algorithm</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">Time Complexity</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="table halign-left valign-top">
+                <p class="table"><code>LCS(aA, B)</code></p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table"><code>O(LCS(A, B))</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td class="table halign-left valign-top">
+                <p class="table"><code>LCS(Aa, B)</code></p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table"><code>O(LCS(A, B))</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td class="table halign-left valign-top">
+                <p class="table"><code>LCS(A, bB)</code></p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table"><code>O(|A|)</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td class="table halign-left valign-top">
+                <p class="table"><code>LCS(A, Bb)</code></p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table"><code>O(|A|)</code></p>
+              </td>
+            </tr>
+            <tr>
+              <td class="table halign-left valign-top">
+                <p class="table"><code>Total</code></p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table"><code>O(LCS(A, B)*|A| + |B|)</code></p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </section>
       <section class="sect1">
         <h2 id="_incremental_inprocessing_in_sat_solving">Incremental Inprocessing in SAT Solving</h2>
         <p>Fazekas, K., Biere, A., & Scholl, C. (2019). Incremental Inprocessing in SAT Solving. International Conference on Theory and Applications of Satisfiability Testing.</p>
-        <section class="sect3">
-          <h4 id="_implementation_difficulty_5">Implementation Difficulty</h4>
-          <p>The technique is tightly coupled with the SAT solver. It may be hard to implement in a separate context.</p>
-        </section>
-        <section class="sect3">
-          <h4 id="_note_5">Note</h4>
-          <p>The processing technique in SAT solving means rewriting and simplifying formulas before the actual search for satisfiability. It can be extended to interleave formula simplification and the search process, which is called <em>inprocessing</em>.</p>
-          <p>The incremental SAT problem is defined as follows: An incremental SAT problem \(F\) is a sequence of clause sets \(〈∆_0, ..., ∆_n〉\). In phase \(i = 0, ..., n \), the task is to determine the satisfiability of \(F^i=∧_{s=0...i}∆_s\), the conjunction of all added clauses up to this point. If \(F_i\) is unsatisfiable, then \(F_j\) for all \(j &gt; i\) is unsatisfiable as well, as each iteration just augments the set of clauses.</p>
-          <p>The incremental SAT solving requires to efficiently reuse the already learned information. As an essential part of the SAT solver, the inprocessing technique should be incremental as well.</p>
-          <p>The details are very niche to the SAT solving domain so it’s hard to conclude the core idea here.</p>
-        </section>
+        <h4 id="_implementation_difficulty_5" class="discrete">Implementation Difficulty</h4>
+        <p>The technique is tightly coupled with the SAT solver. It may be hard to implement in a separate context.</p>
+        <h4 id="_note_5" class="discrete">Note</h4>
+        <p>The processing technique in SAT solving means rewriting and simplifying formulas before the actual search for satisfiability. It can be extended to interleave formula simplification and the search process, which is called <em>inprocessing</em>.</p>
+        <p>The incremental SAT problem is defined as follows: An incremental SAT problem \(F\) is a sequence of clause sets \(〈∆_0, ..., ∆_n〉\). In phase \(i = 0, ..., n \), the task is to determine the satisfiability of \(F^i=∧_{s=0...i}∆_s\), the conjunction of all added clauses up to this point. If \(F_i\) is unsatisfiable, then \(F_j\) for all \(j &gt; i\) is unsatisfiable as well, as each iteration just augments the set of clauses.</p>
+        <p>The incremental SAT solving requires to efficiently reuse the already learned information. As an essential part of the SAT solver, the inprocessing technique should be incremental as well.</p>
+        <p>The details are very niche to the SAT solving domain so it’s hard to conclude the core idea here.</p>
       </section>
       <section class="sect1">
         <h2 id="_incremental_trace_based_jit_compilation">Incremental Trace-based JIT Compilation</h2>
         <p>A\. Gal and M. Franz. Incremental Dynamic Code Generation with Trace Trees. Technical Report ICS-TR-006-16, University of California, Irvine, 2006.</p>
-        <section class="sect3">
-          <h4 id="_implementation_difficulty_6">Implementation Difficulty</h4>
-          <p>The techinique itself is simple, but I am not sure if it would be useful outside the JIT compilation background.</p>
-        </section>
-        <section class="sect3">
-          <h4 id="_note_6">Note</h4>
-          <p>The concept of incremental in this paper is different here compared to the previous examples. Here, the incremental procedure is just about appending new compiled code to existing code (and reusing the existing code). It doesn’t involve invalidation or updating the existing code. Therefore, this topic could not be as interesting as the previous ones.</p>
-          <p>As an early work of trace-based JIT compilation, this paper uses a simple but effective tree structure to partially represent a program, compared to the full representation with a control flow graph.</p>
-          <p>The trace tree is constructed during the execution by interpreting the program. Once some conditions are satisfied, the trace tree will be constructed and further extended.</p>
-          <p>The root of the trace tree is the so-called anchor node. It will be selected based on the frequency of execution. In usual cases, it’s most likely one of the inner-most loop-header basic blocs in the program. After the root is selected, the JIT compiler will start to record the code executed since the anchor node until there’s a back edge to the anchor node, or the trace is too long.</p>
-          <p>If there’s a side exit of which the path is not covered by the trace tree itself, the JTI compiler may start a new trace recording. The new trace forms a branch from an existing node in the trace tree, so it’s possible that it also shares a common prefix of the trace tree.</p>
-          <p>There are other considerations on this topic, like how to effectively handle the performance-dominant loop structure with the trace tree representation, how to do fast but optimized code compilation with the tree structure, etc. But generally they are not directly related to the incremental compilation since the tree structure itself makes these computations easier.</p>
-        </section>
+        <h4 id="_implementation_difficulty_6" class="discrete">Implementation Difficulty</h4>
+        <p>The techinique itself is simple, but I am not sure if it would be useful outside the JIT compilation background.</p>
+        <h4 id="_note_6" class="discrete">Note</h4>
+        <p>The concept of incremental in this paper is different here compared to the previous examples. Here, the incremental procedure is just about appending new compiled code to existing code (and reusing the existing code). It doesn’t involve invalidation or updating the existing code. Therefore, this topic could not be as interesting as the previous ones.</p>
+        <p>As an early work of trace-based JIT compilation, this paper uses a simple but effective tree structure to partially represent a program, compared to the full representation with a control flow graph.</p>
+        <p>The trace tree is constructed during the execution by interpreting the program. Once some conditions are satisfied, the trace tree will be constructed and further extended.</p>
+        <p>The root of the trace tree is the so-called anchor node. It will be selected based on the frequency of execution. In usual cases, it’s most likely one of the inner-most loop-header basic blocs in the program. After the root is selected, the JIT compiler will start to record the code executed since the anchor node until there’s a back edge to the anchor node, or the trace is too long.</p>
+        <p>If there’s a side exit of which the path is not covered by the trace tree itself, the JTI compiler may start a new trace recording. The new trace forms a branch from an existing node in the trace tree, so it’s possible that it also shares a common prefix of the trace tree.</p>
+        <p>There are other considerations on this topic, like how to effectively handle the performance-dominant loop structure with the trace tree representation, how to do fast but optimized code compilation with the tree structure, etc. But generally they are not directly related to the incremental compilation since the tree structure itself makes these computations easier.</p>
       </section>
     </div>
     <hr>

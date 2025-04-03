@@ -159,9 +159,11 @@ If they both have the same type (i.e., both have the same production symbol), th
 
 2.Tsuda, K., Fuketa, M., and Aoe, J.I. 1995. An incremental algorithm for string pattern matching machines. International Journal of Computer Mathematics, 58(1-2), p.33–42.
 
+[discrete]
 ==== Implementation Difficulty
 The extensions to the AC algorithm are both simple.
 
+[discrete]
 ==== Note
 
 The non-incremental version of this problem is to search a set of strings (needles) in a piece of text (haystack).
@@ -183,11 +185,13 @@ where m is the number of states in the automata. The worst case happens in some 
 
 Yusuke Ishida, Shunsuke Inenaga, Ayumi Shinohara, and Masayuki Takeda. 2005. Fully incremental LCS computation. In Proceedings of the 15th international conference on Fundamentals of Computation Theory (FCT'05). Springer-Verlag, Berlin, Heidelberg, 563–574. https://doi.org/10.1007/11537311_49
 
+[discrete]
 ==== Implementation Difficulty
 It contains 4 sub-algorithms.
 Each of sub-algorithms may contain one or multiple dynamic programming matrices.
 The difficulty depends on if the implementers are familiar with dynamic programming.
 
+[discrete]
 ==== Note
 There is a common metric for string comparison, longest common subsequences (LCS).
 The incremental computation here means that when knowing LCS(A, B), how to incrementally calculate the LCS after adding a character as a suffix or a prefix to one of the strings.
@@ -208,10 +212,12 @@ The sub-algorithms have different time complexities and space complexities as fo
 
 Fazekas, K., Biere, A., & Scholl, C. (2019). Incremental Inprocessing in SAT Solving. International Conference on Theory and Applications of Satisfiability Testing.
 
+[discrete]
 ==== Implementation Difficulty
 
 The technique is tightly coupled with the SAT solver. It may be hard to implement in a separate context.
 
+[discrete]
 ==== Note
 The processing technique in SAT solving means rewriting and simplifying formulas before the actual search for
 satisfiability. It can be extended to interleave formula simplification and the search process, which is called
@@ -232,10 +238,12 @@ The details are very niche to the SAT solving domain so it's hard to conclude th
 A\. Gal and M. Franz. Incremental Dynamic Code Generation with Trace Trees. Technical
 Report ICS-TR-006-16, University of California, Irvine, 2006.
 
+[discrete]
 ==== Implementation Difficulty
 
 The techinique itself is simple, but I am not sure if it would be useful outside the JIT compilation background.
 
+[discrete]
 ==== Note
 The concept of incremental in this paper is different here compared to the previous examples. Here, the incremental procedure
 is just about appending new compiled code to existing code (and reusing the existing code). It doesn't involve
