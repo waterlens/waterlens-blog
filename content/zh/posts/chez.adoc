@@ -60,7 +60,7 @@
 - faster continuation handling (one-shot continuations)
 - improved float printing
 
-CP0 在另外一篇 xref:/zh/posts/chez.html[文章] 里有介绍。
+CP0 在另外一篇 xref:/zh/posts/cp0.html[文章] 里有介绍。
 
 [#chez-scheme-7]
 == <<#chez-scheme-7, Chez Scheme 7>>
