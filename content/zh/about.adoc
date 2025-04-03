@@ -40,5 +40,5 @@
 
 [.centered]
 --
-本网站使用 _Asciidoctor @ Waterlens 的 HTML 5 后端_ 构建。
+本站使用 _Asciidoctor @ Waterlens 的 HTML 5 后端_ 构建。
 --
