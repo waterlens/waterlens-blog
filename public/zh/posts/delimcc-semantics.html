@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-hans">
+<head>
+  <meta charset="utf-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11.0.2/dist/mermaid.min.js" onload="mermaid.initialize({ startOnLoad: true });"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="Asciidoctor 2.0.23 with Waterlens HTML Backend 0.1.0">
+  <title>定界延续的语义</title>
+</head>
+<body>
+  <article>
+    <header>
+      <h1><a href=".">定界延续的语义</a></h1>
+    </header>
+    <hr>
+    <div id="content">
+      <section class="sect1">
+        <h2 id="_resetshift">reset/shift</h2>
+        <p>操作语义如下：</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlight"><code class="language-text" data-lang="text">M[(reset V)] = M[V]
+M[(reset C[(shift f E)])] = M[(reset (let f = \x. (reset C[x]) in E))]</code></pre>
+          </div>
+        </div>
+        <p>这里的 <code>V</code> 是一个值，<code>E</code> 是一个表达式，, <code>C</code> 是一个没有横跨 <code>reset</code> 边界的 evaluation context, M 是一个可能横跨 <code>reset</code> 边界的 evaluation context.</p>
+        <p>与之对应的 CPS 转换如下：</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlight"><code class="language-text" data-lang="text">CPS{(reset E)}   = \c. c (CPS{E} \x. x)
+CPS{(shift f E)} = \c. let f = \x. \c2. c2 (c x) in
+                       CPS{E} \x. x</code></pre>
+          </div>
+        </div>
+      </section>
+    </div>
+    <hr>
+    <footer>
+      <p><a property="dct:title" rel="cc:attributionURL" href="/zh/index.html">本站</a> 由 <span property="cc:attributionName">Waterlens</span> 创作的一切内容 © 2021 - 2025 在 <a href="http://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">知识共享 署名 - 相同方式共享 4.0 协议 <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1"></a> 之条款下提供。</p>
+    </footer>
+  </article>
+</body>
+</html>
