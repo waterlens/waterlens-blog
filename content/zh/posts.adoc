@@ -11,7 +11,7 @@
 == 所有文章
 
 [.centered]
-* xref:/zh/posts/delimcc-semantics.html[定界延续的语义]
+* xref:/zh/posts/fast-monoid-crc32.html[快速幺半群 CRC32 哈希计算]
 * xref:/zh/posts/chez.html[Chez Scheme 的发展]
 * xref:/zh/posts/til.html[今天我学到了]
 * xref:/zh/posts/cp0.html[Compiler Pass 0 优化简析]

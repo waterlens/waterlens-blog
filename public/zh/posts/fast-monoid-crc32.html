@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-hans">
+<head>
+  <meta charset="utf-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11.0.2/dist/mermaid.min.js" onload="mermaid.initialize({ startOnLoad: true });"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="Asciidoctor 2.0.23 with Waterlens HTML Backend 0.1.0">
+  <title>快速幺半群 CRC32 哈希计算</title>
+</head>
+<body>
+  <article>
+    <header>
+      <h1><a href=".">快速幺半群 CRC32 哈希计算</a></h1>
+    </header>
+    <hr>
+    <div id="content">
+      <p>在 <a href="https://www.schoolofhaskell.com/user/edwardk/parallel-crc">并行和增量CRC</a> 中描述的单调半群哈希在某些场景中很有用。一个 <strong>幺半群</strong> 哈希需要定义一个二元操作，可以将两个片段的哈希值结合起来， 并且结合的结果，与连接这两个片段后再哈希是等价的。 此外，还需要有一个单位元，当与任何哈希值结合时，会返回相同的哈希值。</p>
+      <p>然而，原始帖子中描述的朴素算法并没有达到现代硬件的极限。</p>
+      <p>为了更清楚地说明这一点， 我们从快速幺半群 CRC32 计算的核心抽象开始说起。</p>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p><code>type t</code></p>
+          </li>
+          <li>
+            <p><code>val fold_bytes: [u8] → t</code></p>
+          </li>
+          <li>
+            <p><code>val combine: t → t → t</code></p>
+          </li>
+          <li>
+            <p><code>val identity: t</code></p>
+          </li>
+        </ul>
+      </div>
+      <p>我们使用 <code>fold_bytes: [u8] → t</code> 而不是 <code>from_byte: u8 → t</code> 。 虽然后一种形式上更为通用，但许多架构支持硬件 CRC32 计算， 这使得 <code>fold_bytes</code> 更有效率。</p>
+      <p>关于抽象类型 <code>t</code>，一个合理的表示方法需要包括两个多项式，每个多项式都按位存储到一个 32 位整数中。</p>
+      <p>两个多项式分别为标准的 CRC32 值和多项式 \( x^n \bmod p \) , 后者用于编码长度 \( n \)。</p>
+      <div class="listing">
+        <div class="content">
+          <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">type r32 = u32 (* r32 表示一个 32 位的位反射多项式 *)
+type t = {
+  crc: r32
+  len: r32
+}</code></pre>
+        </div>
+      </div>
+      <p>为该类型定义相应的 <code>fold_bytes</code> 操作非常直接。</p>
+      <div class="listing">
+        <div class="content">
+          <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">let fold_bytes data  =
+  let crc = crc32 data in
+  let len = xnmodp @@ length data in
+  { crc, len }</code></pre>
+        </div>
+      </div>
+      <p>这里，<code>crc32</code> 和 <code>xnmodp</code> 都是用于常规 CRC32 计算的基本原语。</p>
+      <p>可以在 <a href="https://github.com/corsix/fast-crc32">Fast CRC32</a> 找到这两个原语的最出色实现。</p>
+      <p>根据原始帖子，结合操作定义为：</p>
+      <div class="listing">
+        <div class="content">
+          <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">let combine m n =
+  let crc = addp32 (mulp32 m.crc n.len) n.crc in
+  let len = mulp32 m.len n.len in
+  { crc, len }</code></pre>
+        </div>
+      </div>
+      <p>这次我们使用了两个基本操作：<code>addp32</code> （32 位多项式相加）和 <code>mulp32</code>（32 位多项式相乘并模 P）。</p>
+      <p>对于多项式的加法，只是简单的 <code>xor</code>。 然而，多项式乘法更为复杂。 虽然有相应的硬件指令 （x86-64 的 <code>clmul</code> 和 AArch64 的 <code>pmull</code>），在得到加宽后的乘积后，结果必须对 CRC32 多项式 P 取模。 这一运算本身未被硬件加速。</p>
+      <p>作为背景， <a href="https://www.corsix.org/content/galois-field-instructions-2021-cpus">2021 年的 CPU 上的伽罗瓦域运算指令</a> 建议使用 crc32 指令进行取模。</p>
+      <p>然而，也可以选择了另外一种方法，明确地使用如下等式对结果进行模运算。</p>
+      <div class="stem">
+        <div class="content">
+          \[S \bmod P = (((S * (T / P)) \bmod T) * P) / T\]
+        </div>
+      </div>
+      <p>(这个方法仍然来自 @cosrix)</p>
+      <p>按照我在 <a href="https://crypto.stackexchange.com/a/114412/126155">Questions on multiplication over GF(2^32) when implementing monoid CRC32</a> 中描述的步骤，有如下代码（在 aarch64 架构上）：</p>
+      <div class="listing">
+        <div class="content">
+          <pre class="highlight"><code class="language-c" data-lang="c">uint64x2_t clmul_lo(uint64x2_t a, uint64x2_t b) {
+  uint64x2_t r;
+  __asm("pmull %0.1q, %1.1d, %2.1d\n" : "=w"(r) : "w"(a), "w"(b));
+  return r;
+}
+
+uint64x2_t clmul_hi_e(uint64x2_t a, uint64x2_t b, uint64x2_t c) {
+  uint64x2_t r;
+  __asm("pmull2 %0.1q, %2.2d, %3.2d\neor %0.16b, %0.16b, %1.16b\n"
+        : "=w"(r), "+w"(c)
+        : "w"(a), "w"(b));
+  return r;
+}
+
+uint32_t clmulr32(uint32_t a, uint32_t b) {
+  uint64x2_t aa = vdupq_n_u64(a), bb = vdupq_n_u64(b);
+  uint64x2_t j = vshlq_u64(clmul_lo(aa, bb), vdupq_n_s64(1));
+  uint64x2_t k;
+  {
+    static const uint64_t __attribute__((align(16)))
+                k_[] = {0x90d3d871bd4e27e2ull};
+    k = vld1q_dup_u64(k_);
+  }
+  uint64x2_t l = clmul_lo(j, k);
+  {
+    static const uint64_t __attribute__((align(16)))
+        k_[] = {0xfffffffe00000000ull, (uint64_t)-1ll};
+    k = vld1q_u64(k_);
+  }
+  uint64x2_t n = vandq_u64(l, k);
+  {
+    static const uint64_t __attribute__((align(16)))
+        k_[] = {0x82f63b7880000000ull};
+    k = vld1q_dup_u64(k_);
+  }
+  uint64x2_t hi = clmul_lo(n, k);
+  uint64x2_t shl = vextq_u64(hi, vdupq_n_u64(0), 1);
+  uint64x2_t r = clmul_hi_e(n, k, shl);
+  return (uint32_t)vgetq_lane_u64(r, 0);
+}</code></pre>
+        </div>
+      </div>
+      <p>基准数据显示这对我应用程序来说足够高效。 现在，让我们总结一下快速幺半群 CRC32 哈希的最后一部分，单位元的定义。</p>
+      <div class="listing">
+        <div class="content">
+          <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">let identity = {
+  crc = 0,
+  len = 0x80000000
+}</code></pre>
+        </div>
+      </div>
+    </div>
+    <hr>
+    <footer>
+      <p><a property="dct:title" rel="cc:attributionURL" href="/zh/index.html">本站</a> 由 <span property="cc:attributionName">Waterlens</span> 创作的一切内容 © 2021 - 2025 在 <a href="http://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">知识共享 署名 - 相同方式共享 4.0 协议 <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1"></a> 之条款下提供。</p>
+    </footer>
+  </article>
+</body>
+</html>

@@ -28,6 +28,33 @@
       <p>不定时更新，记录我在浏览网页、阅读论文、逛社媒时看到的细碎知识和技巧。</p>
       <p>使用倒序方式记录。</p>
       <section class="sect1">
+        <h2 id="date-20240413"><a href="#date-20240413">2024 年 4 月 13 日</a></h2>
+        <p><a href="https://doi.org/10.1145/3729259">Partial Evaluation, Whole-Program Compilation</a></p>
+        <p>输入解释器和字节码，产生编译后的程序。</p>
+        <p>新意：AOT 编译 + 保留控制流图结构 + 不需要用特定 DSL 重写解释器。</p>
+        <p>PyPy 和 GraalVM/Truffle 终于后继有人了 (泪目)。</p>
+      </section>
+      <section class="sect1">
+        <h2 id="date-20250405"><a href="#date-20250405">2025 年 4 月 5 日</a></h2>
+        <p>reset/shift 的操作语义如下：</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlight"><code class="language-text" data-lang="text">M[(reset V)] = M[V]
+M[(reset C[(shift f E)])] = M[(reset (let f = \x. (reset C[x]) in E))]</code></pre>
+          </div>
+        </div>
+        <p>这里的 <code>V</code> 是一个值，<code>E</code> 是一个表达式，, <code>C</code> 是一个没有横跨 <code>reset</code> 边界的 evaluation context, M 是一个可能横跨 <code>reset</code> 边界的 evaluation context.</p>
+        <p>与之对应的 CPS 转换如下：</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlight"><code class="language-text" data-lang="text">CPS{(reset E)}   = \c. c (CPS{E} \x. x)
+CPS{(shift f E)} = \c. let f = \x. \c2. c2 (c x) in
+                       CPS{E} \x. x</code></pre>
+          </div>
+        </div>
+        <p>然而对于 reset/shift0, prompt/control 和 prompt/control0, 其 CPS 转换变得相对复杂 (且不实用)。 参考 <a href="https://homes.luddy.indiana.edu/ccshan/recur/recur.pdf">Shift to control</a>。</p>
+      </section>
+      <section class="sect1">
         <h2 id="date-20240929"><a href="#date-20240929">2024 年 9 月 29 日</a></h2>
         <h3 id="_cyclone_基于区域的内存管理" class="discrete">Cyclone: 基于区域的内存管理</h3>
         <p>现如今，Rust 已经变成了一门备受欢迎的编程语言，在它诸多设计中，允许对生命周期的标注与推导可以说是颇具特色、让人又爱又恨的特性。追溯到学术研究上，那就不能不提 2002 年发表的 <a href="https://dl.acm.org/doi/10.1145/512529.512563">Region-Based Memory Management in Cyclone</a>。这篇出版物描述了作者们在 Cyclone（一个基于 C 语言的 Safe-C 方言）中引入和实现的基于区域的内存管理系统，在之后 Rust 的开发发展有着深远的意义。</p>

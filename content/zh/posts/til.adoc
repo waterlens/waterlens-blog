@@ -8,6 +8,42 @@
 
 使用倒序方式记录。
 
+[#date-20240413]
+== <<date-20240413, 2024 年 4 月 13 日>>
+
+https://doi.org/10.1145/3729259[Partial Evaluation, Whole-Program Compilation]
+
+输入解释器和字节码，产生编译后的程序。
+
+新意：AOT 编译 + 保留控制流图结构 + 不需要用特定 DSL 重写解释器。
+
+PyPy 和 GraalVM/Truffle 终于后继有人了 (泪目)。
+
+[#date-20250405]
+== <<date-20250405, 2025 年 4 月 5 日>>
+
+reset/shift 的操作语义如下：
+
+[source, text]
+----
+M[(reset V)] = M[V]
+M[(reset C[(shift f E)])] = M[(reset (let f = \x. (reset C[x]) in E))]
+----
+
+这里的 `V` 是一个值，`E` 是一个表达式，, `C` 是一个没有横跨 `reset` 边界的 evaluation context, M 是一个可能横跨 `reset` 边界的 evaluation context.
+
+与之对应的 CPS 转换如下：
+
+[source, text]
+----
+CPS{(reset E)}   = \c. c (CPS{E} \x. x)
+CPS{(shift f E)} = \c. let f = \x. \c2. c2 (c x) in
+                       CPS{E} \x. x
+----
+
+然而对于 reset/shift0, prompt/control 和 prompt/control0, 其 CPS 转换变得相对复杂 (且不实用)。
+参考 https://homes.luddy.indiana.edu/ccshan/recur/recur.pdf[Shift to control]。
+
 [#date-20240929]
 == <<date-20240929, 2024 年 9 月 29 日>>
 
