@@ -30,9 +30,16 @@ I'm a master student who is interested in the following topics:
 * Compiler construction and optimization.
 * Programming language theory.
 * Computer architecture.
-
-I like to write toy projects.
 --
+
+[.centered]
+----
+I shall be telling this with a sigh
+Somewhere ages and ages hence;
+Two roads diverged in a wood, and I-
+I took the one less traveled by,
+And that has made all the difference.
+----
 
 [.centered]
 [discrete]
