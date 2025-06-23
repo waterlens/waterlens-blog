@@ -50,3 +50,8 @@ cp-assets:
 
 live-server:
   live-server public/
+
+watch-adoc:
+  #!/usr/bin/env sh
+  watchexec -e adoc -w content/ -- just render-adoc
+  

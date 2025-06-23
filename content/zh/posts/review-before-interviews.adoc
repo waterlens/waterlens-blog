@@ -1,0 +1,305 @@
+= xref:.[知识点回顾]
+:showtitle:
+:lang: zh-hans
+:stem: latexmath
+
+最近在找工作，因此回顾一下自己简历上可能相关的知识点。
+
+[discrete]
+== Algebraic Data Type 代数数据类型
+
+由其他数据类型组合而成的数据类型。
+通常于函数式编程语言与类型论的语境下被提及，但近些年来，
+这个概念也逐渐被（部分地）引入到通用编程语言的设计中。
+通常情况下，指代的是以下两种类型：
+
+- 和类型：体现为元组或记录等（也就是命名元组）
+- 积类型：体现为联合或者枚举等
+
+一个直观的解释 (from ice1000)：A 有 6 种可能，B 有 7 种可能，
+那么 A 和 B 的和类型组合有 6 + 7 = 13 种可能，
+而 A 和 B 的积类型组合有 6 * 7 = 42 种可能。
+
+*如何表示存在递归的 ADT?*
+
+- 形式化上：使用 stem:[\mu] 类型算子
+  例子：自然数类型可以表示为 stem:[\mu X. Z + S \times X]
+- 实践上：主要问题是形成了环，所以不再能假设类型是树状数据结构表示的（能简单地递归比较）。
+  但好在形成环都是因为使用了对另一类型或自己的引用，这些引用可以要么用名字表示（当然这样做的话，类型检查、推导时候得使用一个类型环境），
+  要么就使用一个可变的引用，对类型进行 hash-consing，然后可以简单地使用引用相等性比较。
+- 进阶一点：如果我们的类型系统被拓展到了依值类型 (Dependent Type)，那么对类型等价的判断就变得非常重要了。有一些相关的技术，
+  例如 De Bruijn 索引，NbE (Normalization by Evaluation)，HOAS (Higher-Order Abstract Syntax)，等。关于后两者，
+  有一个有趣的参考：
+  https://julesjacobs.com/notes/smartconstr/smartconstr.pdf[Smart Constructors].
+
+[discrete]
+== 高阶函数
+可以作为一流值 (first-class values) 而出现在参数、返回值等位置的函数。
+
+不完全等同但相关的实现方式：
+
+*函数闭包*：Scheme 引入，由环境和代码两个部分组成，所有代码部分引用的“自由变量”都从对应的环境中获取。
+
+相关概念：
+
+- 扁平闭包：所有被引用的自由变量都直接存储在当前闭包中。优点是更加快速，缺点是占用更多内存。
+- 链式闭包：如果存在嵌套的闭包（例如，闭包 A 包含闭包 B 和 C，而 B 和 C 都引用了自由变量 x），
+          那么可以考虑将 x 存储在闭包 A 中，而不是闭包 B 和 C 中，在 B 和 C 中我们只保留一个指向闭包 A 的指针。
+          优点是节省内存，缺点是无法快速访问 x，需要沿着闭包链向上查找；另外，指向上层闭包的指针也可能导致意外地延长
+          上层闭包包含对象的生命周期，导致内存泄露。
+- 互递归函数形成的互递归闭包：可以被合并成同一个闭包。好处是没有环，不会干扰引用技术类垃圾回收器的工作。
+
+相关技术在 Compiling with Continuations 中被提及。
+
+在某些 OOP 导向的语言里（如 C++），由于环境、代码等实现细节可以被对应到对象中的字段、为对象重载的调用操作符等，
+因此可以比较方便地模拟闭包。默认情况下，这种方式是单态化的，也就是说重载的调用操作符是一个直接调用而非间接调用；
+如果需要实现多态化，则需要使用虚函数。这里，实现间存在一种隔阂：C++ 支持单态化（在调用点即确定闭包所调用的函数），
+但一旦出现多态的情况（特定调用点可能有多个可能的闭包），使用虚函数就极大增加了开销（并非直接的函数指针，而是虚函数表）；
+MLton 不会诉诸于虚函数、函数指针，而是借助了以下描述的 *去函数化* 技术，但它却不能实现足够的单态化。
+在 https://dl.acm.org/doi/pdf/10.1145/3591260[Beer Defunctionalization through Lambda Set Specialization] 中，
+作者描述了这种隔阂。
+
+*去函数化*：这种方法首先由
+https://surface.syr.edu/cgi/viewcontent.cgi?article=1012&context=lcsmith_other[Definitional interpreters for higher-order programming languages]
+提出，其核心思想是，使用宿主语言里的数据结构类型去表示闭包中的环境（用“变体”携带的 tag 具体区分所用的闭包类型），
+并使用一个单独的 `apply` 函数去根据 tag 提取出环境中的值，然后调用对应的代码。
+在这种方式下，所有的闭包创建都变成了对数据构造（包含类型变量），并且所有的闭包调用都变成了使用闭包为参数，调用
+`apply` 函数。这种方式在之后也得到了长久的发展（根据数据流分析和类型分析的优化，分离 `apply` 函数等），
+但概念上的普及反而不如上一种方法。
+
+[discrete]
+== 优化技术
+
+[discrete]
+=== 稀疏简单常量传播
+
+在 SSA 式 IR 上进行，为每个名字关联一个格元素，stem:[\{\top,~\bot,~C\}]，
+其中 stem:[\top] 表示未知；stem:[\bot] 表示可能为任意值。
+
+1. 首先根据所有名字关联的操作的实际内容更新其格元素；常量或 stem:[\top] 元素；
+   将不为顶元素的名字加入初始工作列表
+2. 取出已知其格元素的名字；更新所有使用它的指令的结果名字的格元素，如果结果名字的格元素不为 stem:[\bot]（不可知）。
+
+关于终止性：每个名字最多改变两次格元素，故每个名字最多出现在工作列表中两次。
+
+初始化为 stem:[\top] 为乐观分析；和悲观分析的不同在于允许在环中传递值。
+有用的例子：
+
+[source]
+----
+  x0 = 42
+  x1 = ???
+  goto L1(p0)
+L1(p0)
+  x1 = p0 + 0
+  if x1 goto L1(x1) else goto L2(x1)
+L2(p1)
+  ...
+----
+
+[discrete]
+=== 稀疏条件常量传播
+
+关联：抽象解释和符号执行的不同：
+符号执行不关心探索所有可能的执行路径，而只关心探索那些可能的执行路径。
+符号执行形成执行树。
+
+结合稀疏简单常量传播和不可达分析；
+
+1. 关联每个名字到 stem:[\top]，标记所有控制流边为未执行。
+2. 取出一条控制边，如果已执行，则跳过；否则标记为执行并更新目标块里的 phi 节点的操作数。
+   如果目标块没有其他执行的边，则更新目标块里的指令，
+   然后根据控制指令的类型和它的条件格元素加入新的边。
+3. 取出一条数据边，先看目标是否可达，如果不可达，则跳过；否则更新（或合并）目标指令的操作数。
+
+比较：
+当遇到条件时，相比于稀疏简单常量传播，还会处理不可达性。
+不可达的块中的抽象值不会流入到其他块中。SCCP 只在数据流上进行格元素合并，而不在控制流上进行合并。
+
+[discrete]
+=== 支配边界的计算
+
+- *Cooper 算法：*
+使用数据流分析：
+
+[stem]
+++++
+\def\sc#1{\dosc#1\csod} \def\dosc#1#2\csod{{\rm #1{\small #2}}}
+\newcommand{\dom}{\sc{dom}}
+
+\dom(n) = \{n\} \cup \left(\ \bigcup_{m \in \text{pred}(n)} \dom(m) \right)
+++++
+
+初始值：
+
+[stem]
+++++
+\def\sc#1{\dosc#1\csod} \def\dosc#1#2\csod{{\rm #1{\small #2}}}
+\newcommand{\dom}{\sc{dom}}\\
+
+\dom(n_{entry}) = \{n_{entry}\}\\
+
+\dom(n) = N, \forall n \neq n_{entry}
+++++
+
+*逆后序*：拓扑顺序。确保每个块的前驱都在块之前已经被访问。
+*反向 CFG 上的逆后序*：为什么不用后序？循环时不同。
+例子如下：
+[source]
+----
+A - B - D
+   | |
+    C
+----
+
+加速技巧：将 Dom 集表示为树，合并时候使用 2-finger 算法。
+
+*支配边界的定义*：b 的支配边界是集合 Y，其中 Y 中的每个块 b' 的每个前驱都被 b 支配，但 b' 不被 b 支配。
+
+*找支配边界*：所有汇合点都在其前驱的支配边界中，除非其前驱支配该汇合点；因此可以从汇合点开始构造性地产生支配边界集合。
+
+集合的迭代支配边界：
+
+[stem]
+++++
+DF_1(S) = DF(S)\\
+DF_{i+1}(S) = DF (S \cup DF_i(S))
+++++
+
+
+[discrete]
+=== SSA 构建
+
+最小 SSA 在任何两个不同定义相同原始名称相遇的连接点插入φ函数。
+
+修剪 SSA 在φ函数插入算法中添加了一个存活性测试，以避免添加无效的φ函数。
+这种构建必须计算 LIVE OUT 集合，这增加了构建修剪 SSA 的成本。
+
+半修剪 SSA 是在最小 SSA 和修剪 SSA 之间的一种妥协。
+在插入φ函数之前，算法会消除任何在块边界处不存活的名称。
+这可以缩小名称空间并减少φ函数的数量，而无需计算 LIVEOUT 集合的开销。
+
+*最小 SSA 的构建*：
+
+- Phi 插入算法：找到变量 x 的定义块集 B 加入工作列表；
+  从工作列表取出块 b，对于其每个支配边界块 d，如果不包含为 x 的 phi 指令，则插入 phi 指令；
+  将 d 加入工作列表。
+- 重命名：为基本块内的每个名字的新定义分配一个新名字并压栈；
+  重命名所有位于其支配树里的后继基本块；弹出本基本块中的新名字。
+
+[discrete]
+=== 死代码消除和不可达代码消除
+
+区别：死代码消除移除可能被执行，但既无副作用而结果又不被使用的代码；
+不可达代码消除移除不可能到达的代码。
+
+*死代码消除*：
+
+数据流：类似 Mark-Sweep 算法，从“关键”指令开始，
+标记所有依赖的指令。
+
+控制依赖性：
+后支配关系：所有从 b 到 exit 的路径都经过 b', 则 b' 后支配 b。
+所有后支配边界的块的分支指令都是有用的。
+
+*不可达代码消除*：
+
+没有控制流路径或者条件恒不成立；后者依赖 SCCP 优化。
+
+[discrete]
+=== CFG 化简
+
+- 折叠冗余分支（例如跳转到同一目标）
+- 移除空基本块
+- 合并基本块
+
+[discrete]
+=== 值编号
+
+局部的：
+
+- 维护一个指令到输出值的表中
+- 当遇到指令时，如果指令已经在映射中，则将这条指令的输出值的所有使用替换为表中的输出值
+- 否则，将这条指令到其输出值的映射加入表中
+
+拓展：
+
+- 超局部值编号：拓展基本块：一组块集合 stem:[\{ B_0, B_1, \dots, B_k \}]，
+  其中要么 stem:[B_0] 是入口节点，要么 stem:[B_0] 有多个 CFG 前驱，
+  而每其他 stem:[B_i] 都只有一个前驱，该前驱在该集合中。
+
+和公共子表达式消除的关系：CSE 不会追踪在有中间复制下的表达式等价性；更聚焦于在全局背景下寻找完全相同的表达式并替换。
+
+[discrete]
+== SyOC（一个学习用编译器项目）
+
+- *手写的递归下降解析器*
+- *SSA IR 设计*：所有值都具有一个相同的基类，其中包含有一个 kind tag，父指针，use chain，还有一个 id。
+  其中，kind tag 用于区分值的类型，父指针用于跟踪所属关系，use chain 用于表示值的依赖关系，id 用于表示值的唯一编号。
+  use chain 是一个 edge 的双端链表，方便插入和删除，其中 edge 包含了源和目标。
+  修改指令的操作数时自动更新对应的边和链表。支持了 replaceAllUsesWith 操作。
+- *Transformer 设计*：利用 C++ 泛型构造 Pass 然后执行。
+- *优化 Pass*：CFG 化简（合并基本块、移除没有前驱的基本块），
+  Alloca 相关优化（清理无 user 的加载；只定义一次（store 1 次）的情况下则替换掉所有受支配的块的 load 指令），
+  Mem2Reg（构建 SSA 形式 IR）；保守的 DCE（删除没有用户的指令）；常量传播。
+
+[discrete]
+== 寄存器分配
+
+*弦图着色*：无向图是弦图，如果图中每个长度为 4 或更长的环都有弦。
+图中的节点 stem:[v] 是单形（simplicial）的，如果它的邻域形成一个团 (clique)，
+也就是说，stem:[v] 的所有邻居彼此相连，因此需要不同的颜色。
+如果图中的节点 stem:[v_1, \dots , v_n] 的一个排列使得每个节点 stem:[v_i] 在子图 stem:[v_1, \dots , v_i] 
+中都是单形的，那么这个排列称为单形消除排列。
+一个图有单形消除排列当且仅当它是弦图。
+当这样的排列存在时，按该排列贪心着色即可得到一个最优图着色。
+
+[discrete]
+== Calocom（一个课程项目）
+
+新意：
+
+- *代数数据类型*
+- *高阶函数*
+- *嵌套的模式匹配支持*
+- *中间 IR* 具有类三地址码的结构，特殊之处在于每个函数存在所谓“捕获变量”，可以作为正常值一样使用。
+- *后端* 会在入口点处去从闭包中对应偏移量处的自由变量到关联的“捕获变量”中去。
+- *名称修饰* 模仿 Swift 和 C++ 形成了一套自己的命名风格，编码内置类型、用户定义的 ADT、数据等
+  总结：显式编码标识符长度；C 前缀类型；编码路径；区分多态和单态函数
+- *运行时* 使用 unsafe Rust 实现，常见的数组、字符串操作函数等
+
+[source]
+----
+name ::= identifier-length identifier
+
+// Primitive Types
+type ::= 'Co'   // Calocom.Object
+type ::= 'Cu'   // Calocom.Unit
+type ::= 'Cb'   // Calocom.Bool
+type ::= 'Ci4'  // Calocom.Int32
+type ::= 'Cs'   // Calocom.String
+type ::= 'Cci4' // Calocom.CInt32
+type ::= 'Cf8'  // Calocom.Float64
+
+// Complex Type
+type-list ::= 'l_' type* '_l'
+type ::= 'Ce' context name                  // Enum
+type ::= 'Ct' type-list                     // Tuple
+type ::= 'Cr' type                          // Reference
+type ::= 'Ca' type                          // Array
+type ::= 'Clf' function-signature           // Callable (Function)
+type ::= 'Clc' function-signature           // Callable (Closure)
+type ::= 'Clt' function-signature           // Callable (Ctor)
+
+function-signature ::= 'f' type type-list
+generic-signature  ::= 'g' number-of-generic-params
+generic-function-signature ::= function-signature generic-signature
+specialization     ::= 's' type-list
+
+// Context
+context ::= name*   // Full restricted context
+context ::= '$'     // Current context
+
+polymorphic-function-name ::= '_CALOCOM_PF_' context name function-signature
+specialized-function-name ::= '_CALOCOM_F_'  context name generic-function-signature specialization
+----
