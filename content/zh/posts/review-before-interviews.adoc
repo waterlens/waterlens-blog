@@ -125,7 +125,7 @@ L2(p1)
 [stem]
 ++++
 \def\sc#1{\dosc#1\csod} \def\dosc#1#2\csod{{\rm #1{\small #2}}}
-\newcommand{\dom}{\sc{dom}}
+\newcommand{\dom}{\sc{DOM}}
 
 \dom(n) = \{n\} \cup \left(\ \bigcup_{m \in \text{pred}(n)} \dom(m) \right)
 ++++
@@ -135,7 +135,7 @@ L2(p1)
 [stem]
 ++++
 \def\sc#1{\dosc#1\csod} \def\dosc#1#2\csod{{\rm #1{\small #2}}}
-\newcommand{\dom}{\sc{dom}}\\
+\newcommand{\dom}{\sc{DOM}}\\
 
 \dom(n_{entry}) = \{n_{entry}\}\\
 
@@ -231,6 +231,122 @@ DF_{i+1}(S) = DF (S \cup DF_i(S))
 和公共子表达式消除的关系：CSE 不会追踪在有中间复制下的表达式等价性；更聚焦于在全局背景下寻找完全相同的表达式并替换。
 
 [discrete]
+=== 冗余优化辨析
+
+公共子表达式消除 (Common Subexpression Elimination)：
+查找在给定执行路径上至少执行两次的计算，并消除其中的第二次及后续出现的计算。
+这种优化需要数据流分析来定位冗余计算，几乎总是能提高所应用程序的性能。
+
+循环不变量代码移动 (Loop Invariant Code Motion)：查找每次循环迭代都会产生相同结果的计算，并将它们移出循环。
+虽然可以通过独立的数据流分析来确定这一点，但通常基于使用 ud 链。
+这种优化几乎总是能提高性能，通常非常显著，很大程度上是因为它经常发现并移除循环不变量的地址计算，通常还包括那些访问数组元素的计算。
+
+部分冗余消除 (Partial Redundancy Elimination)：
+将至少部分冗余的计算（即在流图的某些路径上被计算多次的计算）移动到其最优计算点，并完全消除冗余的计算。
+它包括公共子表达式消除、循环不变量代码移动，以及更多内容。
+
+代码提升 (Code Hoisting)：查找在程序中某一点的所有路径上都会执行的计算，并将它们统一为在该点的一个计算。
+它需要数据流分析（即一种名称略显滑稽的“非常繁忙的表达式”分析形式），并减少程序所占用的空间，但很少影响其时间性能。
+
+[discrete]
+=== 惰性代码移动
+
+增强版 PRE。
+
+*可用表达式分析*：
+
+计算控制流图中的一个节点（基本块）入口处所有可用的表达式。
+
+[stem]
+++++
+\def\sc#1{\dosc#1\csod}\def\dosc#1#2\csod{{\rm #1{\small #2}}}
+\newcommand{\avail}{\sc{AVAIL}\sc{IN}}\\
+\newcommand{\deexpr}{\sc{D}\sc{E}\sc{EXPR}}\\
+\newcommand{\exprkill}{\sc{EXPR}\sc{KILL}}\\
+\avail(n) = \bigcap_{m \in \text{preds}(n)} \left(\deexpr(m) \cup \left(\avail(m) \cap \exprkill(m) \right) \right)
+++++
+
+其中初始值为：
+
+[stem]
+++++
+\def\sc#1{\dosc#1\csod}\def\dosc#1#2\csod{{\rm #1{\small #2}}}
+\newcommand{\avail}{\sc{AVAIL}\sc{IN}}\\
+\avail(n_{entry}) = \emptyset\\
+\avail(n) = \{ \text{all expressions} \}, \forall n \neq n_{entry}
+++++
+
+stem:[\def\sc#1{\dosc#1\csod}\def\dosc#1#2\csod{{\rm #1{\small #2}}}\newcommand{\deexpr}{\sc{D}\sc{E}\sc{EXPR}}\deexpr(n)] 是 stem:[n] 中向下暴露的表达式集合。
+一个表达式 stem:[e] 属于 stem:[\def\sc#1{\dosc#1\csod}\def\dosc#1#2\csod{{\rm #1{\small #2}}}\newcommand{\deexpr}{\sc{D}\sc{E}\sc{EXPR}}\deexpr(n)]，
+当且仅当基本块 stem:[n] 评估 stem:[e]，并且 stem:[e] 的所有操作数在 stem:[e] 在 stem:[n] 中的最后一次评估和 stem:[n] 结束之间都没有被定义。
+stem:[\def\sc#1{\dosc#1\csod}\def\dosc#1#2\csod{{\rm #1{\small #2}}}\newcommand{\exprkill}{\sc{EXPR}\sc{KILL}}\exprkill(n)] 包含所有被 stem:[n] 中的定义所杀死的表达式。一个表达式被杀死，当且仅当它的某个或某些操作数在块中被重新定义。
+
+*惰性代码移动*：
+
+TODO
+
+[discrete]
+=== 生命周期分析
+
+[stem]
+++++
+\def\sc#1{\dosc#1\csod}\def\dosc#1#2\csod{{\rm #1{\small #2}}}
+\newcommand{\liveout}{\sc{LIVE}\sc{OUT}}\\
+\newcommand{\uevar}{\sc{UE}\sc{VAR}}\\
+\newcommand{\varkill}{\sc{VAR}\sc{KILL}}\\
+\liveout(n) = \bigcup_{m \in \text{succs}(n)} \left(\uevar(m) \cup \left(\liveout(m) \cap \varkill(m) \right) \right)
+++++
+
+SSA（stem:[\phi] 指令）：
+
+[stem]
+++++
+\def\sc#1{\dosc#1\csod}\def\dosc#1#2\csod{{\rm #1{\small #2}}}
+\newcommand{\liveout}{\sc{LIVE}\sc{OUT}}\\
+\newcommand{\livein}{\sc{LIVE}\sc{IN}}\\
+\newcommand{\phidefs}{\sc{PHI}\sc{DEFS}}\\
+\newcommand{\uevar}{\sc{UE}\sc{VAR}}\\
+\newcommand{\phiuses}{\sc{PHI}\sc{USES}}\\
+\newcommand{\defs}{\sc{DEFS}}\\
+\livein(n) = \phidefs(n) \cup \uevar(n) \cup \left(\liveout(n) \setminus \defs(n) \right) \\
+\liveout(n) = \bigcup_{m \in \text{succs}(n)} \left(\livein(m) \setminus \phidefs(m) \right) \cup \phiuses(n)
+++++
+
+SSA（块参数）：
+
+[stem]
+++++
+\def\sc#1{\dosc#1\csod}\def\dosc#1#2\csod{{\rm #1{\small #2}}}
+\newcommand{\liveout}{\sc{LIVE}\sc{OUT}}\\
+\newcommand{\livein}{\sc{LIVE}\sc{IN}}\\
+\newcommand{\uevar}{\sc{UE}\sc{VAR}}\\
+\newcommand{\defs}{\sc{DEFS}}\\
+\newcommand{\uses}{\sc{USES}}\\
+\newcommand{\jumpuses}{\sc{JUMP}\sc{USES}}\\
+\newcommand{\bp}{\sc{BLOCK}\sc{PARAMS}}\\
+\livein(n) = \bp(n) \cup \uevar(n) \cup \left(\liveout(n) \setminus \defs(n) \right) \\
+\liveout(n) = \bigcup_{m \in \text{succs}(n)} \left(\livein(m) \setminus \bp(m) \right) \cup \jumpuses(n)
+++++
+
+[discrete]
+=== 超级字向量化
+
+搭配循环展开使用。
+SLP 向量化通过在直行代码中寻找独立的、同构的指令，并将其替换为向量指令来实现。
+由于 SLP 向量化针对的是直行代码，因此它只需要更简单的依赖性分析（与循环向量化所需的更复杂的循环依赖性分析相比）。
+
+[discrete]
+=== 杂项
+
+*循环分裂（Loop Unswitching）*：
+如果循环体内有一个不会在循环过程中改变的条件判断（即该条件与循环变量无关），
+那么可以将这个条件判断“搬”到循环外部，把循环拆分成两个（或多个）没有该条件判断的循环。
+
+*If 转换（If-conversion）*：
+If 转换通过将程序转换为无条件执行每个条件分支的两个分支，将控制依赖转换为数据依赖，
+并用 select 指令（根据布尔条件选择两个替代值，类似于 C/C++ 中的三元运算符）替换控制流的合并（即 SSA 中的φ节点）。
+
+[discrete]
 == SyOC（一个学习用编译器项目）
 
 - *手写的递归下降解析器*
@@ -282,38 +398,38 @@ DF_{i+1}(S) = DF (S \cup DF_i(S))
   总结：显式编码标识符长度；C 前缀类型；编码路径；区分多态和单态函数
 - *运行时* 使用 unsafe Rust 实现，常见的数组、字符串操作函数等
 
-[source]
-----
-name ::= identifier-length identifier
+// [source]
+// ----
+// name ::= identifier-length identifier
 
-// Primitive Types
-type ::= 'Co'   // Calocom.Object
-type ::= 'Cu'   // Calocom.Unit
-type ::= 'Cb'   // Calocom.Bool
-type ::= 'Ci4'  // Calocom.Int32
-type ::= 'Cs'   // Calocom.String
-type ::= 'Cci4' // Calocom.CInt32
-type ::= 'Cf8'  // Calocom.Float64
+// // Primitive Types
+// type ::= 'Co'   // Calocom.Object
+// type ::= 'Cu'   // Calocom.Unit
+// type ::= 'Cb'   // Calocom.Bool
+// type ::= 'Ci4'  // Calocom.Int32
+// type ::= 'Cs'   // Calocom.String
+// type ::= 'Cci4' // Calocom.CInt32
+// type ::= 'Cf8'  // Calocom.Float64
 
-// Complex Type
-type-list ::= 'l_' type* '_l'
-type ::= 'Ce' context name                  // Enum
-type ::= 'Ct' type-list                     // Tuple
-type ::= 'Cr' type                          // Reference
-type ::= 'Ca' type                          // Array
-type ::= 'Clf' function-signature           // Callable (Function)
-type ::= 'Clc' function-signature           // Callable (Closure)
-type ::= 'Clt' function-signature           // Callable (Ctor)
+// // Complex Type
+// type-list ::= 'l_' type* '_l'
+// type ::= 'Ce' context name                  // Enum
+// type ::= 'Ct' type-list                     // Tuple
+// type ::= 'Cr' type                          // Reference
+// type ::= 'Ca' type                          // Array
+// type ::= 'Clf' function-signature           // Callable (Function)
+// type ::= 'Clc' function-signature           // Callable (Closure)
+// type ::= 'Clt' function-signature           // Callable (Ctor)
 
-function-signature ::= 'f' type type-list
-generic-signature  ::= 'g' number-of-generic-params
-generic-function-signature ::= function-signature generic-signature
-specialization     ::= 's' type-list
+// function-signature ::= 'f' type type-list
+// generic-signature  ::= 'g' number-of-generic-params
+// generic-function-signature ::= function-signature generic-signature
+// specialization     ::= 's' type-list
 
-// Context
-context ::= name*   // Full restricted context
-context ::= '$'     // Current context
+// // Context
+// context ::= name*   // Full restricted context
+// context ::= '$'     // Current context
 
-polymorphic-function-name ::= '_CALOCOM_PF_' context name function-signature
-specialized-function-name ::= '_CALOCOM_F_'  context name generic-function-signature specialization
-----
+// polymorphic-function-name ::= '_CALOCOM_PF_' context name function-signature
+// specialized-function-name ::= '_CALOCOM_F_'  context name generic-function-signature specialization
+// ----
