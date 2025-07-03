@@ -8,8 +8,42 @@
 
 使用倒序方式记录。
 
-[#date-20240413]
-== <<date-20240413, 2024 年 4 月 13 日>>
+[#date-20250703]
+== <<date-20250703, 2025 年 7 月 3 日>>
+
+https://dl.acm.org/doi/10.1145/3519939.3523701[All you need is superword-level parallelism: systematic control-flow vectorization with SLP]
+
+超级字并行（Superword-level parallelism, SLP）在直线代码中寻找连续的同构指令模式，并将其向量化。
+这样做的好处是避免了有循环情况下的复杂依赖分析。
+也因为这个特性，SLP 向量化不能发现在横跨多个基本块或循环的并行模式。
+
+所以这篇工作拓展了出来了一个基于所谓 Predicated SSA 的向量化框架，并且表示在这个框架下，
+SLP 向量化可以横跨多个控制流区域工作。
+那么这里说的 Predicated SSA 起到了什么作用？
+
+Predicated SSA 抛弃了 CFG 结构，将程序视为指令或循环序列，
+并使用一个布尔谓词来表示指令的控制流依赖性。
+这样做的好处是代码移动变得更容易（也就是简单的指令重排序）。
+
+然后，工作流程就变成了：
+
+- 将程序转换为 Predicated SSA 形式
+- SLP 打包
+- 循环融合 (Loop Fusion) 和 Co-iteration
+- 生成向量指令
+- 恢复到 SSA 形式
+
+关于 SLP 打包，感觉这里有一些“叙事技巧”，就是这个框架在使用 SLP 打包前还是要合并循环的：
+“首先，如果我们打包来自不同循环的指令，我们将转换这些循环，使得任何给定向量打包的指令属于同一个循环。”
+所以听起来大概是这样工作的：转换成 Predicated SSA 形式 -> 更容易做 Loop Fusion -> Fuse 完之后进行通常的 SLP 打包。
+
+关于评估部分，相比于 LLVM 的向量化有好有坏，好的相对多一点。
+不过在视频里，有人提问用了 ISPC 测试集但为什么没和 ISPC 比较（笑），
+作者解释是说 ISPC 在这些样例上确实有优势，但主要是 ISPC 支持用户手动标注之类的辅助向量化的提示，
+比自动向量化效果好也是正常的，而论文讨论的主要是自动向量化，因此就没有比较了。
+
+[#date-20250413]
+== <<date-20250413, 2025 年 4 月 13 日>>
 
 https://doi.org/10.1145/3729259[Partial Evaluation, Whole-Program Compilation]
 
