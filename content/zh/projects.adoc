@@ -1,0 +1,14 @@
+= xref:.[+++[ Waterlens 主页 ]+++]
+:author: Waterlens
+:pagetitle: Waterlens 的项目
+:description: Waterlens 的项目
+:showtitle:
+:shownav:
+:lang: zh
+
+[.centered]
+[discrete]
+== 所有项目
+
+[.centered]
+* xref:/tomasulo/index.html[Tomasulo 算法模拟器] 

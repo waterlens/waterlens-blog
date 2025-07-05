@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@400;700&amp;display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tomasulo's Algorithm Simulator</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Tomasulo's Algorithm Simulator</h1>
+        
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="input-section">
+                <h2>Instruction Input</h2>
+                <textarea id="instructions"></textarea>
+                <button id="load-instructions">Load</button>
+                <button id="step">Step</button>
+                <button id="run">Run</button>
+                <button id="reset">Reset</button>
+                <button id="clear">Clear</button>
+            </div>
+            <div class="clock-section">
+                <h2>Clock Cycle</h2>
+                <div id="clock">0</div>
+                <h2>Instruction Latency</h2>
+                <table class="latency-info">
+                    <thead>
+                        <tr>
+                            <th>Instruction</th>
+                            <th>IS</th>
+                            <th>EXE</th>
+                            <th>WB</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>ADD/SUB</strong></td>
+                            <td>1</td>
+                            <td>1</td>
+                            <td>1</td>
+                            <td>3</td>
+                        </tr>
+                        <tr>
+                            <td><strong>MUL</strong></td>
+                            <td>1</td>
+                            <td>5</td>
+                            <td>1</td>
+                            <td>7</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DIV</strong></td>
+                            <td>1</td>
+                            <td>11</td>
+                            <td>1</td>
+                            <td>13</td>
+                        </tr>
+                        <tr>
+                            <td><strong>LOAD</strong></td>
+                            <td>1</td>
+                            <td>2 (ADDR: 1, MEM: 1)</td>
+                            <td>1</td>
+                            <td>4</td>
+                        </tr>
+                        <tr>
+                            <td><strong>STORE</strong></td>
+                            <td>1</td>
+                            <td>1 (ADDR: 1)</td>
+                            <td>1</td>
+                            <td>3</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Top Section: Reservation Stations and Instruction Status -->
+        <div class="top-section">
+            <!-- Reservation Station Status -->
+            <div class="section reservation-section">
+                <h2>Reservation Station Status</h2>
+                <div class="table-container">
+                    <table id="reservation-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Busy</th>
+                                <th>Op</th>
+                                <th>Vj</th>
+                                <th>Vk</th>
+                                <th>Qj</th>
+                                <th>Qk</th>
+                                <th>A</th>
+                            </tr>
+                        </thead>
+                    <tbody id="reservation-body">
+                    </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Instruction Status Table -->
+            <div class="section instruction-section">
+                <h2>Instruction Status</h2>
+                <div class="table-container">
+                    <table id="instruction-table">
+                        <thead>
+                            <tr>
+                                <th>Instruction</th>
+                                <th>Issue</th>
+                                <th>Exec</th>
+                                <th>Write Back</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="instruction-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Section: Register File Status -->
+        <div class="section register-section">
+            <h2>Register File Status</h2>
+            <div class="table-container">
+                <table id="register-table">
+                    <thead>
+                        <tr id="register-header">
+                            <td class="placeholder-cell">Please enable JavaScript to view the register status</td>
+                        </tr>
+                    </thead>
+                    <tbody id="register-body">
+                        <tr id="register-qi-row">
+                            <td class="placeholder-cell">Please enable JavaScript to view the register status</td>
+                        </tr>
+                        <tr id="register-value-row">
+                            <td class="placeholder-cell">Please enable JavaScript to view the register status</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Memory Status -->
+        <div class="section">
+            <h2>Memory Status</h2>
+            <div class="table-container">
+                <table id="memory-table">
+                    <thead>
+                        <tr id="memory-header">
+                            <td class="placeholder-cell">Please enable JavaScript to view the memory status</td>
+                        </tr>
+                    </thead>
+                    <tbody id="memory-body">
+                        <!-- Dynamically generated memory value rows -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Execution Log -->
+        <div class="section">
+            <h2>Execution Log</h2>
+            <div id="log" class="log-container"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

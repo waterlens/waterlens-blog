@@ -296,6 +296,148 @@ L2(p1)
       </section>
       <section class="sect1">
         <h2 id="_体系结构">体系结构</h2>
+        <section class="sect2">
+          <h3 id="_流水线">流水线</h3>
+          <p>简单的五级流水线：</p>
+          <div class="olist arabic">
+            <ol class="arabic">
+              <li>
+                <p>取指 (IF)</p>
+              </li>
+              <li>
+                <p>译码 (ID)</p>
+              </li>
+              <li>
+                <p>执行 (EX)</p>
+              </li>
+              <li>
+                <p>访存 (MEM)</p>
+              </li>
+              <li>
+                <p>写回 (WB)</p>
+              </li>
+            </ol>
+          </div>
+          <p>限制流水线被充分利用的约束：</p>
+          <div class="olist arabic">
+            <ol class="arabic">
+              <li>
+                <p><strong>结构冒险</strong>：两条指令竞争同一个功能单元；可被重复功能单元解决</p>
+              </li>
+              <li>
+                <p><strong>数据冒险</strong>：指令间的数据依赖：</p>
+                <div class="open">
+                  <div class="content">
+                    <div class="ulist">
+                      <ul>
+                        <li>
+                          <p>写后读 (RAW):</p>
+                          <div class="listing">
+                            <div class="content">
+                              <pre class="highlight"><code>R1 = R0 + 1
+R2 = R1 + 1</code></pre>
+                            </div>
+                          </div>
+                          <p>解决办法（部分缓解）：数据前递。</p>
+                        </li>
+                      </ul>
+                    </div>
+                    <p>TODO：在经典五级流水线里，前递最多能缓解数据冒险多少个周期？</p>
+                    <div class="ulist">
+                      <ul>
+                        <li>
+                          <p>读后写 (WAR):</p>
+                          <div class="listing">
+                            <div class="content">
+                              <pre class="highlight"><code>R1 = R0 + 1
+R0 = R2 + 1</code></pre>
+                            </div>
+                          </div>
+                          <p>解决办法：寄存器重命名。</p>
+                        </li>
+                        <li>
+                          <p>写后写 (WAW):</p>
+                          <div class="listing">
+                            <div class="content">
+                              <pre class="highlight"><code>R1 = R0 + 1
+R2 = R1 - 2
+R1 = R0 * 3</code></pre>
+                            </div>
+                          </div>
+                          <p>解决办法：寄存器重命名。</p>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li>
+                <p><strong>控制冒险</strong>： 来自于改变控制流的指令，例如分支或者跳转。 解决办法（部分缓解）：动态分支预测和推测执行。</p>
+              </li>
+            </ol>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_指令级并行">指令级并行</h3>
+          <div class="olist arabic">
+            <ol class="arabic">
+              <li>
+                <p><strong>乱序执行</strong>：</p>
+                <div class="open">
+                  <div class="content">
+                    <p>指令可以以任意顺序进入特定流水线阶段，只受依赖关系和资源的限制（而非指令顺序）。</p>
+                    <p>重排序指令的过程被称作 <em>指令调度</em> 。</p>
+                    <div class="ulist">
+                      <ul>
+                        <li>
+                          <p>静态调度：IA-64，似了</p>
+                        </li>
+                        <li>
+                          <p>动态调度：Scoreboarding 算法或 Tomasulo 算法。</p>
+                        </li>
+                      </ul>
+                    </div>
+                    <p><strong>Scoreboarding 算法</strong>：</p>
+                    <p>主要缺点：不仅保留了真依赖，也保留了伪依赖（WAW 和 WAR）。</p>
+                    <p><strong>Tomasulo 算法</strong>：</p>
+                    <p>改进：加入了寄存器重命名机制。</p>
+                    <div class="olist arabic">
+                      <ol class="arabic">
+                        <li>
+                          <p>保留站：缓冲 (buffer) 等待发射的指令的操作数。可以消除从寄存器读的需要并只保留最新的对寄存器的写。 “使用保留站而不是集中式的寄存器文件，会导致另外两个重要的特性。首先，危险检测和执行控制是分布式的：每个功能单元的保留站中保存的信息决定了该指令何时可以在该单元开始执行。 其次，结果直接从保留站传递到功能单元，而不是经过寄存器。这种绕过是通过一个公共结果总线实现的，它允许所有等待操作数的功能单元同时加载。 在可以每个时钟周期发出多条指令并且拥有多个执行单元的流水线中，将需要多个结果总线。”</p>
+                        </li>
+                        <li>
+                          <p>三阶段：发射（分派），执行（发射），写回。分别代表指令从队列送入保留站、保留站等待指令操作数就绪后将指令送入执行单元、执行单元完成计算后将结果放置于总线上（提供给寄存器堆、保留站、存储缓冲区等）。</p>
+                        </li>
+                        <li>
+                          <p>在 Tomasulo 算法中，保留站被用作拓展的虚拟寄存器；但存在其他方案，例如重排序缓冲区。</p>
+                        </li>
+                        <li>
+                          <p>“Tomasulo 算法会在源和结果之间引入一个周期的延迟，因为结果与其使用之间的匹配只能在写回阶段结束时进行，而不是像简单流水线那样在执行阶段结束时进行。因此，在动态调度流水线中，产生指令和消费指令之间的有效延迟至少比产生结果的功能单元的延迟多一个周期。”</p>
+                        </li>
+                        <li>
+                          <p>“Tomasulo 算法中的标签指的是将产生结果的缓冲区或执行单元；当一条指令被发往保留站时，寄存器名称会被丢弃。这是 Tomasulo 算法与计分板算法之间的关键区别：在计分板算法中，操作数保留在寄存器中，只有在产生该操作数的指令执行完成，且消费该操作数的指令准备好执行时才会被读取。”</p>
+                        </li>
+                      </ol>
+                    </div>
+                    <p>保留站的字段：(Op, Qj, Qk, Vj, Vk, Addr, Busy)：（指令类型，产生操作数 1 的保留站编号，产生操作数 2 的保留站编号，操作数 1 的值，操作数 2 的值，立即数或地址，是否繁忙）</p>
+                    <p>寄存器堆的字段：(Qi)：（产生结果需要存入该寄存器的保留站编号）</p>
+                    <p>通往模拟器的链接：<a href="/tomasulo/index.html">Tomasulo’s Algorithm Simulator</a></p>
+                  </div>
+                </div>
+              </li>
+              <li>
+                <p><strong>超标量</strong>：</p>
+              </li>
+              <li>
+                <p><strong>推测执行</strong>：</p>
+              </li>
+              <li>
+                <p><strong>分支预测</strong>：</p>
+              </li>
+            </ol>
+          </div>
+        </section>
       </section>
       <section class="sect1">
         <h2 id="_syoc一个学习用编译器项目">SyOC（一个学习用编译器项目）</h2>
