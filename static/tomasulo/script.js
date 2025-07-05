@@ -43,14 +43,14 @@ class TomasuloSimulator {
         // Address calculation status for load/store instructions
         this.addressCalcStatus = new Map(); // stationName -> {start: clock, completed: boolean}
         
-        // Execution unit delays (including issue but excluding writeback)
+        // Execution unit latency
         this.executionDelays = {
-            'ADD': 2,
-            'SUB': 2,
+            'ADD': 1,
+            'SUB': 1,
             'MUL': 6,
             'DIV': 12,
-            'LD': [2, 1], // [address calculation, memory operation]
-            'ST': [2, 0], // [address calculation, memory operation] - 0 means no additional delay (has buffer)
+            'LD': [1, 1], // [address calculation, memory operation]
+            'ST': [1, 0], // [address calculation, memory operation] - 0 means no additional delay (has buffer)
         };
         
         this.initStationTypeMap();
@@ -485,7 +485,7 @@ class TomasuloSimulator {
                 const memOpDelay = delays[1];
                 
                 // Address calculation phase
-                if (this.clock === addrCalc.start + addrCalcDelay - 1 && !addrCalc.completed) {
+                if (this.clock === addrCalc.start + addrCalcDelay && !addrCalc.completed) {
                     addrCalc.completed = true;
                     const address = station.vj + station.a; // For load: base + offset, For store: base + offset
                     station.a = address; // Store calculated address in 'a' field
@@ -499,14 +499,14 @@ class TomasuloSimulator {
                 
                 // Memory operation phase (for load instructions or store instructions with buffer delay)
                 if (addrCalc.completed && memOpDelay > 0 && 
-                    this.clock === addrCalc.start + addrCalcDelay + memOpDelay - 1) {
+                    this.clock === addrCalc.start + addrCalcDelay + memOpDelay) {
                     status.execEnd = this.clock;
                     status.status = 'writeback';
                 }
             } else {
                 // Handle arithmetic instructions
                 const delay = this.executionDelays[station.op];
-                if (this.clock === status.execStart + delay - 1) {
+                if (this.clock === status.execStart + delay) {
                     status.execEnd = this.clock;
                     status.status = 'writeback';
                 }
