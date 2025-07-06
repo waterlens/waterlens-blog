@@ -485,6 +485,20 @@ R1 = R0 * 3
 --
 
 4. *分支预测*：
++
+--
+* 1-bit 分支预测（分支预测缓冲区）；2-bit 分支预测
+* 一个 stem:[(m,n)] 预测器使用最后 stem:[m] 条分支的行为，从 stem:[2^m] 个分支预测器中选择，其中每个预测器是对单条分支的 stem:[n] 位预测器。
+* 锦标赛预测器：
++
+[.centered]
+image::/resource/arch-tournament.svg[Tournament Branch Predictor, 25rem]
+* 被标记混合预测器（TAGE）：使用 PC 和 _不同长度_ 的分支历史混合后的哈希作为索引，选择不同级的分支预测表条目，并选择最长的且其 tag 相匹配的 2-bit 或 3-bit 预测器。
++
+[.centered]
+image::/resource/arch-tage.svg[TAGE, 40rem]
+
+--
 
 5. *更多高级技术*：
 +
@@ -517,6 +531,123 @@ WAW 和 WAR 冲突通过重命名目标寄存器得以避免；因为指令的�
 有限推测：推测执行可能会触发昂贵的事件（TLB 失效、L2 缓存失效）。解决方法：推测执行时若遇到这些事件，则等待直到指令不再是推测性的。
 ----
 --
+
+=== 数据级并行
+
+1. *SIMD*：单条指令同时对多个数据元素进行操作。通常是定长的，但 SVE 和 RVV 都支持变长操作。
+2. *向量架构*：
++
+--
+* 谓词寄存器：
+  向量处理器和 GPU 之间的一个区别在于它们处理条件语句的方式。向量处理器将谓词寄存器作为架构状态的一部分，并依赖编译器显式地操作掩码寄存器。相比之下，GPU 通过硬件操作内部掩码寄存器来达到相同的效果，而这些寄存器对 GPU 软件是不可见的。
+* 跨步（Stride）：加载间隔固定距离的数据元素。用于多维数组。需要考虑 bank 冲突问题。
+* 收集 - 分散（Gather-Scatter）：处理稀疏数组。收集指令使用额外的向量存储的索引加上基址计算出目标元素地址并加载对应元素进入向量寄存器。
+  分散指令类似。
+--
+
+=== GPU（老黄特辑）：
+
+==== 老黄的 GPU 架构
+
+* CUDA 线程：抽象的最低级的并行执行单元。
+
+* 线程块：定义了一个组，一些线程在组内被在一起阻塞执行。
+
+* 多线程 SIMD 处理器（流式多处理器，SM）：执行一整个线程块的处理器。一个 GPU 上可能有很多个这样的处理器。
+
+* `+__device__+` 或 `+__global__+` 修饰的函数在 GPU 上执行，`+__host__+` 修饰的函数在 CPU 上执行。
+
+* `+__device__+` 修饰的变量被分配在 GPU 上并可被所有（GPU 上的）多线程 SIMD 处理器访问。
+
+* `+<<<dimGrid, dimBlock>>>+` 语法用于指定代码的维度（单位为线程块）和线程块的维度（单位为线程）。
+  `+blockIdx+` 和 `+threadIdx+` 分别用于获取线程块和线程的索引。
+
+* CUDA 编程要求：线程块内的线程可以以任意顺序独立地执行。
+
+.GPU 术语对照表（编程抽象）
+[cols="1,1,1,1",options="header"]
+|===
+| 描述性名称 | 最接近旧 GPU 术语 | CUDA/NVIDIA GPU 术语 | 简短解释
+
+| Vectorizable Loop | Vectorizable Loop | Grid | 一种在 GPU 上执行的可向量化循环，由一个或多个线程块（向量化循环主体）组成，可以并行执行
+| Body of Vectorized Loop | Body of a (Strip-mined) Vectorized Loop | Thread Block | 一种在多线程 SIMD 处理器上执行的向量化循环，由一个或多个 SIMD 指令线程组成，它们可以通过局部内存进行通信
+| Sequence of SIMD Lane Operations | One iteration of a Scalar Loop | CUDA Thread | 对应于一个由单一 SIMD 通道执行的 SIMD 指令线程的垂直切片，结果根据掩码和谓词寄存器存储
+|===
+
+.GPU 术语对照表（物理对象）
+[cols="1,1,1,1",options="header"]
+|===
+| 描述性名称 | 最接近旧 GPU 术语 | CUDA/NVIDIA GPU 术语 | 简短解释
+
+| A Thread of SIMD Instructions | Thread of Vector Instructions | Warp | 一种传统线程，但仅包含 SIMD 指令，在多线程 SIMD 处理器上执行，结果根据每个元素掩码存储
+| SIMD Instruction | Vector Instruction | PTX Instruction | 一种跨 SIMD 通道执行的单一 SIMD 指令
+|===
+
+.GPU 术语对照表（计算硬件）
+[cols="1,1,1,1",options="header"]
+|===
+| 描述性名称 | 最接近旧 GPU 术语 | CUDA/NVIDIA GPU 术语 | 简短解释
+
+| Multithreaded SIMD Processor | (Multithreaded) Vector Processor | Streaming Multiprocessor | 一种多线程 SIMD 处理器，执行独立的 SIMD 指令线程，与其他 SIMD 处理器无关
+| Thread Block | Scalar Processor | Giga Thread Engine | 将多个线程块（向量化循环主体）分配给多线程 SIMD 处理器
+| SIMD Thread Scheduler | Thread Scheduler in a Multithreaded CPU | Warp Scheduler | 一种硬件单元，负责调度和分发就绪的 SIMD 指令线程；包括一个记分板来跟踪 SIMD 线程执行
+| SIMD Lane | Vector Lane | Thread Processor | 一种 SIMD 通道，在单一元素上执行线程中的操作，结果根据掩码存储
+|===
+
+.GPU 术语对照表（内存硬件）
+[cols="1,1,1,1",options="header"]
+|===
+| 描述性名称 | 最接近旧 GPU 术语 | CUDA/NVIDIA GPU 术语 | 简短解释
+
+| GPU Memory | Main Memory | Global Memory | 所有多线程 SIMD 处理器可访问的 DRAM 内存
+| Private Memory | Stack or Thread Local Storage (OS) | Local Memory | 每个 SIMD 通道专属的 DRAM 内存部分
+| Local Memory | Local Memory | Shared Memory | 专属于一个多线程 SIMD 处理器的高速本地 SRAM，其他 SIMD 处理器无法访问
+| SIMD Lane Registers | Vector Lane Registers | Thread Processor Registers | 分配给单个 SIMD 通道的寄存器，覆盖整个线程块（向量化循环主体）
+|===
+
+==== PTX 指令集
+
+硬件指令集上的一层额外抽象。
+
+指令格式：`+opcode.type d, a, b, c;+`
+
+.PTX 数据类型
+[cols="1,1"]
+|===
+| 无类型 | `.b8`, `.b16`, `.b32`, `.b64`
+| 无符号整数 | `.u8`, `.u16`, `.u32`, `.u64`
+| 有符号整数 | `.s8`, `.s16`, `.s32`, `.s64`
+| 浮点数 | `.f16`, `.f32`, `.f64`
+| 谓词 | `+.pred+`
+|===
+
+详见 https://docs.nvidia.com/cuda/parallel-thread-execution/index.html?highlight=type#fundamental-types[PTX 基础数据类型]。
+
+一些指令：
+
+* 控制流：`call`，`return`
+* 屏障（线程块内同步）：`bar.sync`
+
+所有指令都可以被 1 位的谓词修饰。`R0`, `R1`, ... 表示 32 位寄存器，`RD0`, `RD1`, ... 表示 64 位寄存器。
+
+*GPU 上的条件分支*：
+
+显式谓词寄存器、内部掩码、分支同步栈、指令标记等手段。
+
+在 PTX 汇编层面，有 `branch`，`call`，`return`，`exit` 等指令，外加用户指定的谓词修饰。
+
+在 GPU 硬件层面，有 `branch`，`jump`，`jump indexed`，`call`，`call indexed`，`return`，`exit` 等指令，
+并且有特殊指令管理来处理分支同步栈。GPU 硬件为每个 SIMD 线程提供自己的栈；
+栈条目包含一个标识符令牌、目标指令地址和目标线程活动掩码。
+有一些 GPU 专用指令，用于将栈条目压栈到 SIMD 线程中，
+以及专用指令和指令标记，用于弹出栈条目或回退到指定的栈条目，
+并根据目标指令地址和目标线程活动掩码进行分支。
+GPU 分支指令通过分支同步栈在某些通道分支到目标地址时压入一个栈条目，而其他通道则继续执行。
+NVIDIA 称这种情况为分支发散。
+这种混合也用于当 SIMD 通道执行同步标记或汇聚时，
+此时会弹出一个栈条目，并根据栈条目中的线程活动掩码分支到栈条目地址。
+（具体执行方式，参考 fine-grained SIMD）。
+
 
 == SyOC（一个学习用编译器项目）
 

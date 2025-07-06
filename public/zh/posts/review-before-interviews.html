@@ -475,6 +475,32 @@ R1 = R0 * 3</code></pre>
               </li>
               <li>
                 <p><strong>分支预测</strong>：</p>
+                <div class="open">
+                  <div class="content">
+                    <div class="ulist">
+                      <ul>
+                        <li>
+                          <p>1-bit 分支预测（分支预测缓冲区）；2-bit 分支预测</p>
+                        </li>
+                        <li>
+                          <p>一个 \((m,n)\) 预测器使用最后 \(m\) 条分支的行为，从 \(2^m\) 个分支预测器中选择，其中每个预测器是对单条分支的 \(n\) 位预测器。</p>
+                        </li>
+                        <li>
+                          <p>锦标赛预测器：</p>
+                          <div class="imageblock centered">
+                            <div class="content"><img src="/resource/arch-tournament.svg" alt="Tournament Branch Predictor" style="width: 25rem;"></div>
+                          </div>
+                        </li>
+                        <li>
+                          <p>被标记混合预测器（TAGE）：使用 PC 和 <em>不同长度</em> 的分支历史混合后的哈希作为索引，选择不同级的分支预测表条目，并选择最长的且其 tag 相匹配的 2-bit 或 3-bit 预测器。</p>
+                          <div class="imageblock centered">
+                            <div class="content"><img src="/resource/arch-tage.svg" alt="TAGE" style="width: 40rem;"></div>
+                          </div>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               </li>
               <li>
                 <p><strong>更多高级技术</strong>：</p>
@@ -522,6 +548,406 @@ WAW 和 WAR 冲突通过重命名目标寄存器得以避免；因为指令的�
               </li>
             </ol>
           </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_数据级并行">数据级并行</h3>
+          <div class="olist arabic">
+            <ol class="arabic">
+              <li>
+                <p><strong>SIMD</strong>：单条指令同时对多个数据元素进行操作。通常是定长的，但 SVE 和 RVV 都支持变长操作。</p>
+              </li>
+              <li>
+                <p><strong>向量架构</strong>：</p>
+                <div class="open">
+                  <div class="content">
+                    <div class="ulist">
+                      <ul>
+                        <li>
+                          <p>谓词寄存器： 向量处理器和 GPU 之间的一个区别在于它们处理条件语句的方式。向量处理器将谓词寄存器作为架构状态的一部分，并依赖编译器显式地操作掩码寄存器。相比之下，GPU 通过硬件操作内部掩码寄存器来达到相同的效果，而这些寄存器对 GPU 软件是不可见的。</p>
+                        </li>
+                        <li>
+                          <p>跨步（Stride）：加载间隔固定距离的数据元素。用于多维数组。需要考虑 bank 冲突问题。</p>
+                        </li>
+                        <li>
+                          <p>收集 - 分散（Gather-Scatter）：处理稀疏数组。收集指令使用额外的向量存储的索引加上基址计算出目标元素地址并加载对应元素进入向量寄存器。 分散指令类似。</p>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ol>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_gpu老黄特辑">GPU（老黄特辑）：</h3>
+          <section class="sect3">
+            <h4 id="_老黄的_gpu_架构">老黄的 GPU 架构</h4>
+            <div class="ulist">
+              <ul>
+                <li>
+                  <p>CUDA 线程：抽象的最低级的并行执行单元。</p>
+                </li>
+                <li>
+                  <p>线程块：定义了一个组，一些线程在组内被在一起阻塞执行。</p>
+                </li>
+                <li>
+                  <p>多线程 SIMD 处理器（流式多处理器，SM）：执行一整个线程块的处理器。一个 GPU 上可能有很多个这样的处理器。</p>
+                </li>
+                <li>
+                  <p><code>__device__</code> 或 <code>__global__</code> 修饰的函数在 GPU 上执行，<code>__host__</code> 修饰的函数在 CPU 上执行。</p>
+                </li>
+                <li>
+                  <p><code>__device__</code> 修饰的变量被分配在 GPU 上并可被所有（GPU 上的）多线程 SIMD 处理器访问。</p>
+                </li>
+                <li>
+                  <p><code>&lt;&lt;&lt;dimGrid, dimBlock&gt;&gt;&gt;</code> 语法用于指定代码的维度（单位为线程块）和线程块的维度（单位为线程）。 <code>blockIdx</code> 和 <code>threadIdx</code> 分别用于获取线程块和线程的索引。</p>
+                </li>
+                <li>
+                  <p>CUDA 编程要求：线程块内的线程可以以任意顺序独立地执行。</p>
+                </li>
+              </ul>
+            </div>
+            <table class="table frame-all grid-all stretch">
+              <caption class="title">
+                Table 1. GPU 术语对照表（编程抽象）
+              </caption>
+              <colgroup>
+                <col style="width: 25%;">
+                <col style="width: 25%;">
+                <col style="width: 25%;">
+                <col style="width: 25%;">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th class="table halign-left valign-top">描述性名称</th>
+                  <th class="table halign-left valign-top">最接近旧 GPU 术语</th>
+                  <th class="table halign-left valign-top">CUDA/NVIDIA GPU 术语</th>
+                  <th class="table halign-left valign-top">简短解释</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Vectorizable Loop</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Vectorizable Loop</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Grid</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">一种在 GPU 上执行的可向量化循环，由一个或多个线程块（向量化循环主体）组成，可以并行执行</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Body of Vectorized Loop</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Body of a (Strip-mined) Vectorized Loop</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Thread Block</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">一种在多线程 SIMD 处理器上执行的向量化循环，由一个或多个 SIMD 指令线程组成，它们可以通过局部内存进行通信</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Sequence of SIMD Lane Operations</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">One iteration of a Scalar Loop</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">CUDA Thread</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">对应于一个由单一 SIMD 通道执行的 SIMD 指令线程的垂直切片，结果根据掩码和谓词寄存器存储</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <table class="table frame-all grid-all stretch">
+              <caption class="title">
+                Table 2. GPU 术语对照表（物理对象）
+              </caption>
+              <colgroup>
+                <col style="width: 25%;">
+                <col style="width: 25%;">
+                <col style="width: 25%;">
+                <col style="width: 25%;">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th class="table halign-left valign-top">描述性名称</th>
+                  <th class="table halign-left valign-top">最接近旧 GPU 术语</th>
+                  <th class="table halign-left valign-top">CUDA/NVIDIA GPU 术语</th>
+                  <th class="table halign-left valign-top">简短解释</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="table halign-left valign-top">
+                    <p class="table">A Thread of SIMD Instructions</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Thread of Vector Instructions</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Warp</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">一种传统线程，但仅包含 SIMD 指令，在多线程 SIMD 处理器上执行，结果根据每个元素掩码存储</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="table halign-left valign-top">
+                    <p class="table">SIMD Instruction</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Vector Instruction</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">PTX Instruction</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">一种跨 SIMD 通道执行的单一 SIMD 指令</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <table class="table frame-all grid-all stretch">
+              <caption class="title">
+                Table 3. GPU 术语对照表（计算硬件）
+              </caption>
+              <colgroup>
+                <col style="width: 25%;">
+                <col style="width: 25%;">
+                <col style="width: 25%;">
+                <col style="width: 25%;">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th class="table halign-left valign-top">描述性名称</th>
+                  <th class="table halign-left valign-top">最接近旧 GPU 术语</th>
+                  <th class="table halign-left valign-top">CUDA/NVIDIA GPU 术语</th>
+                  <th class="table halign-left valign-top">简短解释</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Multithreaded SIMD Processor</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">(Multithreaded) Vector Processor</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Streaming Multiprocessor</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">一种多线程 SIMD 处理器，执行独立的 SIMD 指令线程，与其他 SIMD 处理器无关</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Thread Block</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Scalar Processor</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Giga Thread Engine</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">将多个线程块（向量化循环主体）分配给多线程 SIMD 处理器</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="table halign-left valign-top">
+                    <p class="table">SIMD Thread Scheduler</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Thread Scheduler in a Multithreaded CPU</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Warp Scheduler</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">一种硬件单元，负责调度和分发就绪的 SIMD 指令线程；包括一个记分板来跟踪 SIMD 线程执行</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="table halign-left valign-top">
+                    <p class="table">SIMD Lane</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Vector Lane</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Thread Processor</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">一种 SIMD 通道，在单一元素上执行线程中的操作，结果根据掩码存储</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <table class="table frame-all grid-all stretch">
+              <caption class="title">
+                Table 4. GPU 术语对照表（内存硬件）
+              </caption>
+              <colgroup>
+                <col style="width: 25%;">
+                <col style="width: 25%;">
+                <col style="width: 25%;">
+                <col style="width: 25%;">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th class="table halign-left valign-top">描述性名称</th>
+                  <th class="table halign-left valign-top">最接近旧 GPU 术语</th>
+                  <th class="table halign-left valign-top">CUDA/NVIDIA GPU 术语</th>
+                  <th class="table halign-left valign-top">简短解释</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="table halign-left valign-top">
+                    <p class="table">GPU Memory</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Main Memory</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Global Memory</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">所有多线程 SIMD 处理器可访问的 DRAM 内存</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Private Memory</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Stack or Thread Local Storage (OS)</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Local Memory</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">每个 SIMD 通道专属的 DRAM 内存部分</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Local Memory</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Local Memory</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Shared Memory</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">专属于一个多线程 SIMD 处理器的高速本地 SRAM，其他 SIMD 处理器无法访问</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="table halign-left valign-top">
+                    <p class="table">SIMD Lane Registers</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Vector Lane Registers</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">Thread Processor Registers</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table">分配给单个 SIMD 通道的寄存器，覆盖整个线程块（向量化循环主体）</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+          <section class="sect3">
+            <h4 id="_ptx_指令集">PTX 指令集</h4>
+            <p>硬件指令集上的一层额外抽象。</p>
+            <p>指令格式：<code>opcode.type d, a, b, c;</code></p>
+            <table class="table frame-all grid-all stretch">
+              <caption class="title">
+                Table 5. PTX 数据类型
+              </caption>
+              <colgroup>
+                <col style="width: 50%;">
+                <col style="width: 50%;">
+              </colgroup>
+              <tbody>
+                <tr>
+                  <td class="table halign-left valign-top">
+                    <p class="table">无类型</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table"><code>.b8</code>, <code>.b16</code>, <code>.b32</code>, <code>.b64</code></p>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="table halign-left valign-top">
+                    <p class="table">无符号整数</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table"><code>.u8</code>, <code>.u16</code>, <code>.u32</code>, <code>.u64</code></p>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="table halign-left valign-top">
+                    <p class="table">有符号整数</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table"><code>.s8</code>, <code>.s16</code>, <code>.s32</code>, <code>.s64</code></p>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="table halign-left valign-top">
+                    <p class="table">浮点数</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table"><code>.f16</code>, <code>.f32</code>, <code>.f64</code></p>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="table halign-left valign-top">
+                    <p class="table">谓词</p>
+                  </td>
+                  <td class="table halign-left valign-top">
+                    <p class="table"><code>.pred</code></p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p>详见 <a href="https://docs.nvidia.com/cuda/parallel-thread-execution/index.html?highlight=type#fundamental-types">PTX 基础数据类型</a>。</p>
+            <p>一些指令：</p>
+            <div class="ulist">
+              <ul>
+                <li>
+                  <p>控制流：<code>call</code>，<code>return</code></p>
+                </li>
+                <li>
+                  <p>屏障（线程块内同步）：<code>bar.sync</code></p>
+                </li>
+              </ul>
+            </div>
+            <p>所有指令都可以被 1 位的谓词修饰。<code>R0</code>, <code>R1</code>, …​ 表示 32 位寄存器，<code>RD0</code>, <code>RD1</code>, …​ 表示 64 位寄存器。</p>
+            <p><strong>GPU 上的条件分支</strong>：</p>
+            <p>显式谓词寄存器、内部掩码、分支同步栈、指令标记等手段。</p>
+            <p>在 PTX 汇编层面，有 <code>branch</code>，<code>call</code>，<code>return</code>，<code>exit</code> 等指令，外加用户指定的谓词修饰。</p>
+            <p>在 GPU 硬件层面，有 <code>branch</code>，<code>jump</code>，<code>jump indexed</code>，<code>call</code>，<code>call indexed</code>，<code>return</code>，<code>exit</code> 等指令， 并且有特殊指令管理来处理分支同步栈。GPU 硬件为每个 SIMD 线程提供自己的栈； 栈条目包含一个标识符令牌、目标指令地址和目标线程活动掩码。 有一些 GPU 专用指令，用于将栈条目压栈到 SIMD 线程中， 以及专用指令和指令标记，用于弹出栈条目或回退到指定的栈条目， 并根据目标指令地址和目标线程活动掩码进行分支。 GPU 分支指令通过分支同步栈在某些通道分支到目标地址时压入一个栈条目，而其他通道则继续执行。 NVIDIA 称这种情况为分支发散。 这种混合也用于当 SIMD 通道执行同步标记或汇聚时， 此时会弹出一个栈条目，并根据栈条目中的线程活动掩码分支到栈条目地址。 （具体执行方式，参考 fine-grained SIMD）。</p>
+          </section>
         </section>
       </section>
       <section class="sect1">

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 1066 791" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-miterlimit:10;">
+    <g transform="matrix(1,0,0,1,-515.458,-1357.83)">
+        <g transform="matrix(1,0,0,1,447.005,1054.21)">
+            <g transform="matrix(33.3333,0,0,33.3333,354.191,356.784)">
+            </g>
+            <text x="141.159px" y="356.784px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:33.333px;fill:rgb(35,31,32);">Branch history</text>
+        </g>
+        <g transform="matrix(1,0,0,1,917.579,1528.95)">
+            <g transform="matrix(33.3333,0,0,33.3333,437.967,506.704)">
+            </g>
+            <text x="289.762px" y="506.704px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:33.333px;fill:rgb(35,31,32);">Prediction</text>
+        </g>
+        <g transform="matrix(1,0,0,1,810.004,1498.55)">
+            <text x="255.791px" y="497.103px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:33.333px;fill:rgb(35,31,32);">m</text>
+            <text x="260.407px" y="537.103px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:33.333px;fill:rgb(35,31,32);">u</text>
+            <g transform="matrix(33.3333,0,0,33.3333,278.007,577.103)">
+            </g>
+            <text x="261.341px" y="577.103px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:33.333px;fill:rgb(35,31,32);">x</text>
+        </g>
+        <g transform="matrix(1,0,0,1,432.223,1120.35)">
+            <g transform="matrix(33.3333,0,0,33.3333,388.419,377.672)">
+            </g>
+            <text x="136.492px" y="377.672px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:33.333px;fill:rgb(35,31,32);">Global predictors</text>
+        </g>
+        <g transform="matrix(1,0,0,1,731.85,1054.21)">
+            <g transform="matrix(33.3333,0,0,33.3333,464.539,356.784)">
+            </g>
+            <text x="231.111px" y="356.784px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:33.333px;fill:rgb(35,31,32);">Branch address</text>
+        </g>
+        <g transform="matrix(1,0,0,1,774.094,1120.35)">
+            <g transform="matrix(33.3333,0,0,33.3333,366.718,377.671)">
+            </g>
+            <text x="244.451px" y="377.671px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:33.333px;fill:rgb(35,31,32);">Selector</text>
+        </g>
+        <g transform="matrix(1,0,0,1,1023.76,1120.35)">
+            <g transform="matrix(33.3333,0,0,33.3333,558.552,377.671)">
+            </g>
+            <text x="323.291px" y="377.671px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:33.333px;fill:rgb(35,31,32);">Local predictors</text>
+        </g>
+        <g transform="matrix(4.16667,0,0,4.16667,569.017,1370.39)">
+            <rect x="0" y="0" width="60.318" height="14.418" style="fill:none;stroke:rgb(35,31,32);stroke-width:0.6px;"/>
+        </g>
+        <g transform="matrix(-4.16667,0,0,4.16667,644.05,1520.32)">
+            <rect x="-24.301" y="0" width="24.301" height="88.117" style="fill:none;stroke:rgb(35,31,32);stroke-width:0.6px;"/>
+        </g>
+        <g transform="matrix(4.16667,0,0,4.16667,694.679,1981.96)">
+            <path d="M0,-110.796L0,0L82.817,0" style="fill:none;fill-rule:nonzero;stroke:rgb(35,31,32);stroke-width:0.6px;"/>
+        </g>
+        <g transform="matrix(4.16667,0,0,4.16667,1034.8,1974.7)">
+            <path d="M0,3.486L6.504,1.743L0,0L0,3.486" style="fill:rgb(35,31,32);fill-rule:nonzero;"/>
+        </g>
+        <g transform="matrix(4.16667,0,0,4.16667,954.017,1370.39)">
+            <rect x="0" y="0" width="60.318" height="14.418" style="fill:none;stroke:rgb(35,31,32);stroke-width:0.6px;"/>
+        </g>
+        <g transform="matrix(-4.16667,0,0,4.16667,1029.05,1520.32)">
+            <rect x="-24.301" y="0" width="24.301" height="88.117" style="fill:none;stroke:rgb(35,31,32);stroke-width:0.6px;"/>
+        </g>
+        <g transform="matrix(0,4.16667,4.16667,0,1279.75,1720.38)">
+            <path d="M-48.017,-48.017L48.017,-48.017" style="fill:none;fill-rule:nonzero;stroke:rgb(35,31,32);stroke-width:0.6px;"/>
+        </g>
+        <g transform="matrix(4.16667,0,0,4.16667,1072.41,1942.6)">
+            <path d="M0,-6.505L1.743,0L3.486,-6.505L0,-6.505" style="fill:rgb(35,31,32);fill-rule:nonzero;"/>
+        </g>
+        <g transform="matrix(-4.16667,0,0,4.16667,1414.05,1520.31)">
+            <rect x="-24.301" y="0" width="24.301" height="88.117" style="fill:none;stroke:rgb(35,31,32);stroke-width:0.6px;"/>
+        </g>
+        <g transform="matrix(0,4.16667,4.16667,0,1496.42,2103.59)">
+            <path d="M-139.988,-7.62L7.62,-7.62L7.62,-139.988L-11.715,-139.988L-11.715,-109.805" style="fill:none;fill-rule:nonzero;stroke:rgb(35,31,32);stroke-width:0.6px;"/>
+        </g>
+        <g transform="matrix(4.16667,0,0,4.16667,0,0)">
+            <clipPath id="_clip1">
+                <rect x="126.425" y="328.593" width="253.247" height="184.138" clip-rule="nonzero"/>
+            </clipPath>
+            <g clip-path="url(#_clip1)">
+                <g transform="matrix(1,0,0,1,248.147,491.405)">
+                    <path d="M0,3.486L6.504,1.743L0,0L0,3.486" style="fill:rgb(35,31,32);fill-rule:nonzero;"/>
+                </g>
+                <g transform="matrix(1,0,0,1,263.88,486.02)">
+                    <path d="M0,0L17.161,0" style="fill:none;fill-rule:nonzero;stroke:rgb(35,31,32);stroke-width:0.6px;"/>
+                </g>
+                <g transform="matrix(1,0,0,1,279.852,484.277)">
+                    <path d="M0,3.486L6.504,1.743L0,0L0,3.486" style="fill:rgb(35,31,32);fill-rule:nonzero;"/>
+                </g>
+                <g transform="matrix(0,-1,-1,0,259.122,481.01)">
+                    <ellipse cx="-5.009" cy="0" rx="19.795" ry="5.009" style="fill:none;stroke:rgb(35,31,32);stroke-width:0.6px;"/>
+                </g>
+                <g transform="matrix(1,0,0,1,136.564,413.935)">
+                    <path d="M0,-77.833L-9.839,-77.833L-9.839,0L12.693,0" style="fill:none;fill-rule:nonzero;stroke:rgb(35,31,32);stroke-width:0.6px;"/>
+                </g>
+                <g transform="matrix(1,0,0,1,148.069,412.192)">
+                    <path d="M0,3.486L6.504,1.743L0,0L0,3.486" style="fill:rgb(35,31,32);fill-rule:nonzero;"/>
+                </g>
+                <g transform="matrix(1,0,0,1,228.992,413.935)">
+                    <path d="M0,-77.833L-9.839,-77.833L-9.839,0L12.694,0" style="fill:none;fill-rule:nonzero;stroke:rgb(35,31,32);stroke-width:0.6px;"/>
+                </g>
+                <g transform="matrix(1,0,0,1,240.497,412.192)">
+                    <path d="M0,3.486L6.504,1.743L0,0L0,3.486" style="fill:rgb(35,31,32);fill-rule:nonzero;"/>
+                </g>
+                <g transform="matrix(1,0,0,1,289.281,413.935)">
+                    <path d="M0,-77.833L18.024,-77.833L18.024,0L44.775,0" style="fill:none;fill-rule:nonzero;stroke:rgb(35,31,32);stroke-width:0.6px;"/>
+                </g>
+                <g transform="matrix(1,0,0,1,332.867,412.192)">
+                    <path d="M0,3.486L6.505,1.743L0,0L0,3.486" style="fill:rgb(35,31,32);fill-rule:nonzero;"/>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

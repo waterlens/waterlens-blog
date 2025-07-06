@@ -1,4 +1,4 @@
-build: clean render-typ render-adoc make-css cp-assets tidy
+build: clean render-typ render-adoc make-css cp-svg cp-assets tidy
 
 clean:
   find . -name ".DS_Store" -type f -delete
@@ -14,6 +14,14 @@ render-typ:
     echo "Typst is compiling $file to public/resource/$NAME"
     mkdir -p $(dirname "public/resource/$NAME")
     $TYPST compile -f svg $file "public/resource/$NAME"
+  done
+
+cp-svg:
+  #!/usr/bin/env sh
+  for file in $(find resource/svg -type f -print0 | xargs -0); do
+    NAME=${file#resource/svg/}
+    echo "Copying $file to public/resource/$NAME"
+    cp $file "public/resource/$NAME"
   done
 
 render-adoc:
