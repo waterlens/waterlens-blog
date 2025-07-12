@@ -145,7 +145,7 @@ L2(p1)
               \[\def\sc#1{\dosc#1\csod} \def\dosc#1#2\csod{{\rm #1{\small #2}}} \newcommand{\dom}{\sc{DOM}}\\ \dom(n_{entry}) = \{n_{entry}\}\\ \dom(n) = N, \forall n \neq n_{entry}\]
             </div>
           </div>
-          <p><strong>逆后序</strong>：拓扑顺序。确保每个块的前驱都在块之前已经被访问。 <strong>反向 CFG 上的逆后序</strong>：为什么不用后序？循环时不同。 例子如下：</p>
+          <p><strong>逆后序</strong>：拓扑顺序。确保每个块的前驱都在块之前已经被访问。 <strong>反向 CFG 上的逆后序</strong>：为什么不用后序？循环时不同。 <a href="https://eli.thegreenplace.net/2015/directed-graph-traversal-orderings-and-applications-to-data-flow-analysis/">参考</a>。例子如下：</p>
           <div class="listing">
             <div class="content">
               <pre class="highlight"><code>A - B - D
@@ -233,10 +233,10 @@ L2(p1)
         </section>
         <section class="sect2">
           <h3 id="_冗余优化辨析">冗余优化辨析</h3>
-          <p>公共子表达式消除 (Common Subexpression Elimination)： 查找在给定执行路径上至少执行两次的计算，并消除其中的第二次及后续出现的计算。 这种优化需要数据流分析来定位冗余计算，几乎总是能提高所应用程序的性能。</p>
-          <p>循环不变量代码移动 (Loop Invariant Code Motion)：查找每次循环迭代都会产生相同结果的计算，并将它们移出循环。 虽然可以通过独立的数据流分析来确定这一点，但通常基于使用 ud 链。 这种优化几乎总是能提高性能，通常非常显著，很大程度上是因为它经常发现并移除循环不变量的地址计算，通常还包括那些访问数组元素的计算。</p>
+          <p>公共子表达式消除 (Common Subexpression Elimination)： 查找在给定执行路径上至少执行两次的计算，并消除其中的第二次及后续出现的计算。 这种优化需要数据流分析（Available Expression 分析）来定位冗余计算。</p>
+          <p>循环不变量代码移动 (Loop Invariant Code Motion)：查找每次循环迭代都会产生相同结果的计算，并将它们移出循环。 虽然可以通过独立的数据流分析来确定这一点，但通常基于使用 Use-Def 链。 这种优化几乎总是能提高性能，通常非常显著，很大程度上是因为它经常发现并移除循环不变量的地址计算，通常还包括那些访问数组元素的计算。</p>
           <p>部分冗余消除 (Partial Redundancy Elimination)： 将至少部分冗余的计算（即在流图的某些路径上被计算多次的计算）移动到其最优计算点，并完全消除冗余的计算。 它包括公共子表达式消除、循环不变量代码移动，以及更多内容。</p>
-          <p>代码提升 (Code Hoisting)：查找在程序中某一点的所有路径上都会执行的计算，并将它们统一为在该点的一个计算。 它需要数据流分析（即一种名称略显滑稽的“非常繁忙的表达式”分析形式），并减少程序所占用的空间，但很少影响其时间性能。</p>
+          <p>代码提升 (Code Hoisting)：查找在程序中从某一点开始的所有路径上都会执行的计算，并将它们统一为在该点的一个计算。 它需要数据流分析（即一种名称略显滑稽的“非常繁忙的表达式”分析形式），并减少程序所占用的空间，但很少影响其时间性能。</p>
         </section>
         <section class="sect2">
           <h3 id="_惰性代码移动">惰性代码移动</h3>
@@ -255,6 +255,8 @@ L2(p1)
             </div>
           </div>
           <p>\(\def\sc#1{\dosc#1\csod}\def\dosc#1#2\csod{{\rm #1{\small #2}}}\newcommand{\deexpr}{\sc{D}\sc{E}\sc{EXPR}}\deexpr(n)\) 是 \(n\) 中向下暴露的表达式集合。 一个表达式 \(e\) 属于 \(\def\sc#1{\dosc#1\csod}\def\dosc#1#2\csod{{\rm #1{\small #2}}}\newcommand{\deexpr}{\sc{D}\sc{E}\sc{EXPR}}\deexpr(n)\)， 当且仅当基本块 \(n\) 评估 \(e\)，并且 \(e\) 的所有操作数在 \(e\) 在 \(n\) 中的最后一次评估和 \(n\) 结束之间都没有被定义。 \(\def\sc#1{\dosc#1\csod}\def\dosc#1#2\csod{{\rm #1{\small #2}}}\newcommand{\exprkill}{\sc{EXPR}\sc{KILL}}\exprkill(n)\) 包含所有被 \(n\) 中的定义所杀死的表达式。一个表达式被杀死，当且仅当它的某个或某些操作数在块中被重新定义。</p>
+          <p><strong>忙碌表达式分析</strong>：</p>
+          <p>无论从某一点采取什么路径，表达式都会被评估，则称作该表达式在该点为忙碌的表达式。</p>
           <p><strong>惰性代码移动</strong>：</p>
           <p>TODO</p>
         </section>
