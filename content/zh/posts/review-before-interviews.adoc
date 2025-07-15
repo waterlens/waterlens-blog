@@ -66,6 +66,111 @@ https://surface.syr.edu/cgi/viewcontent.cgi?article=1012&context=lcsmith_other[D
 `apply` 函数。这种方式在之后也得到了长久的发展（根据数据流分析和类型分析的优化，分离 `apply` 函数等），
 但概念上的普及反而不如上一种方法。
 
+== 链接器
+
+=== 静态链接：
+
+1. *符号解析*：将符号（全局变量，函数等）引用与唯一的符号定义关联起来。
+2. *重定位*：
++
+--
+_编译器和汇编器生成的代码和数据段假设地址从 0 开始。_ 
+链接器通过将符号和一个地址关联起来来，并修改所有对这个新地址的引用从而完成重定位。
+--
+
+=== 对象文件
+
+1. 可重定位对象文件
+2. 可执行对象文件
+3. 共享对象文件：可以被动态链接的特殊可重定位文件
+
+=== 符号和符号表
+
+1. 全局符号
+2. 外部符号
+3. 局部符号：（static C 函数和 static 变量）
+
+*COMMON 段和 .bss 段的区别*：
+当多个全局变量被定义但未被初始化时，编译器不认为为冲突并且链接器可以选择任意可用定义中的一个，+
+此时将这些变量放入 COMMON 段允许惰性选择定义。
+
+=== 符号解析
+
+从符号表
+
+陷阱：如果一个 archive 文件被放置于实际使用其中符号的另一个对象文件之前，那么可能因为链接器+
+提前跳过 archive 中的符号而导致错误。
+
+=== 重定位
+
+1. 重定位段、符号定义
+2. 重定位段内的符号引用
+
+==== 重定位条目
+
+例如，对于 `elf` 文件，在 `+.rel.text+` 和 `+.rel.data+` 段中，
+分别包含了 `+.text+` 和 `+.data+` 段的重定位条目。
+
+x86-64 架构上的两种常见重定位类型：
+
+1. `R_X86_64_32`：重新定位使用对 32 位绝对地址的引用。
+通过绝对寻址，CPU 直接使用指令中编码的 32 位值作为有效地址，无需进一步修改。
+
+2. `R_X86_64_PC32`：使用一个 32 位 PC-relative 偏移量来重新定位引用。
+
+==== 重定位算法
+
+[source]
+----
+foreach section s {
+  foreach relocation entry r {
+    refptr = s + r.offset; /* ptr to reference to be relocated */
+    /* Relocate a PC-relative reference */
+    if (r.type == R_X86_64_PC32) {
+      refaddr = ADDR(s) + r.offset; /* ref’s run-time address */
+      *refptr = (unsigned) (ADDR(r.symbol) + r.addend - refaddr);
+    }
+    /* Relocate an absolute reference */
+    if (r.type == R_X86_64_32) {
+      *refptr = (unsigned) (ADDR(r.symbol) + r.addend);
+    }
+  }
+}
+----
+
+=== 动态链接
+
+在加载或者运行时，动态加载一个共享库并进行链接。
+
+当加载器加载一个使用了共享库的程序时，需要执行以下步骤：
+
+1. 重定位共享库
+2. 重定位对共享库中符号的引用
+
+
+==== PIC（地址无关代码）
+
+允许代码被加载、执行而无需任何重定位。
+
+*PIC 数据引用*：通过 GOT（Global Offset Table）来实现。+
+对于每个全局变量使用一个 8 字节条目，被使用全局变量的代码所引用；+
+并生成对应的重定位条目，使得在加载时，GOT 里的条目在重定位后包含了对象的绝对地址。+
+每个对象都有其自己的独立 GOT。
+
+*PIC 函数引用和延迟绑定*：通过 PLT（Procedure Linkage Table）来实现。
+
+1. 程序不是直接调用 `addvec`，而是调用 `PLT[2]`，这是 `addvec` 的 PLT 入口。
+2. 第一个 PLT 指令通过 `GOT[4]` 进行间接跳转。由于每个 GOT 条目最初指向其对应的 PLT 入口中的第二条指令，因此这个间接跳转只是将控制权转移到 `PLT[2]` 中的下一条指令。
+3. 在将 `addvec` 的 ID（0x1）压入栈之后，`PLT[2]` 跳转到 `PLT[0]`。
+4. `PLT[0]` 通过 `GOT[1]` 间接压入一个参数给动态链接器，然后通过 `GOT[2]` 间接跳转到动态链接器。+
+动态链接器使用这两个栈条目来确定 `addvec` 的运行时地址，将 `GOT[4]` 替换为这个地址，然后将控制权传递给 `addvec`。
+
+相比于全局变量，额外的步骤主要是为了实现惰性加载。
+
+*共享库需要 PIC 的核心原因*：+ 
+尽管加载器可以运行时候加载并修补代码中的偏移量，但这也导致共享库无法被共享：
+每个进程所需的代码中的偏移量都不同。因此，通过一层间接，我们允许共享库的
+代码段保持只读状态，而只需要修补数据段（而这本来就是共享库应有的机制）。
 
 == 优化技术
 
@@ -118,6 +223,12 @@ L2(p1)
 
 === 支配边界的计算
 
+- *Lengauer-Tarjan 算法和 Semi-NCA 算法*：
+
+动机：增量 LT 只能通过修复 IDOM 来修补，因此手动更新困难，往往选择重新计算。
+
+复杂度变化：从 stem:[O(E\alpha(E, V))] 到 stem:[O(V^2)]。
+
 - *Cooper 算法：*
 使用数据流分析：
 
@@ -144,6 +255,7 @@ L2(p1)
 *逆后序*：拓扑顺序。确保每个块的前驱都在块之前已经被访问。
 *反向 CFG 上的逆后序*：为什么不用后序？循环时不同。
 https://eli.thegreenplace.net/2015/directed-graph-traversal-orderings-and-applications-to-data-flow-analysis/[参考]。例子如下：
+
 [source]
 ----
 A - B - D
@@ -157,6 +269,19 @@ A - B - D
 
 *找支配边界*：所有汇合点都在其前驱的支配边界中，除非其前驱支配该汇合点；因此可以从汇合点开始构造性地产生支配边界集合。
 
+.根据 IDOM 计算 DF 集合的算法
+[source]
+----
+for all nodes, n, in the CFG do DF(n) ← ∅
+for all nodes, n, in the CFG do
+  if n has multiple predecessors then
+    for each CFG predecessor p of n do
+      runner ← p
+      while runner = IDOM(n) do
+        DF(runner) ← DF(runner) ∪ { n }
+        runner ← IDOM(runner)
+----
+
 集合的迭代支配边界：
 
 [stem]
@@ -164,7 +289,6 @@ A - B - D
 DF_1(S) = DF(S)\\
 DF_{i+1}(S) = DF (S \cup DF_i(S))
 ++++
-
 
 
 === SSA 构建
@@ -367,6 +491,9 @@ If 转换通过将程序转换为无条件执行每个条件分支的两个分�
 可以搭配内联缓存使用；替换内联缓存里描述的类型。
 描述对象的基本布局等信息。
 
+=== LLVM 中的优化
+
+TODO
 
 == 体系结构
 

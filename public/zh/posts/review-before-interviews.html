@@ -77,6 +77,153 @@
         <p><strong>去函数化</strong>：这种方法首先由 <a href="https://surface.syr.edu/cgi/viewcontent.cgi?article=1012&amp;context=lcsmith_other">Definitional interpreters for higher-order programming languages</a> 提出，其核心思想是，使用宿主语言里的数据结构类型去表示闭包中的环境（用“变体”携带的 tag 具体区分所用的闭包类型）， 并使用一个单独的 <code>apply</code> 函数去根据 tag 提取出环境中的值，然后调用对应的代码。 在这种方式下，所有的闭包创建都变成了对数据构造（包含类型变量），并且所有的闭包调用都变成了使用闭包为参数，调用 <code>apply</code> 函数。这种方式在之后也得到了长久的发展（根据数据流分析和类型分析的优化，分离 <code>apply</code> 函数等）， 但概念上的普及反而不如上一种方法。</p>
       </section>
       <section class="sect1">
+        <h2 id="_链接器">链接器</h2>
+        <section class="sect2">
+          <h3 id="_静态链接">静态链接：</h3>
+          <div class="olist arabic">
+            <ol class="arabic">
+              <li>
+                <p><strong>符号解析</strong>：将符号（全局变量，函数等）引用与唯一的符号定义关联起来。</p>
+              </li>
+              <li>
+                <p><strong>重定位</strong>：</p>
+                <div class="open">
+                  <div class="content">
+                    <p><em>编译器和汇编器生成的代码和数据段假设地址从 0 开始。</em> 链接器通过将符号和一个地址关联起来来，并修改所有对这个新地址的引用从而完成重定位。</p>
+                  </div>
+                </div>
+              </li>
+            </ol>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_对象文件">对象文件</h3>
+          <div class="olist arabic">
+            <ol class="arabic">
+              <li>
+                <p>可重定位对象文件</p>
+              </li>
+              <li>
+                <p>可执行对象文件</p>
+              </li>
+              <li>
+                <p>共享对象文件：可以被动态链接的特殊可重定位文件</p>
+              </li>
+            </ol>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_符号和符号表">符号和符号表</h3>
+          <div class="olist arabic">
+            <ol class="arabic">
+              <li>
+                <p>全局符号</p>
+              </li>
+              <li>
+                <p>外部符号</p>
+              </li>
+              <li>
+                <p>局部符号：（static C 函数和 static 变量）</p>
+              </li>
+            </ol>
+          </div>
+          <p><strong>COMMON 段和 .bss 段的区别</strong>： 当多个全局变量被定义但未被初始化时，编译器不认为为冲突并且链接器可以选择任意可用定义中的一个，+ 此时将这些变量放入 COMMON 段允许惰性选择定义。</p>
+        </section>
+        <section class="sect2">
+          <h3 id="_符号解析">符号解析</h3>
+          <p>从符号表</p>
+          <p>陷阱：如果一个 archive 文件被放置于实际使用其中符号的另一个对象文件之前，那么可能因为链接器+ 提前跳过 archive 中的符号而导致错误。</p>
+        </section>
+        <section class="sect2">
+          <h3 id="_重定位">重定位</h3>
+          <div class="olist arabic">
+            <ol class="arabic">
+              <li>
+                <p>重定位段、符号定义</p>
+              </li>
+              <li>
+                <p>重定位段内的符号引用</p>
+              </li>
+            </ol>
+          </div>
+          <section class="sect3">
+            <h4 id="_重定位条目">重定位条目</h4>
+            <p>例如，对于 <code>elf</code> 文件，在 <code>.rel.text</code> 和 <code>.rel.data</code> 段中， 分别包含了 <code>.text</code> 和 <code>.data</code> 段的重定位条目。</p>
+            <p>x86-64 架构上的两种常见重定位类型：</p>
+            <div class="olist arabic">
+              <ol class="arabic">
+                <li>
+                  <p><code>R_X86_64_32</code>：重新定位使用对 32 位绝对地址的引用。 通过绝对寻址，CPU 直接使用指令中编码的 32 位值作为有效地址，无需进一步修改。</p>
+                </li>
+                <li>
+                  <p><code>R_X86_64_PC32</code>：使用一个 32 位 PC-relative 偏移量来重新定位引用。</p>
+                </li>
+              </ol>
+            </div>
+          </section>
+          <section class="sect3">
+            <h4 id="_重定位算法">重定位算法</h4>
+            <div class="listing">
+              <div class="content">
+                <pre class="highlight"><code>foreach section s {
+  foreach relocation entry r {
+    refptr = s + r.offset; /* ptr to reference to be relocated */
+    /* Relocate a PC-relative reference */
+    if (r.type == R_X86_64_PC32) {
+      refaddr = ADDR(s) + r.offset; /* ref’s run-time address */
+      *refptr = (unsigned) (ADDR(r.symbol) + r.addend - refaddr);
+    }
+    /* Relocate an absolute reference */
+    if (r.type == R_X86_64_32) {
+      *refptr = (unsigned) (ADDR(r.symbol) + r.addend);
+    }
+  }
+}</code></pre>
+              </div>
+            </div>
+          </section>
+        </section>
+        <section class="sect2">
+          <h3 id="_动态链接">动态链接</h3>
+          <p>在加载或者运行时，动态加载一个共享库并进行链接。</p>
+          <p>当加载器加载一个使用了共享库的程序时，需要执行以下步骤：</p>
+          <div class="olist arabic">
+            <ol class="arabic">
+              <li>
+                <p>重定位共享库</p>
+              </li>
+              <li>
+                <p>重定位对共享库中符号的引用</p>
+              </li>
+            </ol>
+          </div>
+          <section class="sect3">
+            <h4 id="_pic地址无关代码">PIC（地址无关代码）</h4>
+            <p>允许代码被加载、执行而无需任何重定位。</p>
+            <p><strong>PIC 数据引用</strong>：通过 GOT（Global Offset Table）来实现。+ 对于每个全局变量使用一个 8 字节条目，被使用全局变量的代码所引用；+ 并生成对应的重定位条目，使得在加载时，GOT 里的条目在重定位后包含了对象的绝对地址。+ 每个对象都有其自己的独立 GOT。</p>
+            <p><strong>PIC 函数引用和延迟绑定</strong>：通过 PLT（Procedure Linkage Table）来实现。</p>
+            <div class="olist arabic">
+              <ol class="arabic">
+                <li>
+                  <p>程序不是直接调用 <code>addvec</code>，而是调用 <code>PLT[2]</code>，这是 <code>addvec</code> 的 PLT 入口。</p>
+                </li>
+                <li>
+                  <p>第一个 PLT 指令通过 <code>GOT[4]</code> 进行间接跳转。由于每个 GOT 条目最初指向其对应的 PLT 入口中的第二条指令，因此这个间接跳转只是将控制权转移到 <code>PLT[2]</code> 中的下一条指令。</p>
+                </li>
+                <li>
+                  <p>在将 <code>addvec</code> 的 ID（0x1）压入栈之后，<code>PLT[2]</code> 跳转到 <code>PLT[0]</code>。</p>
+                </li>
+                <li>
+                  <p><code>PLT[0]</code> 通过 <code>GOT[1]</code> 间接压入一个参数给动态链接器，然后通过 <code>GOT[2]</code> 间接跳转到动态链接器。+ 动态链接器使用这两个栈条目来确定 <code>addvec</code> 的运行时地址，将 <code>GOT[4]</code> 替换为这个地址，然后将控制权传递给 <code>addvec</code>。</p>
+                </li>
+              </ol>
+            </div>
+            <p>相比于全局变量，额外的步骤主要是为了实现惰性加载。</p>
+            <p><strong>共享库需要 PIC 的核心原因</strong>：+ 尽管加载器可以运行时候加载并修补代码中的偏移量，但这也导致共享库无法被共享： 每个进程所需的代码中的偏移量都不同。因此，通过一层间接，我们允许共享库的 代码段保持只读状态，而只需要修补数据段（而这本来就是共享库应有的机制）。</p>
+          </section>
+        </section>
+      </section>
+      <section class="sect1">
         <h2 id="_优化技术">优化技术</h2>
         <section class="sect2">
           <h3 id="_稀疏简单常量传播">稀疏简单常量传播</h3>
@@ -130,6 +277,15 @@ L2(p1)
           <div class="ulist">
             <ul>
               <li>
+                <p><strong>Lengauer-Tarjan 算法和 Semi-NCA 算法</strong>：</p>
+              </li>
+            </ul>
+          </div>
+          <p>动机：增量 LT 只能通过修复 IDOM 来修补，因此手动更新困难，往往选择重新计算。</p>
+          <p>复杂度变化：从 \(O(E\alpha(E, V))\) 到 \(O(V^2)\)。</p>
+          <div class="ulist">
+            <ul>
+              <li>
                 <p><strong>Cooper 算法：</strong> 使用数据流分析：</p>
               </li>
             </ul>
@@ -156,6 +312,21 @@ L2(p1)
           <p>加速技巧：将 Dom 集表示为树，合并时候使用 2-finger 算法。</p>
           <p><strong>支配边界的定义</strong>：b 的支配边界是集合 Y，其中 Y 中的每个块 b' 的每个前驱都被 b 支配，但 b' 不被 b 支配。</p>
           <p><strong>找支配边界</strong>：所有汇合点都在其前驱的支配边界中，除非其前驱支配该汇合点；因此可以从汇合点开始构造性地产生支配边界集合。</p>
+          <div class="listing">
+            <div class="title">
+              根据 IDOM 计算 DF 集合的算法
+            </div>
+            <div class="content">
+              <pre class="highlight"><code>for all nodes, n, in the CFG do DF(n) ← ∅
+for all nodes, n, in the CFG do
+  if n has multiple predecessors then
+    for each CFG predecessor p of n do
+      runner ← p
+      while runner = IDOM(n) do
+        DF(runner) ← DF(runner) ∪ { n }
+        runner ← IDOM(runner)</code></pre>
+            </div>
+          </div>
           <p>集合的迭代支配边界：</p>
           <div class="stem">
             <div class="content">
@@ -294,6 +465,10 @@ L2(p1)
           <p>这种只缓存一个结果的内联缓存被称作单态的； 对应的我们还有多态内联缓存，对应一个调用点具有多种对象类型和方法的情况。 这时生成一个 PIC stub，用一系列条件判断来决定调用哪个方法。 当然，必须要控制 stub 大小以避免起不到加速效果。</p>
           <p><strong>隐藏类（Hidden Class）</strong>：</p>
           <p>可以搭配内联缓存使用；替换内联缓存里描述的类型。 描述对象的基本布局等信息。</p>
+        </section>
+        <section class="sect2">
+          <h3 id="_llvm_中的优化">LLVM 中的优化</h3>
+          <p>TODO</p>
         </section>
       </section>
       <section class="sect1">
