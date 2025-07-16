@@ -468,7 +468,46 @@ for all nodes, n, in the CFG do
         </section>
         <section class="sect2">
           <h3 id="_llvm_中的优化">LLVM 中的优化</h3>
-          <p>TODO</p>
+        </section>
+      </section>
+      <section class="sect1">
+        <h2 id="_并发">并发</h2>
+        <section class="sect2">
+          <h3 id="_原子原语">原子原语</h3>
+          <p><strong>Bakery 锁模拟</strong>：</p>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>每个线程获取一个“号码”，并等待比自己号码小的线程完成。</p>
+              </li>
+              <li>
+                <p>通过比较号码和线程 ID 确定访问顺序。</p>
+              </li>
+            </ul>
+          </div>
+          <div class="listing">
+            <div class="content">
+              <pre class="highlight"><code>bool choosing[N] = {false};
+int number[N] = {0};
+
+void enter_critical_section(int i) {
+    choosing[i] = true;
+    number[i] = max(number[0], number[1], ..., number[N-1]) + 1;
+    choosing[i] = false;
+
+    for (int j = 0; j &lt; N; j++) {
+        while (choosing[j]) {} // 等待其他线程选号
+        while (number[j] != 0 &amp;& (number[j] &lt; number[i] || (number[j] == number[i] &amp;& j &lt; i))) {
+            // 等待优先级更高的线程
+        }
+    }
+}
+
+void leave_critical_section(int i) {
+    number[i] = 0;
+}</code></pre>
+            </div>
+          </div>
         </section>
       </section>
       <section class="sect1">
@@ -1192,6 +1231,34 @@ WAW 和 WAR 冲突通过重命名目标寄存器得以避免；因为指令的�
               <p><strong>运行时</strong> 使用 unsafe Rust 实现，常见的数组、字符串操作函数等</p>
             </li>
           </ul>
+        </div>
+      </section>
+      <section class="sect1">
+        <h2 id="_apple_uarch_benchmark">Apple-uArch-benchmark</h2>
+        <div class="olist arabic">
+          <ol class="arabic">
+            <li>
+              <p>测量乱序窗口大小：使用不同数量 <code>nop</code> 类指令填充缓冲区。</p>
+            </li>
+            <li>
+              <p>测量重命名窗口大小：使用不同数量的 <code>mov x5, #0</code> 类指令填充缓冲区。</p>
+            </li>
+            <li>
+              <p>测量加载缓冲区大小：使用不同数量的 <code>ldr x5, [x2]</code> 类指令填充缓冲区。</p>
+            </li>
+            <li>
+              <p>测量存储缓冲区大小：使用不同数量的 <code>str x5, [x2, #8]</code> 类指令填充缓冲区。</p>
+            </li>
+            <li>
+              <p>测量标量寄存器堆大小：使用不同数量的 <code>add x5, x11, x11</code> 类指令填充缓冲区。</p>
+            </li>
+            <li>
+              <p>测量向量寄存器堆大小：使用不同数量的 <code>add v0.16b, v1.16b, v2.16b</code> 类指令填充缓冲区。</p>
+            </li>
+            <li>
+              <p>测量调度器大小：使用不同数量的 <code>add x5, x0, x1</code> 类指令填充缓冲区。</p>
+            </li>
+          </ol>
         </div>
       </section>
     </div>
