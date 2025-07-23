@@ -1193,6 +1193,35 @@ SATB：当灰色对象不再指向白色对象时，记录该白色对象。
 *ZGC*：并发，压缩，读屏障，写屏障（分代模式）
 
 
+== 案例学习
+
+=== Google V8
+
+==== 去优化
+
+1. 首先，我们保存当前的程序状态。我们通过从优化代码调用运行时来实现这一点。然后，Deoptimizer 将当前程序状态序列化到一个内部数据结构中，即 FrameDescription。这包括读取 CPU 寄存器并检查要去优化的函数的栈帧。
+
+2. 接下来，我们将转换此状态，使其适应未优化代码，也就是说，将值放置在 Liftoff 生成的代码在去优化点所期望的正确寄存器和栈槽中。例如，TurboFan 代码放在寄存器中的值现在可能最终存放在栈槽中。基线代码的栈布局和期望（如果你愿意，可以称为去优化点的“调用约定”）是从 Liftoff 在编译期间生成的元数据中读取的。 
+
+3. 最后，我们用相应的未优化栈帧替换优化后的栈帧，并跳转到基线代码的中间位置，该位置对应于触发去优化的优化代码中的点。
+
+==== Sea of Nodes
+
+不表示基本块，而只表示指令之间的真实依赖关系。多种效果边。
+
+==== V8 放弃 SoN 的各种原因
+
+1. 手动/目视检查和理解 SoN 图很困难。
+2. 效果链上的节点过多或具有控制输入。（例子：JS 很多宏操作会被 lower 到一系列更底层、有效果的指令上，并形成效果依赖）
+3. 内存效果不容易进行浮动。（例子：。当分支的两个目标都有副作用时，效果链会在控制链分裂和合并的地方完全相同地分裂和合并。有副作用的节点通常被限制安排在两个控制节点之间，也就是在一个基本块内。在这个基本块内，效果链会约束有副作用的节点保持与源代码中相同的顺序）
+4. 手动管理效果链和控制链很困难。
+5. 难以找到合适的顺序遍历图。
+6. 图表示法容易导致缓存缺失。
+7. 难以使用控制流约束数据流（例子：如果测试了一个数满足特定条件，
+那么在 CFG 里可以自然的假设在分支成立的基本块中这个条件成立并进行对应优化。但在 SoN 里，
+由于计算是可以浮动的，并不能利用该性质进行优化，除非显式加入控制依赖，但这相当于重建了 CFG）
+
+
 == Calocom（一个课程项目）
 
 新意：
@@ -1205,42 +1234,6 @@ SATB：当灰色对象不再指向白色对象时，记录该白色对象。
 - *名称修饰* 模仿 Swift 和 C++ 形成了一套自己的命名风格，编码内置类型、用户定义的 ADT、数据等
   总结：显式编码标识符长度；C 前缀类型；编码路径；区分多态和单态函数
 - *运行时* 使用 unsafe Rust 实现，常见的数组、字符串操作函数等
-
-// [source]
-// ----
-// name ::= identifier-length identifier
-
-// // Primitive Types
-// type ::= 'Co'   // Calocom.Object
-// type ::= 'Cu'   // Calocom.Unit
-// type ::= 'Cb'   // Calocom.Bool
-// type ::= 'Ci4'  // Calocom.Int32
-// type ::= 'Cs'   // Calocom.String
-// type ::= 'Cci4' // Calocom.CInt32
-// type ::= 'Cf8'  // Calocom.Float64
-
-// // Complex Type
-// type-list ::= 'l_' type* '_l'
-// type ::= 'Ce' context name                  // Enum
-// type ::= 'Ct' type-list                     // Tuple
-// type ::= 'Cr' type                          // Reference
-// type ::= 'Ca' type                          // Array
-// type ::= 'Clf' function-signature           // Callable (Function)
-// type ::= 'Clc' function-signature           // Callable (Closure)
-// type ::= 'Clt' function-signature           // Callable (Ctor)
-
-// function-signature ::= 'f' type type-list
-// generic-signature  ::= 'g' number-of-generic-params
-// generic-function-signature ::= function-signature generic-signature
-// specialization     ::= 's' type-list
-
-// // Context
-// context ::= name*   // Full restricted context
-// context ::= '$'     // Current context
-
-// polymorphic-function-name ::= '_CALOCOM_PF_' context name function-signature
-// specialized-function-name ::= '_CALOCOM_F_'  context name generic-function-signature specialization
-// ----
 
 == Apple-uArch-benchmark
 
