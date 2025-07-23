@@ -778,6 +778,26 @@ set-associative cache: 首先发现哪个 set 包含地址（block_addr % num_of
 
 10. 使用 HBM 拓展内存体系
 
+==== 缓存与虚拟内存
+
+- *VIVT (Virtual Index Virtual Tag)*：+
+--
+* 优点：无需经过地址翻译
+* 缺点：可能出现歧义或者别名问题（切换进程前需要刷新缓存避免歧义导致的正确性问题；别名问题会产生一致性问题）
+--
+
+- *PIPT (Physical Index Physical Tag)*：+
+--
+* 优点：无歧义和别名问题
+* 缺点：不论是否命中都需要查询 TLB 或 PTE，导致更长的延迟
+--
+
+- *VIPT (Virtual Index Physical Tag)*：+
+--
+* 优点：减小延迟（因为索引时不需要已翻译的物理地址）
+* 缺点：由于 VI 的要求，只有当缓存每路的大小不大于页面大小时，
+才能确保不会有别名问题。
+--
 
 === GPU（老黄特辑）：
 

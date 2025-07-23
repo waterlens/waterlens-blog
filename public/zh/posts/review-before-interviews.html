@@ -898,6 +898,72 @@ WAW 和 WAR 冲突通过重命名目标寄存器得以避免；因为指令的�
               </ol>
             </div>
           </section>
+          <section class="sect3">
+            <h4 id="_缓存与虚拟内存">缓存与虚拟内存</h4>
+            <div class="ulist">
+              <ul>
+                <li>
+                  <p><strong>VIVT (Virtual Index Virtual Tag)</strong>：+</p>
+                </li>
+              </ul>
+            </div>
+            <div class="open">
+              <div class="content">
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>优点：无需经过地址翻译</p>
+                    </li>
+                    <li>
+                      <p>缺点：可能出现歧义或者别名问题（切换进程前需要刷新缓存避免歧义导致的正确性问题；别名问题会产生一致性问题）</p>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="ulist">
+              <ul>
+                <li>
+                  <p><strong>PIPT (Physical Index Physical Tag)</strong>：+</p>
+                </li>
+              </ul>
+            </div>
+            <div class="open">
+              <div class="content">
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>优点：无歧义和别名问题</p>
+                    </li>
+                    <li>
+                      <p>缺点：不论是否命中都需要查询 TLB 或 PTE，导致更长的延迟</p>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="ulist">
+              <ul>
+                <li>
+                  <p><strong>VIPT (Virtual Index Physical Tag)</strong>：+</p>
+                </li>
+              </ul>
+            </div>
+            <div class="open">
+              <div class="content">
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>优点：减小延迟（因为索引时不需要已翻译的物理地址）</p>
+                    </li>
+                    <li>
+                      <p>缺点：由于 VI 的要求，只有当缓存每路的大小不大于页面大小时， 才能确保不会有别名问题。</p>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
         </section>
         <section class="sect2">
           <h3 id="_gpu老黄特辑">GPU（老黄特辑）：</h3>
