@@ -1707,6 +1707,158 @@ WAW 和 WAR 冲突通过重命名目标寄存器得以避免；因为指令的�
         </section>
       </section>
       <section class="sect1">
+        <h2 id="_游戏引擎开发面试相关">游戏引擎开发面试相关</h2>
+        <section class="sect2">
+          <h3 id="_c">C++</h3>
+          <section class="sect3">
+            <h4 id="_虚表">虚表</h4>
+            <p>简明解释： <a href="https://ww2.ii.uj.edu.pl/~kapela/pn/cpp_vtable.html">C++ 虚表</a></p>
+            <p>规定： <a href="https://refspecs.linuxfoundation.org/cxxabi-1.75.html#vtable">C++ ABI</a></p>
+            <p><strong>布局</strong> 按顺序分别为：</p>
+            <div class="ulist">
+              <ul>
+                <li>
+                  <p>虚调用偏移 (vcall offset) 如果存在虚基类，当存在多个不同派生类且具有对应的覆写的虚函数实现时，需要将该偏移量加到 this 指针上用于调用对应的虚函数。</p>
+                </li>
+                <li>
+                  <p>虚基类偏移 (vbase offset) 如果存在虚基类，则该虚基类不能被复制并作为中间层对象前缀，+ 此时基类对象的布局可被单独分割开，派生类可以使用虚基类偏移来确定该基类对象在整个对象中的位置。</p>
+                </li>
+                <li>
+                  <p>顶部偏移 (top offset) 表示从虚表指针在对象内部位置到对象顶部的位移，用于找到对象顶部。+ 这对于特定的 <code>dynamic_cast&lt;void*&gt;</code> 是必要的。</p>
+                </li>
+                <li>
+                  <p>类型信息指针（RTTI） (typeinfo pointer)</p>
+                </li>
+                <li>
+                  <p>虚表地址点 (vtable address pointer)：无大小，虚表指针指向此处</p>
+                </li>
+                <li>
+                  <p>虚函数指针（包括虚析构函数） (vfunc pointer)</p>
+                </li>
+              </ul>
+            </div>
+          </section>
+          <section class="sect3">
+            <h4 id="_内存池对象池和内存分配">内存池、对象池和内存分配</h4>
+            <p>概念来上说，内存池和对象池都指的是领域特定状况下（如游戏引擎）某种特殊的内存分配器。 对于对象池来说，最关键的优化手段是重用对象从而避免反复构造和销毁对象的开销。 这样的开销可能是某种特殊的资源带来的，比如网络连接、数据库连接、文件句柄等。</p>
+          </section>
+          <section class="sect3">
+            <h4 id="_引用相关">引用相关</h4>
+            <p>右值引用：为编译器提供显式的所有权“移动”指示。</p>
+            <p>万能引用 + forward = 完美转发：由于怪异的引用间互相转换规则，需要一种保持引用类型、用于重载决议的机制。</p>
+            <div class="listing">
+              <div class="content">
+                <pre class="highlight"><code>template&lt;typename T&gt;
+void print(T & t) { // F1
+}
+
+template&lt;typename T&gt;
+void print(T &amp;& t) { // F2
+}
+
+template&lt;typename T&gt;
+void testForward(T &amp;& v){
+    print(v);// always F1
+    print(std::forward&lt;T&gt;(v)); // F2
+    print(std::move(v)); //always F2
+}</code></pre>
+              </div>
+            </div>
+          </section>
+          <section class="sect3">
+            <h4 id="_crtp奇异递归模板模式">CRTP（奇异递归模板模式）</h4>
+            <p>形式化为 F-bound polymorphism。</p>
+            <p>类似于虚函数 + 编译器去虚化的效果。</p>
+            <div class="listing">
+              <div class="content">
+                <pre class="highlight"><code>// The Curiously Recurring Template Pattern (CRTP)
+template &lt;class T&gt;
+class Base
+{
+    // methods within Base can use template to access members of Derived
+};
+class Derived : public Base&lt;Derived&gt;
+{
+    // ...
+};</code></pre>
+              </div>
+            </div>
+          </section>
+        </section>
+        <section class="sect2">
+          <h3 id="_脚本框架和其在游戏引擎中的应用">脚本框架和其在游戏引擎中的应用</h3>
+          <section class="sect3">
+            <h4 id="_burst">Burst</h4>
+            <p>基于 LLVM 的 C# 编译器。支持无托管对象的 C# 子集。</p>
+          </section>
+          <section class="sect3">
+            <h4 id="_mono">Mono</h4>
+            <p>Mono 是一个跨平台、开源的 .NET 运行时框架， 并被 Unity 项目所使用作为其的脚本后端。</p>
+            <p>Mono 包含一些关键的组件：</p>
+            <div class="ulist">
+              <ul>
+                <li>
+                  <p>C# 编译器</p>
+                </li>
+                <li>
+                  <p>CLI 虚拟机</p>
+                </li>
+                <li>
+                  <p>语言库</p>
+                </li>
+              </ul>
+            </div>
+            <p>Unity 主要使用 Mono 的 JIT 模式。</p>
+            <p>优点：构建快，支持各种托管类库。</p>
+          </section>
+          <section class="sect3">
+            <h4 id="_il2cpp">IL2CPP</h4>
+            <p>Mono 后端的替代方案， 将 CIL 直接翻译为 C++ 代码。</p>
+            <p>还包含一个运行时，承担 GC 等工作。 使用 Boehm GC (标记 - 清扫，增量，非分代)。</p>
+          </section>
+          <section class="sect3">
+            <h4 id="_luajit_和_xlua">LuaJIT 和 xLua</h4>
+            <p>C# 和 xLua 通信机制：</p>
+            <div class="ulist">
+              <ul>
+                <li>
+                  <p>C# 调用 Lua：<code>P/Invoke</code></p>
+                </li>
+                <li>
+                  <p>传递 C# 对象给 Lua：将 Object 放入内存池并提供索引； 然后可以使用反射获取 Object 的类型信息并对应地为 Lua 对象设置元表。</p>
+                </li>
+              </ul>
+            </div>
+            <p>优化 <code>P/Invoke</code> 的性能：用本机代码写的函数封装多个调用，然后再使用 <code>P/Invoke</code> 调用。</p>
+          </section>
+          <section class="sect3">
+            <h4 id="_热更新">热更新</h4>
+            <p>Lua 解决方案（xLua，ToLua）：直接更新 Lua 脚本</p>
+            <p>C# 解决方案（ILRuntime）：实现一个 IL 字节码解释器，然后执行脚本</p>
+            <p>HybirdCLR 方案：向 IL2CPP 加入解释器模式，将 IL 编译成寄存器式指令，然后执行，提高效率。</p>
+          </section>
+          <section class="sect3">
+            <h4 id="_verse">Verse</h4>
+            <p>静态分析（消除 bound checking），软件事务内存。</p>
+          </section>
+          <section class="sect3">
+            <h4 id="_我投入到游戏开发的动机">我投入到游戏开发的动机</h4>
+            <p>参考： <a href="https://blog.celes42.com/the_language_that_never_was.html">The Language That Never Was</a></p>
+            <p>概要：</p>
+            <div class="ulist">
+              <ul>
+                <li>
+                  <p>掌握很多编译器相关知识，可以用在多种项目里（UE5：LTO，PGO；Unity：IL2CPP，Burst）。</p>
+                </li>
+                <li>
+                  <p>在此基础上，我认为游戏开发的程序员值得用上更好的编程语言和编译器。</p>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+      </section>
+      <section class="sect1">
         <h2 id="_案例学习">案例学习</h2>
         <section class="sect2">
           <h3 id="_google_v8">Google V8</h3>
