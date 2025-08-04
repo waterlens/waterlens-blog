@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="Asciidoctor 2.0.23 with Waterlens HTML Backend 0.1.0">
+  <title>使用 SIMD 指令批量检测字节位于集合中的字节: 与一种系统化查找表分解法</title>
+</head>
+<body>
+  <article>
+    <header>
+      <h1><a href=".">使用 SIMD 指令批量检测字节位于集合中的字节</a></h1>
+      <h2 class="subtitle">与一种系统化查找表分解法</h2>
+    </header>
+    <hr>
+    <div id="content">
+      <p>在进行文本处理时，判断某些字节是否属于特定集合是一项 <em>基础</em> 操作。 对于标量实现而言，针对不同大小和特性的字节集合，判断一个字节是否存在于其中通常采用分支判断、位图或查找表等方法。 利用 SIMD 指令对这一操作进行批量处理，可以在不显著增加单次操作延迟的情况下，大幅提升吞吐量，实现远超标量实现的性能。这种批量化的处理技术又被称作 <em>向量化分类</em>。</p>
+      <p>向量化分类并非新事物：在我受到 <a href="https://lemire.me/blog/2023/09/04/locating-identifiers-quickly-arm-neon-edition/">Lemire 相关工作</a> 启发、自己思考出一种查找表计算方法、并决定写点相关的东西后， 我又发现了 <a href="http://0x80.pl/notesen/2018-10-18-simd-byte-lookup.html">另一篇相关的文章</a>，几乎完整地介绍了向量化分类的各种场景和对应的实现（包括我将要介绍的）。 幸运的是，这篇文章给出的“特例情况”的条件过于苛刻，因此我还能在本文中唠叨一些新东西。</p>
+      <p>本文将使用 ARM64 指令集中的 Neon 向量指令进行叙述。 不过，大部分内容也适用于支持 SSE2 + SSSE3 指令集的 x86-64 架构。</p>
+      <section class="sect1">
+        <h2 id="_两次查找法">两次查找法</h2>
+      </section>
+      <section class="sect1">
+        <h2 id="_如何计算出分解后的查找表">如何计算出分解后的查找表？</h2>
+      </section>
+      <section class="sect1">
+        <h2 id="_可以使用单次查找法的特例">可以使用单次查找法的特例</h2>
+      </section>
+    </div>
+    <hr>
+    <footer>
+      <p>The content on <a property="dct:title" rel="cc:attributionURL" href="/">this website</a> © 2021 - 2025 by <span property="cc:attributionName">Waterlens</span> is licensed under <a href="http://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">CC BY-SA 4.0 <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1"></a></p>
+    </footer>
+  </article>
+</body>
+</html>
