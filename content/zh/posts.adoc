@@ -11,7 +11,7 @@
 == 所有文章
 
 [.centered]
-* xref:/zh/posts/simd-byte-set-check.html[使用 SIMD 指令批量检测字节位于集合中的字节]
+* xref:/zh/posts/simd-byte-set-check.html[使用 SIMD 指令批量检测位于集合中的字节]
 * xref:/zh/posts/fast-monoid-crc32.html[快速幺半群 CRC32 哈希计算]
 * xref:/zh/posts/chez.html[Chez Scheme 的发展]
 * xref:/zh/posts/til.html[今天我学到了]

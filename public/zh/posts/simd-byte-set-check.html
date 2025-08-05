@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-hans">
 <head>
   <meta charset="utf-8">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,21 +11,67 @@
   <link rel="stylesheet" href="/style.css">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="generator" content="Asciidoctor 2.0.23 with Waterlens HTML Backend 0.1.0">
-  <title>使用 SIMD 指令批量检测字节位于集合中的字节: 与一种系统化查找表分解法</title>
+  <title>使用 SIMD 指令批量检测位于集合中的字节: 与一种查找表分解法</title>
 </head>
 <body>
   <article>
     <header>
-      <h1><a href=".">使用 SIMD 指令批量检测字节位于集合中的字节</a></h1>
-      <h2 class="subtitle">与一种系统化查找表分解法</h2>
+      <h1><a href=".">使用 SIMD 指令批量检测位于集合中的字节</a></h1>
+      <h2 class="subtitle">与一种查找表分解法</h2>
     </header>
     <hr>
     <div id="content">
-      <p>在进行文本处理时，判断某些字节是否属于特定集合是一项 <em>基础</em> 操作。 对于标量实现而言，针对不同大小和特性的字节集合，判断一个字节是否存在于其中通常采用分支判断、位图或查找表等方法。 利用 SIMD 指令对这一操作进行批量处理，可以在不显著增加单次操作延迟的情况下，大幅提升吞吐量，实现远超标量实现的性能。这种批量化的处理技术又被称作 <em>向量化分类</em>。</p>
-      <p>向量化分类并非新事物：在我受到 <a href="https://lemire.me/blog/2023/09/04/locating-identifiers-quickly-arm-neon-edition/">Lemire 相关工作</a> 启发、自己思考出一种查找表计算方法、并决定写点相关的东西后， 我又发现了 <a href="http://0x80.pl/notesen/2018-10-18-simd-byte-lookup.html">另一篇相关的文章</a>，几乎完整地介绍了向量化分类的各种场景和对应的实现（包括我将要介绍的）。 幸运的是，这篇文章给出的“特例情况”的条件过于苛刻，因此我还能在本文中唠叨一些新东西。</p>
-      <p>本文将使用 ARM64 指令集中的 Neon 向量指令进行叙述。 不过，大部分内容也适用于支持 SSE2 + SSSE3 指令集的 x86-64 架构。</p>
+      <p>在进行文本处理时，判断某些字节是否属于特定集合是一项 <strong>基础</strong> 操作。 对于标量实现而言，针对不同大小和特性的字节集合，判断一个字节是否存在于其中通常采用分支判断、位图或查找表等方法。 利用 SIMD 指令对这一操作进行批量处理，可以在不显著增加单次操作延迟的情况下，大幅提升吞吐量，实现远超标量实现的性能。这种批量化的处理技术又被称作 <strong>向量化分类</strong>。</p>
+      <p>向量化分类并非新事物：在我受到 <a href="https://lemire.me/blog/2023/09/04/locating-identifiers-quickly-arm-neon-edition/">Lemire 相关工作</a> 启发、自己思考出一种查找表分解方法、并决定写点相关的东西后，我发现我的方法与 <a href="https://arxiv.org/pdf/1902.08318">Parsing Gigabytes of JSON per Second</a> 中提出的方法实质上是一致的（尽管原文中的描述相对更加简洁和难以理解）。</p>
+      <p>我又发现了 <a href="http://0x80.pl/notesen/2018-10-18-simd-byte-lookup.html">另一篇相关的文章</a>，几乎完整地介绍了向量化分类的各种场景和对应的实现（包括我将要介绍的）。 幸运的是，这篇文章给出的“特例情况”的条件过于苛刻，因此我在重述算法之外还能总结一些更新的理解与应用。 在本文接下来的部分，我将介绍最常用的一种基于查找表的向量化分类实现以及一个特例情况下的简化实现。 对于前者，我会使用我的思路描述计算所需的查找表的方法。</p>
+      <section class="sect1">
+        <h2 id="_arm64_neon_和_x86_64_ssse3_指令集中的表查找字节混洗指令">ARM64 (Neon) 和 x86-64 (SSSE3) 指令集中的表查找/字节混洗指令</h2>
+        <section class="sect2">
+          <h3 id="_tbl">TBL</h3>
+          <p>在 Neon 指令集中，ARM 提供了 <code>tbl</code> 指令，用于执行表的向量化查找。 其中最常用的一种变体，用于单个长度为 128 位、每个元素为 1 个字节、共包含 16 个通道的表（恰好可以放置在单个向量寄存器中）。 取决于要进行批量查找的源索引寄存器长度，其指令格式为 <code>tbl vd.16b, {vn.16b}, vm.16b</code> 或 <code>tbl vd.8b, {v16.8b}, vm.8b</code>。 这条指令变体的语义官方描述如下：</p>
+          <div class="listing">
+            <div class="content">
+              <pre class="highlight"><code>此指令从索引源 SIMD 和 FP 寄存器的向量元素中读取每个值，将每个结果作为索引，在由一个源表 SIMD 和 FP 寄存器描述的字节表中进行查找，将查找结果放入向量中，并将向量写入目标 SIMD 和 FP 寄存器。如果索引超出表的范围，则该查找结果为 0。</code></pre>
+            </div>
+          </div>
+          <p>举例而言，如果我们有一个 16 元素的字节查找表， 其内容为 <code>[0xF, 0xE, 0xD, 0xC, 0xB, 0xA, 0x9, 0x8, 0x7, 0x6, 0x5, 0x4, 0x3, 0x2, 0x1, 0x0]</code> （也就是说，索引为 0 处存储的值为 15，索引为 1 处存储的值为 14，以此类推，直到索引为 15 处存储的值为 0）。 使用这个查找表可以将一个半字节（4 位）的值作为索引转换为 15 减去该值的结果，而如果索引超过半字节的值域（&gt;= 15），则会产生 0 作为结果。 抛开这个查找表的实际作用不谈，如果我们有一个长度为 8 的字节数组，例如 <code>[4, 2, 17, 8, 5, 1, 10, 11]</code>， 那么通过单条 <code>tbl</code> 指令，我们即可使用上述查找表将这个数组转换为 <code>[11, 13, 8, 7, 10, 14, 5, 4]</code>。 在高性能 ARM64 架构实现，例如 M1 系列芯片上，无论是大核还是小核， 使用单个查找表的 <code>tbl</code> 指令延迟为 2 个周期，吞吐量为 0.25， 后者表示最多同时运行 4 条尚未完成的 <code>tbl</code> 指令。</p>
+        </section>
+        <section class="sect2">
+          <h3 id="_pshufb">PSHUFB</h3>
+          <p>尽管并没有直接用于查找表的指令，Intel 早在 SSSE3 指令集中就提供了 <code>pshufb</code> 指令。 当用于长度为 128 位的 <code>xmm</code> 寄存器时，其指令格式为 <code>pshufb xmm1, xmm2/m128</code>。 该指令变体的语义官方描述如下：</p>
+          <div class="listing">
+            <div class="content">
+              <pre class="highlight"><code>PSHUFB 根据源操作数（第二个操作数）中的混洗控制掩码，对目标操作数（第一个操作数）中的字节进行原地混洗。该指令对目标操作数中的数据进行重新排列，而不会影响混洗掩码。如果混洗控制掩码中每个字节的最高位（bit[7]）被置为1，则在结果字节中写入常量零。混洗控制掩码中的每个字节形成一个索引，用于重新排列目标操作数中对应的字节。每个索引的值是混洗控制字节的最低4位。</code></pre>
+            </div>
+          </div>
+          <p>正如它的名字“混洗” (Shuffle) 所暗示的那样，它的作用是使用 <code>xmm2</code> 寄存器中位于位置 n 的字节值 m 作为目标索引， 表明 <code>xmm1</code> 寄存器中位置 n 的字节应该被放置于 <code>xmm1</code> 寄存器中位置 m 处。当索引越界时，不同于 <code>tbl</code> 指令总会产生 0， <code>pshufb</code> 只会在索引的最高位被置为 1 时，才会产生 0。 在余下的情况，它只是静默的从字节的低 4 位中提取索引值，而不管高 3 位的值具体是什么。</p>
+          <p>虽然并非专用于表查找，<code>pshufb</code> 仍然能服务于该目的。 在进行查找操作时，输入的查找表会被原地更新为输出。 也就是说，这条指令里的 <code>xmm1</code> 寄存器同时起到了存储查找表和结果的作用， 而 <code>xmm2</code> 对应着输入寄存器。</p>
+        </section>
+        <section class="sect2">
+          <h3 id="_查找表大小的限制">查找表大小的限制</h3>
+          <p>上述两条指令中，我们都使用了 128 位长的字节查找表，索引值为 4 位。 在 Neon 指令集中 <code>tbl</code> 可以最多被拓展到使用 64 字节的查找表， 但这仍然无法覆盖我们字节分类任务中所需 256 种情况， 且速度无法与使用 16 字节的查找表的指令速度相匹敌，更别说跨平台的可用性了。</p>
+          <p>在这种情形下，我们可以将单次查找拆分为两次查找。 这样的分解并不总是能成功：它对目标集合的特性存在要求。 然而，现实场景中的大部分具有使用价值的集合都满足这一要求。</p>
+        </section>
+      </section>
       <section class="sect1">
         <h2 id="_两次查找法">两次查找法</h2>
+        <section class="sect2">
+          <h3 id="_分解即是升维">分解即是升维</h3>
+          <p>考虑使用一个全宽查找表进行单次查找的原理： 我们使用待查元素作为一个 <strong>一维坐标</strong> 去获取一个对应的值， 这个值是预先计算过的，代表了待查元素的某种性质（针对标题所述的检测字节是否位于集合中的任务， 我们只需要 1 位的值用于表示该元素是否则集合中 - 这恰好对应了位图）。</p>
+          <p>那么，是否可以通过 <strong>升维</strong> 的方式，使用 <strong>二维坐标</strong> 去更好地刻画信息，从而缩短所需的查找表长度？ 结论是肯定的。</p>
+          <p>考虑这样的一个案例：我们希望识别字符集合 { '{', '}', '[', ']' } 中的字符。 它在一维的 256 位查找表（位图）中需要设置 4 位。</p>
+          <p>然而，考虑他们出现在 2 维 ASCII 字符表中的位置：</p>
+          <div class="imageblock centered">
+            <div class="content"><img src="/resource/brackets-braces.svg" alt="Brackets and braces in ASCII table" style="width: 30rem;"></div>
+          </div>
+          <p>上表中的列标签代表了 ASCII 字符的低 4 位数值，并且行标签代表了 ASCII 字符的高 4 位数值。</p>
+          <p>从上表中，可以发现，我们希望识别的字符恰好位于两列两行形成的 4 个交叉点上。 因此，尽管仍然需要设置 4 位 - 分别为 2 列和 2 行 - 但这次我们只需要两个、 单个长 16 位的查找表，分别对应着列和行。 进行查找时，我们先将待查字节的低 4 位作为索引，从列查找表中获取一位， 同时使用待查字符的高 4 位作为索引，从行查找表中获取另一位。 将得到的 2 位数据进行按位与操作，即可获得可以判断该元素是否位于集合中的 1 位数据。 借助这一思路，我们成功将查找表的长度从 256 位缩短到了 32 位。</p>
+          <p>现在，让我们思考分解后我们能够覆盖的字符集合。 由于这种列选择和行选择的特性，我们不能自由地表示任意字符集合。 TODO。</p>
+          <p>在上述计算中，我们使用了位图（也就是单位查找表），但在实践过程中， 由于硬件指令的限制，将值映射到单个字节而非单个位的查找表往往更受青睐。 与之对应的，对于二维分解的查找表而言，单个查找表至少需要 16 个字节， 而这也恰好对应了可移植性最强的 128 位向量运算。</p>
+        </section>
+        <section class="sect2">
+          <h3 id="_额外的位带来更美妙的分解">额外的位带来更美妙的分解</h3>
+        </section>
       </section>
       <section class="sect1">
         <h2 id="_如何计算出分解后的查找表">如何计算出分解后的查找表？</h2>
@@ -36,7 +82,7 @@
     </div>
     <hr>
     <footer>
-      <p>The content on <a property="dct:title" rel="cc:attributionURL" href="/">this website</a> © 2021 - 2025 by <span property="cc:attributionName">Waterlens</span> is licensed under <a href="http://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">CC BY-SA 4.0 <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1"></a></p>
+      <p><a property="dct:title" rel="cc:attributionURL" href="/zh/index.html">本站</a> 由 <span property="cc:attributionName">Waterlens</span> 创作的一切内容 © 2021 - 2025 在 <a href="http://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">知识共享 署名 - 相同方式共享 4.0 协议 <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1"></a> 之条款下提供。</p>
     </footer>
   </article>
 </body>
