@@ -3,12 +3,12 @@
 :lang: zh-hans
 :source-highlighter: highlight.js
 :highlightjs-theme: atom-one-light
-
+:highlightjs-languages: powershell,shell
 
 [discrete]
 === 在 macOS 上使用 Touch ID 进行 sudo 认证
 
-[source,shell]
+[source,sh]
 ----
 sed "s/^#auth/auth/" /etc/pam.d/sudo_local.template | sudo tee /etc/pam.d/sudo_local
 ----

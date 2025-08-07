@@ -31,7 +31,7 @@ render-adoc:
     outfile="${output%.*}.html"
     echo "Rendering $file to public/$outfile"
     mkdir -p $(dirname "public/$outfile")
-    asciidoctor -b w-html -r ./w-asciidoc/convert.rb $file -o "public/$outfile"
+    asciidoctor -b w-html -r ./w-asciidoc/convert.rb -r ./w-asciidoc/hljs.rb $file -o "public/$outfile"
   done
 
 make-css:

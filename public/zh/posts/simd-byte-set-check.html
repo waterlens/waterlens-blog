@@ -12,7 +12,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="generator" content="Asciidoctor 2.0.23 with Waterlens HTML Backend 0.1.0">
   <title>使用 SIMD 指令批量检测位于集合中的字节: 与一种查找表分解法</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/atom-one-light.min.css">
 </head>
 <body>
   <article>
@@ -95,7 +94,7 @@
         <p>计算完查找表后，即可将它们用于 SIMD 并行检测位于集合中的字节。 以 Neon 指令集为例，以下代码可以被用来批量跳过连续的字母：</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlightjs highlight"><code class="language-c hljs" data-lang="c">#include &lt;arm_neon.h&gt;
+            <pre class="highlightjs highlight"><code class="language-c hljs" data-noescape="true" data-lang="c">#include &lt;arm_neon.h&gt;
 #include &lt;stdlib.h&gt;
 #include &lt;assert.h&gt;
 
@@ -148,13 +147,11 @@ char *batch_skip_alpha(char *str, size_t len) {
     <footer>
       <p><a property="dct:title" rel="cc:attributionURL" href="/zh/index.html">本站</a> 由 <span property="cc:attributionName">Waterlens</span> 创作的一切内容 © 2021 - 2025 在 <a href="http://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">知识共享 署名 - 相同方式共享 4.0 协议 <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1"></a> 之条款下提供。</p>
     </footer>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.3/styles/atom-one-light.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.3/highlight.min.js"></script> 
     <script>
 
-    if (!hljs.initHighlighting.called) {
-    hljs.initHighlighting.called = true
-    ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) { hljs.highlightBlock(el) })
-    }
+    hljs.highlightAll();
     </script>
   </article>
 </body>
