@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-hans">
+<head>
+  <meta charset="utf-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="Asciidoctor 2.0.23 with Waterlens HTML Backend 0.1.0">
+  <title>Shell 命令合集</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/styles/atom-one-light.min.css">
+</head>
+<body>
+  <article>
+    <header>
+      <h1><a href=".">Shell 命令合集</a></h1>
+    </header>
+    <hr>
+    <div id="content">
+      <h3 id="_在_macos_上使用_touch_id_进行_sudo_认证" class="discrete">在 macOS 上使用 Touch ID 进行 sudo 认证</h3>
+      <div class="listing">
+        <div class="content">
+          <pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">sed "s/^#auth/auth/" /etc/pam.d/sudo_local.template | sudo tee /etc/pam.d/sudo_local</code></pre>
+        </div>
+      </div>
+      <h3 id="_修改_windows_的默认_openssh_服务的登陆_shell" class="discrete">修改 Windows 的默认 OpenSSH 服务的登陆 shell</h3>
+      <div class="listing">
+        <div class="content">
+          <pre class="highlightjs highlight"><code class="language-powershell hljs" data-lang="powershell">$NewItemPropertyParams = @{
+    Path         = "HKLM:\SOFTWARE\OpenSSH"
+    Name         = "DefaultShell"
+    Value        = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+    PropertyType = "String"
+    Force        = $true
+}
+New-ItemProperty @NewItemPropertyParams</code></pre>
+        </div>
+      </div>
+      <h3 id="_开启_windows_公钥登陆" class="discrete">开启 Windows 公钥登陆</h3>
+      <div class="listing">
+        <div class="content">
+          <pre class="highlightjs highlight"><code class="language-powershell hljs" data-lang="powershell">$keys = Invoke-RestMethod -Uri https://github.com/waterlens.keys -Method Get
+Add-Content -Force -Path $env:ProgramData\ssh\administrators_authorized_keys -Value $keys
+icacls.exe "$env:ProgramData\ssh\administrators_authorized_keys" /inheritance:r /grant "Administrators:F" /grant "SYSTEM:F"</code></pre>
+        </div>
+      </div>
+    </div>
+    <hr>
+    <footer>
+      <p><a property="dct:title" rel="cc:attributionURL" href="/zh/index.html">本站</a> 由 <span property="cc:attributionName">Waterlens</span> 创作的一切内容 © 2021 - 2025 在 <a href="http://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">知识共享 署名 - 相同方式共享 4.0 协议 <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1"></a> 之条款下提供。</p>
+    </footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script> 
+    <script>
+
+    if (!hljs.initHighlighting.called) {
+    hljs.initHighlighting.called = true
+    ;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) { hljs.highlightBlock(el) })
+    }
+    </script>
+  </article>
+</body>
+</html>

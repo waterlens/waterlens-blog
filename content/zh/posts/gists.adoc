@@ -1,0 +1,40 @@
+= xref:.[Shell 命令合集]
+:showtitle:
+:lang: zh-hans
+:source-highlighter: highlight.js
+:highlightjs-theme: atom-one-light
+
+
+[discrete]
+=== 在 macOS 上使用 Touch ID 进行 sudo 认证
+
+[source,shell]
+----
+sed "s/^#auth/auth/" /etc/pam.d/sudo_local.template | sudo tee /etc/pam.d/sudo_local
+----
+
+
+[discrete]
+=== 修改 Windows 的默认 OpenSSH 服务的登陆 shell
+
+[source,powershell]
+----
+$NewItemPropertyParams = @{
+    Path         = "HKLM:\SOFTWARE\OpenSSH"
+    Name         = "DefaultShell"
+    Value        = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+    PropertyType = "String"
+    Force        = $true
+}
+New-ItemProperty @NewItemPropertyParams
+----
+
+[discrete]
+=== 开启 Windows 公钥登陆
+
+[source,powershell]
+----
+$keys = Invoke-RestMethod -Uri https://github.com/waterlens.keys -Method Get
+Add-Content -Force -Path $env:ProgramData\ssh\administrators_authorized_keys -Value $keys
+icacls.exe "$env:ProgramData\ssh\administrators_authorized_keys" /inheritance:r /grant "Administrators:F" /grant "SYSTEM:F"
+----
