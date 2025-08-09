@@ -1,0 +1,412 @@
+/* Reset all elements */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Main body styling */
+body {
+    font-family: "Oxygen", sans-serif;
+    min-height: 100vh;
+    padding: 20px;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* Main container */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: white;
+    overflow: hidden;
+}
+
+/* Page header */
+h1 {
+    padding: 10px;
+    text-align: center;
+    font-size: 1.8em;
+    font-weight: 700;
+    font-family: "Oxygen", sans-serif;
+}
+
+/* 传感器选择区域 */
+.sensor-selection-section {
+    padding: 16px 24px;
+}
+
+.sensor-selection-section h2 {
+    margin-bottom: 12px;
+    color: #495057;
+    font-size: 1.2em;
+    font-weight: 600;
+    font-family: "Oxygen", sans-serif;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 8px;
+}
+
+.sensor-layout {
+    display: flex;
+    gap: 32px;
+}
+
+.left-sensors,
+.right-sensors {
+    flex: 1;
+}
+
+.sensor-group {
+    margin-bottom: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.sensor-group h3 {
+    color: #6c757d;
+    font-size: 1em;
+    font-weight: 500;
+    margin-bottom: 8px;
+    font-family: "Oxygen", sans-serif;
+    width: 100%;
+    flex-basis: 100%;
+}
+
+.sensor-btn {
+    background: #e0e0e0;
+    color: black;
+    border: 2px solid transparent;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 400;
+    font-family: "Oxygen", sans-serif;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+
+.sensor-btn:hover {
+    background: #d0d0d0;
+    transform: translateY(-1px);
+}
+
+
+
+.sensor-btn:active {
+    transform: translateY(0);
+}
+
+.sensor-btn.selected {
+    background: #e0e0e0;
+    color: black;
+    font-weight: 600;
+    border: 2px solid #007bff;
+    padding: 4px 8px;
+}
+
+/* Custom sensor input */
+.custom-sensor {
+    padding-top: 12px;
+}
+
+.custom-input-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.custom-input-row .input-group {
+    flex: 1;
+    min-width: 170px;
+    margin-bottom: 0;
+}
+
+.custom-input-row #add-custom {
+    flex-shrink: 0;
+    margin-bottom: 0;
+}
+
+.custom-sensor h3 {
+    color: #6c757d;
+    font-size: 1em;
+    font-weight: 500;
+    margin-bottom: 12px;
+    font-family: "Oxygen", sans-serif;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.input-group label {
+    width: 100px;
+    font-size: 14px;
+    color: #495057;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.input-group input {
+    flex: 1;
+    padding: 4px 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-family: "Hack", monospace;
+    font-size: 14px;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* Button styling */
+button {
+    background: #e0e0e0;
+    color: black;
+    border: none;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 400;
+    font-family: "Oxygen", sans-serif;
+    transition: all 0.2s ease;
+}
+
+button:hover {
+    background: #d0d0d0;
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+#add-custom {
+    background: #e0e0e0;
+    color: black;
+}
+
+#add-custom:hover {
+    background: #d0d0d0;
+}
+
+/* 可视化区域 */
+.visualization-section {
+    padding: 16px 24px;
+}
+
+.visualization-section h2 {
+    margin-bottom: 12px;
+    color: #495057;
+    font-size: 1.2em;
+    font-weight: 600;
+    font-family: "Oxygen", sans-serif;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 8px;
+}
+
+.canvas-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+#sensor-canvas {
+    border: 1px solid #ced4da;
+    background: white;
+    cursor: grab;
+    max-width: 100%;
+    height: auto;
+}
+
+#sensor-canvas:active {
+    cursor: grabbing;
+}
+
+.canvas-controls {
+    display: flex;
+    gap: 12px;
+}
+
+.canvas-controls button {
+    background: #e0e0e0;
+    color: black;
+    border: none;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 400;
+    font-family: "Oxygen", sans-serif;
+    transition: all 0.2s ease;
+}
+
+.canvas-controls button:hover {
+    background: #d0d0d0;
+}
+
+/* 信息区域布局 */
+.info-section-layout {
+    display: flex;
+    gap: 24px;
+    padding: 16px 24px;
+}
+
+.info-section {
+    flex: 1;
+    padding: 16px;
+}
+
+.info-section h2 {
+    margin-bottom: 12px;
+    color: #495057;
+    font-size: 1.2em;
+    font-weight: 600;
+    font-family: "Oxygen", sans-serif;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 8px;
+}
+
+#sensor-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-item .label {
+    font-weight: 500;
+    color: #495057;
+    font-size: 14px;
+}
+
+.info-item span:last-child {
+    font-weight: 400;
+    color: #6c757d;
+    font-size: 14px;
+    font-family: "Hack", monospace;
+}
+
+#comparison-list {
+    min-height: 100px;
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.info-text {
+    color: #6c757d;
+    font-size: 14px;
+    margin-bottom: 8px;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+.remove-btn {
+    background: transparent;
+    color: #dc3545;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    margin-left: 8px;
+    padding: 2px 6px;
+    transition: color 0.2s ease;
+}
+
+.remove-btn:hover {
+    color: #c82333;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    .sensor-layout {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    h1 {
+        font-size: 1.5em;
+    }
+    
+    .info-section-layout {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .visualization-section {
+        padding: 16px;
+    }
+    
+    #sensor-canvas {
+        width: 100%;
+        height: auto;
+    }
+    
+    .canvas-controls {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    th,
+    td {
+        font-size: 12px;
+        padding: 6px 8px;
+    }
+    
+    .sensor-btn {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+    
+    .sensor-btn.selected {
+        border: 2px solid #007bff;
+    }
+    
+    .input-group label {
+        font-size: 12px;
+        width: 95px;
+    }
+    
+    .input-group input {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .sensor-layout {
+        flex-direction: column;
+        gap: 24px;
+    }
+    
+    .left-sensors,
+    .right-sensors {
+        flex: none;
+    }
+}

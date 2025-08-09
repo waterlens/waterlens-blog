@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css" rel="stylesheet">
+  <title>Camera CMOS Size Comparator</title>
+  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Interactive camera CMOS size comparison tool">
+  <meta name="author" content="Waterlens">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Camera CMOS Size Comparator</h1><!-- Sensor Selection Section -->
+    <div class="sensor-selection-section">
+      <h2>Sensor Selection</h2>
+      <div class="sensor-layout">
+        <!-- Left: Phone sensors, compact cameras, APS-C -->
+        <div class="left-sensors">
+          <div class="sensor-group">
+            <h3>Phone Sensors</h3><button class="sensor-btn" data-sensor="1/3.2">1/3.2"</button> <button class="sensor-btn" data-sensor="1/3">1/3"</button> <button class="sensor-btn" data-sensor="1/2.8">1/2.8"</button> <button class="sensor-btn" data-sensor="1/2.7">1/2.7"</button> <button class="sensor-btn" data-sensor="1/2.6">1/2.6"</button> <button class="sensor-btn" data-sensor="1/2.55">1/2.55"</button> <button class="sensor-btn" data-sensor="1/2.4">1/2.4"</button> <button class="sensor-btn" data-sensor="1/2.3">1/2.3"</button> <button class="sensor-btn" data-sensor="1/2">1/2"</button> <button class="sensor-btn" data-sensor="1/1.9">1/1.9"</button> <button class="sensor-btn" data-sensor="1/1.8">1/1.8"</button> <button class="sensor-btn" data-sensor="1/1.7">1/1.7"</button> <button class="sensor-btn" data-sensor="1/1.6">1/1.6"</button> <button class="sensor-btn" data-sensor="1/1.5">1/1.5"</button> <button class="sensor-btn" data-sensor="1/1.4">1/1.4"</button> <button class="sensor-btn" data-sensor="1/1.33">1/1.33"</button> <button class="sensor-btn" data-sensor="1/1.28">1/1.28"</button> <button class="sensor-btn" data-sensor="1/1.2">1/1.2"</button> <button class="sensor-btn" data-sensor="1/1.1">1/1.1"</button>
+          </div>
+          <div class="sensor-group">
+            <h3>Compact Cameras</h3><button class="sensor-btn" data-sensor="1">1"</button> <button class="sensor-btn" data-sensor="1.1">1.1"</button> <button class="sensor-btn" data-sensor="1.5">1.5"</button> <button class="sensor-btn" data-sensor="4/3">4/3"</button>
+          </div>
+          <div class="sensor-group">
+            <h3>APS-C Format</h3><button class="sensor-btn" data-sensor="APS-C Canon">APS-C Canon</button> <button class="sensor-btn" data-sensor="APS-C Nikon">APS-C Nikon</button> <button class="sensor-btn" data-sensor="APS-C Sony">APS-C Sony</button> <button class="sensor-btn" data-sensor="APS-C Fuji">APS-C Fuji</button> <button class="sensor-btn" data-sensor="APS-H">APS-H</button>
+          </div>
+        </div><!-- Right: Full frame, medium/large format, custom -->
+        <div class="right-sensors">
+          <div class="sensor-group">
+            <h3>Full Frame</h3><button class="sensor-btn" data-sensor="Full-Frame">Full Frame</button> <button class="sensor-btn" data-sensor="Full-Frame Canon">Full Frame Canon</button> <button class="sensor-btn" data-sensor="Full-Frame Nikon">Full Frame Nikon</button> <button class="sensor-btn" data-sensor="Full-Frame Sony">Full Frame Sony</button>
+          </div>
+          <div class="sensor-group">
+            <h3>Medium/Large Format</h3><button class="sensor-btn" data-sensor="Medium-Format 645">Medium Format 645</button> <button class="sensor-btn" data-sensor="Medium-Format 6x6">Medium Format 6x6</button> <button class="sensor-btn" data-sensor="Medium-Format 6x7">Medium Format 6x7</button> <button class="sensor-btn" data-sensor="Large-Format 4x5">Large Format 4x5</button> <button class="sensor-btn" data-sensor="Large-Format 8x10">Large Format 8x10</button>
+          </div>
+          <div class="custom-sensor">
+            <h3>Custom Sensor</h3>
+            <div class="custom-input-row">
+              <div class="input-group">
+                <label>Width (mm):</label> <input type="number" id="custom-width" step="0.1" min="1" max="100">
+              </div>
+              <div class="input-group">
+                <label>Height (mm):</label> <input type="number" id="custom-height" step="0.1" min="1" max="100">
+              </div><button id="add-custom">Add Custom</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- Visualization Section -->
+    <div class="visualization-section">
+      <h2>Sensor Size Visualization</h2>
+      <div class="canvas-container">
+        <canvas id="sensor-canvas" width="800" height="600"></canvas>
+        <div class="canvas-controls">
+          <button id="reset-view">Reset View</button> <button id="toggle-labels">Toggle Labels</button>
+        </div>
+      </div>
+    </div><!-- Information Section -->
+    <div class="info-section-layout">
+      <div class="info-section">
+        <h2>Sensor Information</h2>
+        <div id="sensor-info">
+          <div class="info-item">
+            <span class="label">Current Sensor:</span> <span id="current-sensor">None Selected</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Size:</span> <span id="sensor-size">-</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Area:</span> <span id="sensor-area">-</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Crop Factor:</span> <span id="crop-factor">-</span>
+          </div>
+        </div>
+      </div>
+      <div class="info-section">
+        <h2>Size Comparison</h2>
+        <div id="comparison-list">
+          <p>Select sensors to start comparison</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
