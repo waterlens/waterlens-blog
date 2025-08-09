@@ -12,4 +12,5 @@
 
 [.centered]
 * xref:/tomasulo/index.html[Tomasulo's Algorithm Simulator]
+* xref:/sensor-size/index.html[Camera Sensor Size Comparator]
 

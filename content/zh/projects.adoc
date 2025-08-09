@@ -11,4 +11,5 @@
 == 所有项目
 
 [.centered]
-* xref:/tomasulo/index.html[Tomasulo 算法模拟器] 
+* xref:/tomasulo/index.html[Tomasulo 算法模拟器]
+* xref:/sensor-size/index.html[相机传感器尺寸比较器]
