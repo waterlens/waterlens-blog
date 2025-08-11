@@ -2,7 +2,6 @@
 :showtitle:
 :lang: zh-hans
 :source-highlighter: highlight.js
-:highlightjs-theme: atom-one-light
 
 在进行文本处理时，判断某些字节是否属于特定集合是一项 *基础* 操作。
 对于标量实现而言，针对不同大小和特性的字节集合，判断一个字节是否存在于其中通常采用分支判断、位图或查找表等方法。

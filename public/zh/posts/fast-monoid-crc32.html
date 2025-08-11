@@ -47,7 +47,7 @@
       <p>两个多项式分别为标准的 CRC32 值和多项式 \( x^n \bmod p \) , 后者用于编码长度 \( n \)。</p>
       <div class="listing">
         <div class="content">
-          <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">type r32 = u32 (* r32 表示一个 32 位的位反射多项式 *)
+          <pre class="highlightjs highlight"><code class="language-ocaml hljs" data-noescape="true" data-lang="ocaml">type r32 = u32 (* r32 表示一个 32 位的位反射多项式 *)
 type t = {
   crc: r32
   len: r32
@@ -57,7 +57,7 @@ type t = {
       <p>为该类型定义相应的 <code>fold_bytes</code> 操作非常直接。</p>
       <div class="listing">
         <div class="content">
-          <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">let fold_bytes data  =
+          <pre class="highlightjs highlight"><code class="language-ocaml hljs" data-noescape="true" data-lang="ocaml">let fold_bytes data  =
   let crc = crc32 data in
   let len = xnmodp @@ length data in
   { crc, len }</code></pre>
@@ -68,7 +68,7 @@ type t = {
       <p>根据原始帖子，结合操作定义为：</p>
       <div class="listing">
         <div class="content">
-          <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">let combine m n =
+          <pre class="highlightjs highlight"><code class="language-ocaml hljs" data-noescape="true" data-lang="ocaml">let combine m n =
   let crc = addp32 (mulp32 m.crc n.len) n.crc in
   let len = mulp32 m.len n.len in
   { crc, len }</code></pre>
@@ -87,7 +87,7 @@ type t = {
       <p>按照我在 <a href="https://crypto.stackexchange.com/a/114412/126155">Questions on multiplication over GF(2^32) when implementing monoid CRC32</a> 中描述的步骤，有如下代码（在 aarch64 架构上）：</p>
       <div class="listing">
         <div class="content">
-          <pre class="highlight"><code class="language-c" data-lang="c">uint64x2_t clmul_lo(uint64x2_t a, uint64x2_t b) {
+          <pre class="highlightjs highlight"><code class="language-c hljs" data-noescape="true" data-lang="c">uint64x2_t clmul_lo(uint64x2_t a, uint64x2_t b) {
   uint64x2_t r;
   __asm("pmull %0.1q, %1.1d, %2.1d\n" : "=w"(r) : "w"(a), "w"(b));
   return r;
@@ -132,7 +132,7 @@ uint32_t clmulr32(uint32_t a, uint32_t b) {
       <p>基准数据显示这对我应用程序来说足够高效。 现在，让我们总结一下快速幺半群 CRC32 哈希的最后一部分，单位元的定义。</p>
       <div class="listing">
         <div class="content">
-          <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">let identity = {
+          <pre class="highlightjs highlight"><code class="language-ocaml hljs" data-noescape="true" data-lang="ocaml">let identity = {
   crc = 0,
   len = 0x80000000
 }</code></pre>
@@ -143,6 +143,12 @@ uint32_t clmulr32(uint32_t a, uint32_t b) {
     <footer>
       <p><a property="dct:title" rel="cc:attributionURL" href="/zh/index.html">本站</a> 由 <span property="cc:attributionName">Waterlens</span> 创作的一切内容 © 2021 - 2025 在 <a href="http://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">知识共享 署名 - 相同方式共享 4.0 协议 <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1"></a> 之条款下提供。</p>
     </footer>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.3/styles/atom-one-light.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.3/highlight.min.js"></script> 
+    <script>
+
+    hljs.highlightAll();
+    </script>
   </article>
 </body>
 </html>

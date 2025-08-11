@@ -46,7 +46,7 @@
       <p>Regarding the abstract type <code>t</code>, a reasonable and dedicated representation includes two polynomials, each fitting into a 32-bit integer. These polynomials store the standard CRC32 value and an additional value that encodes the length \( n \) as \( x^n \bmod p \).</p>
       <div class="listing">
         <div class="content">
-          <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">type r32 = u32 (* r32 means bit-(r)eflecting 32-bit polynomial *)
+          <pre class="highlightjs highlight"><code class="language-ocaml hljs" data-noescape="true" data-lang="ocaml">type r32 = u32 (* r32 means bit-(r)eflecting 32-bit polynomial *)
 type t = {
   crc: r32
   len: r32
@@ -56,7 +56,7 @@ type t = {
       <p>The <code>fold_bytes</code> operation defined for this type is straightforward.</p>
       <div class="listing">
         <div class="content">
-          <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">let fold_bytes data  =
+          <pre class="highlightjs highlight"><code class="language-ocaml hljs" data-noescape="true" data-lang="ocaml">let fold_bytes data  =
   let crc = crc32 data in
   let len = xnmodp @@ length data in
   { crc, len }</code></pre>
@@ -66,7 +66,7 @@ type t = {
       <p>According to the original post, the combination is defined as:</p>
       <div class="listing">
         <div class="content">
-          <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">let combine m n =
+          <pre class="highlightjs highlight"><code class="language-ocaml hljs" data-noescape="true" data-lang="ocaml">let combine m n =
   let crc = addp32 (mulp32 m.crc n.len) n.crc in
   let len = mulp32 m.len n.len in
   { crc, len }</code></pre>
@@ -83,7 +83,7 @@ type t = {
       <p>Following the steps in <a href="https://crypto.stackexchange.com/a/114412/126155" class="bare">https://crypto.stackexchange.com/a/114412/126155</a> (sorry, I don’t want to replicate the content to this post!), we have the following code (on aarch64):</p>
       <div class="listing">
         <div class="content">
-          <pre class="highlight"><code class="language-c" data-lang="c">uint64x2_t clmul_lo(uint64x2_t a, uint64x2_t b) {
+          <pre class="highlightjs highlight"><code class="language-c hljs" data-noescape="true" data-lang="c">uint64x2_t clmul_lo(uint64x2_t a, uint64x2_t b) {
   uint64x2_t r;
   __asm("pmull %0.1q, %1.1d, %2.1d\n" : "=w"(r) : "w"(a), "w"(b));
   return r;
@@ -129,7 +129,7 @@ uint32_t clmulr32(uint32_t a, uint32_t b) {
       <p>Now, let’s conclude the definition of the identity for the last piece of the fast monoid CRC32.</p>
       <div class="listing">
         <div class="content">
-          <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">let identity = {
+          <pre class="highlightjs highlight"><code class="language-ocaml hljs" data-noescape="true" data-lang="ocaml">let identity = {
   crc = 0,
   len = 0x80000000
 }</code></pre>
@@ -140,6 +140,12 @@ uint32_t clmulr32(uint32_t a, uint32_t b) {
     <footer>
       <p>The content on <a property="dct:title" rel="cc:attributionURL" href="/">this website</a> © 2021 - 2025 by <span property="cc:attributionName">Waterlens</span> is licensed under <a href="http://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">CC BY-SA 4.0 <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1"></a></p>
     </footer>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.3/styles/atom-one-light.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.3/highlight.min.js"></script> 
+    <script>
+
+    hljs.highlightAll();
+    </script>
   </article>
 </body>
 </html>
