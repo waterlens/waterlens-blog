@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-hans">
+<head>
+  <meta charset="utf-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="Asciidoctor 2.0.23 with Waterlens HTML Backend 0.1.0">
+  <title>知识点回顾</title>
+</head>
+<body>
+  <article>
+    <header>
+      <h1><a href=".">知识点回顾</a></h1>
+    </header>
+    <hr>
+    <div id="content">
+      <section class="sect1">
+        <h2 id="_bfs">BFS</h2>
+        <section class="sect2">
+          <h3 id="_可获取层号的_bfs">可获取层号的 BFS</h3>
+          <p>要点：正常 BFS 无法区分当前是在处理哪一层的元素；在修改版 BFS 中， 我们通过保证队列中的元素总是属于同一层这一不变量来解决这个问题。 我们可以一次性处理同一层的所有节点，并将下一层的所有后代加入队列中。 只需要获取队列初始大小 n 并在一轮中恰好处理 n 个节点即可保证这一点。 正确性可以通过数学归纳法获得。</p>
+        </section>
+      </section>
+    </div>
+    <hr>
+    <footer>
+      <p><a property="dct:title" rel="cc:attributionURL" href="/zh/index.html">本站</a> 由 <span property="cc:attributionName">Waterlens</span> 创作的一切内容 © 2021 - 2025 在 <a href="http://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">知识共享 署名 - 相同方式共享 4.0 协议 <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1"></a> 之条款下提供。</p>
+    </footer>
+  </article>
+</body>
+</html>

@@ -27,6 +27,13 @@
       <p>不定时更新，记录我在浏览网页、阅读论文、逛社媒时看到的细碎知识和技巧。</p>
       <p>使用倒序方式记录。</p>
       <section class="sect1">
+        <h2 id="date-20250908"><a href="#date-20250908">2025 年 9 月 8 日</a></h2>
+        <p>James Morris 的观察等价/外延等价概念：</p>
+        <p>两个表达式 \(e_1\) 和 \(e_2\) 被称为“观察等价”，如果对于每一个上下文 \(C\)，我们有：\(C[e_1]\) 停止当且仅当 \(C[e_2]\) 停止。</p>
+        <p>本地转换和非局部转换的定义： 如果功能 \(X\) 可以在语言 \(L\) 中作为本地转换实现以获得语言 \(L+X\)，那么对于任何在 \(L\) 中观察上等价的表达式 \(e_1\) 和 \(e_2\)，它们在 \(L+X\) 中也是观察上等价的。</p>
+        <p>例子：考虑 \(e_1 = \lambda f. loop\) 和 \(e_2 = \lambda f. (f 0) loop\)，它们在 \(L\) （不含有异常）中观察上等价， 因为对于任何上下文 \(C\)，我们有：\(C[e_1]\) 停止当且仅当 \(C[e_2]\) 停止。 但在 \(L+halt\) 中，\(e_1\) 和 \(e_2\) 并不观察上等价，因为对于 \(C = (\cdot halt)\) 它们并不同时停止。</p>
+      </section>
+      <section class="sect1">
         <h2 id="date-20250703"><a href="#date-20250703">2025 年 7 月 3 日</a></h2>
         <p><a href="https://dl.acm.org/doi/10.1145/3519939.3523701">All you need is superword-level parallelism: systematic control-flow vectorization with SLP</a></p>
         <p>超级字并行（Superword-level parallelism, SLP）在直线代码中寻找连续的同构指令模式，并将其向量化。 这样做的好处是避免了有循环情况下的复杂依赖分析。 也因为这个特性，SLP 向量化不能发现在横跨多个基本块或循环的并行模式。</p>
