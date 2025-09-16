@@ -964,6 +964,83 @@ WAW 和 WAR 冲突通过重命名目标寄存器得以避免；因为指令的�
               </div>
             </div>
           </section>
+          <section class="sect3">
+            <h4 id="_缓存一致性协议_mesi_协议">缓存一致性协议 (MESI 协议)</h4>
+            <div class="ulist">
+              <ul>
+                <li>
+                  <p>修改（缓存行仅在当前核心缓存中出现，且已被修改）</p>
+                </li>
+                <li>
+                  <p>独占（缓存行仅在当前核心缓存中出现，且未被修改）</p>
+                </li>
+                <li>
+                  <p>共享（缓存行在多个核心缓存中出现，且未被修改）</p>
+                </li>
+                <li>
+                  <p>无效（缓存行无效）</p>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section class="sect2">
+          <h3 id="_性能分析">性能分析</h3>
+          <p>术语定义：</p>
+          <div class="olist arabic">
+            <ol class="arabic">
+              <li>
+                <p>Retired 和 Executed 指令<br></p>
+              </li>
+            </ol>
+          </div>
+          <div class="open">
+            <div class="content">
+              <p>现代处理器通常执行的指令数量比程序流程所需的更多。这是因为一些指令是投机性地执行的，CPU 会保留它们的结果，而不会立即提交。当投机结果正确时，CPU 会解除对这类指令的阻塞并按正常流程执行。但当投机结果错误时，CPU 会丢弃由投机指令所做的所有更改，并且不会使它们退役。因此，CPU 处理的指令可以被执行，但不一定退役。考虑到这一点，我们通常可以预期执行指令的数量要高于退役指令的数量。</p>
+              <p>有一种例外情况是，某些指令被识别为惯用语，并在不实际执行的情况下被解析。 例如，NOP、移动消除和清零指令。此类指令不需要执行单元，但仍会被退役。 因此，理论上可能存在退休指令数量高于实际执行指令数量的情况。</p>
+            </div>
+          </div>
+          <p>+ 2. 缓存缺失<br></p>
+          <div class="open">
+            <div class="content">
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>L1 Cache 4 cycles (~1 ns)</p>
+                  </li>
+                  <li>
+                    <p>L2 Cache 10-25 cycles (5-10 ns)</p>
+                  </li>
+                  <li>
+                    <p>L3 Cache ~40 cycles (20 ns)</p>
+                  </li>
+                  <li>
+                    <p>Main Memory 200+ cycles (100 ns)</p>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <p>+ 3. 预测失败的分支</p>
+        </section>
+        <section class="sect2">
+          <h3 id="_性能分析方法">性能分析方法</h3>
+          <div class="olist arabic">
+            <ol class="arabic">
+              <li>
+                <p>代码插桩</p>
+              </li>
+              <li>
+                <p>追踪（Tracing）</p>
+              </li>
+              <li>
+                <p>收集性能计数器事件</p>
+              </li>
+              <li>
+                <p>采样</p>
+              </li>
+            </ol>
+          </div>
         </section>
         <section class="sect2">
           <h3 id="_gpu老黄特辑">GPU（老黄特辑）：</h3>
