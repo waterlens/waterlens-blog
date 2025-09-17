@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-hans">
+<head>
+  <meta charset="utf-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="Asciidoctor 2.0.23 with Waterlens HTML Backend 0.1.0">
+  <title>随记:（二）</title>
+</head>
+<body>
+  <article>
+    <header>
+      <h1><a href=".">随记</a>:（二）</h1>
+    </header>
+    <hr>
+    <div id="content">
+      <section class="sect1">
+        <h2 id="_附录未完工的开发项目">附录：未完工的开发项目</h2>
+        <section class="sect2">
+          <h3 id="_mocc">mocc</h3>
+          <p>一款基于 tinycc 思路的 C21 编译器，尝试使用 SIMD 技术加速词法分析，尽量实现单趟编译，但由于寄存器分配的问题，可能需要引入中间 IR。</p>
+          <p>目前进度：前端功能支持。</p>
+        </section>
+        <section class="sect2">
+          <h3 id="_qxq">qxq</h3>
+          <p>定位为编程语言编译器综合实验场，尽管最开始使用的是 FP 风格语法并完成了模式匹配器， 但现在目标已经转向无类型语言实现，进而转变为兼具的 JIT 编译器和字节码解释器实验场。</p>
+          <p>目前进度：代码生成支持</p>
+        </section>
+        <section class="sect2">
+          <h3 id="_regalloc_zoo">regalloc-zoo</h3>
+          <p>用于实验不同寄存器分配算法。为了抽象不同的 ISA 设计了一套专注于描述寄存器读写关系的指令集。 遇到了源汇编转换指令集的困难。</p>
+        </section>
+        <section class="sect2">
+          <h3 id="_wlisp">wlisp</h3>
+          <p>另一个 lisp 实现。</p>
+        </section>
+        <section class="sect2">
+          <h3 id="_quickaml">quickaml</h3>
+          <p>原 JIT 技术和解释器技术实验场；现已并入 qxq。</p>
+        </section>
+        <section class="sect2">
+          <h3 id="_tuno">tuno</h3>
+          <p>原解释器技术实验场；现已并入 qxq。</p>
+        </section>
+      </section>
+      <section class="sect1">
+        <h2 id="_附录感兴趣做贡献的项目">附录：感兴趣做贡献的项目</h2>
+        <section class="sect2">
+          <h3 id="_cranelift">cranelift</h3>
+          <p>以下记录由 Gemini 生成：</p>
+          <p>根据会议记录，以下是一些具体且有价值的贡献方向：</p>
+          <div class="olist arabic">
+            <ol class="arabic">
+              <li>
+                <p>为后端添加或完善指令降低 (Instruction Lowering)</p>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>描述：将 Cranelift IR 指令转换为特定机器指令的过程。虽然 x64 的 ISLE 迁移已完成，但其他架构（aarch64, s390x, riscv64）仍有许多工作可做，特别是 SIMD 和不常用的指令。</p>
+                    </li>
+                    <li>
+                      <p>切入点：</p>
+                      <div class="ulist">
+                        <ul>
+                          <li>
+                            <p>为 riscv64 后端贡献 SIMD（Vector 扩展）指令的 ISLE 实现。</p>
+                          </li>
+                          <li>
+                            <p>为 s390x 后端实现对 z17 新指令（如 128 位整数运算）的支持。</p>
+                          </li>
+                          <li>
+                            <p>实现缺失的 i128 运算（如转换到浮点数）的 libcall 或 ISLE 降低规则。</p>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li>
+                <p>中端优化规则 (Egraph-based Optimizations)</p>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>描述：新的 egraph 优化框架允许通过重写规则来改进代码。社区可以贡献新的规则来提升代码质量。</p>
+                    </li>
+                    <li>
+                      <p>切入点：</p>
+                      <div class="ulist">
+                        <ul>
+                          <li>
+                            <p>参考 Souper 等工具的输出，或经典的编译器优化理论，为 prelude_opt.isle 添加新的优化规则。</p>
+                          </li>
+                          <li>
+                            <p>实现对分支指令的优化，例如常量折叠（branch-if-constant）。</p>
+                          </li>
+                          <li>
+                            <p>为宽整数（如 i128）的运算（如乘法）添加更高效的重写规则。</p>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li>
+                <p>Winch 基线编译器</p>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>描述：Winch 是一个追求快速编译的编译器，目前核心功能已完成，但需要支持更多 Wasm 特性。</p>
+                    </li>
+                    <li>
+                      <p>切入点：</p>
+                      <div class="ulist">
+                        <ul>
+                          <li>
+                            <p>为 Winch 的 x64 或 aarch64 后端实现 SIMD 指令支持。</p>
+                          </li>
+                          <li>
+                            <p>帮助修复模糊测试发现的 bug，使其完全符合 Wasm 核心规范。</p>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li>
+                <p>测试与模糊测试 (Fuzzing & Testing)</p>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>描述：增强测试覆盖和模糊测试能力对于保证编译器正确性至关重要。</p>
+                    </li>
+                    <li>
+                      <p>切入点：</p>
+                      <div class="ulist">
+                        <ul>
+                          <li>
+                            <p>修复在 GitHub issue 中标记为 fuzz-bug 的错误。</p>
+                          </li>
+                          <li>
+                            <p>改进 cranelift-fuzzgen，使其能生成更复杂或更有针对性的测试用例（例如，专门测试边界条件的内存访问）。</p>
+                          </li>
+                          <li>
+                            <p>为 ISLE 指令选择规则添加覆盖率跟踪，以指导模糊测试。</p>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li>
+                <p>新汇编器与 ISA 扩展 (New Assembler & ISA Extensions)</p>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>描述：x64 后端正在迁移到一个新的、由 DSL 驱动的汇编器。这是一个庞大的工程，需要大量帮助。</p>
+                    </li>
+                    <li>
+                      <p>切入点：</p>
+                      <div class="ulist">
+                        <ul>
+                          <li>
+                            <p>帮助将剩余的 x64 指令（如条件跳转、CMOVE 等）迁移到新的汇编器框架。</p>
+                          </li>
+                          <li>
+                            <p>为新汇编器添加对 Intel APX 或 AVX10 扩展的支持。</p>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li>
+                <p>形式化验证 (Formal Verification)</p>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>描述：VeriISLE 项目旨在形式化验证 ISLE 规则的正确性。这是一个更具挑战性的领域，适合有相关背景的贡献者。</p>
+                    </li>
+                    <li>
+                      <p>切入点：</p>
+                      <div class="ulist">
+                        <ul>
+                          <li>
+                            <p>为 aarch64 或 x86 的浮点和向量指令添加 SAIL 形式化规约。</p>
+                          </li>
+                          <li>
+                            <p>帮助将 VeriISLE 的注解语言和解析器集成到 Cranelift 主项目中。</p>
+                          </li>
+                        </ul>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+            </ol>
+          </div>
+        </section>
+      </section>
+    </div>
+    <hr>
+    <footer>
+      <p><a property="dct:title" rel="cc:attributionURL" href="/zh/index.html">本站</a> 由 <span property="cc:attributionName">Waterlens</span> 创作的一切内容 © 2021 - 2025 在 <a href="http://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">知识共享 署名 - 相同方式共享 4.0 协议 <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1"></a> 之条款下提供。</p>
+    </footer>
+  </article>
+</body>
+</html>
