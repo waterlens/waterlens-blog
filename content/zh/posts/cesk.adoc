@@ -1,0 +1,73 @@
+= xref:.[CESK 抽象机]
+:showtitle:
+:lang: zh-hans
+:stem: latexmath
+
+== 带有赋值 (stem:[\sigma]-abstraction) 的 stem:[\lambda]-演算
+
+区分 stem:[\sigma]-abstraction 和 stem:[\lambda]-application 的项：
+
+[stem]
+++++
+(?x.(\lambda f.(?x.f~0)~1)(\lambda~y.x))~0
+++++
+
+其中 stem:[?] 可以是 stem:[\lambda] 或 stem:[\sigma]。
+
+== CESK 抽象机
+
+四元组：stem:[(c, e, s, k)]
+
+- stem:[c]: stem:[\ddag] 或 stem:[\lambda_\sigma] 表达式
+- stem:[e]: 从变量到位置的有限映射
+- stem:[s]: 从位置到闭包的有限映射
+- stem:[k]: 延续 +
+    * p-continuation: stem:[(stop), (k~arg~N~e), (k~fun~V)] 中的一种形式，其中 k 是 p-continuation, V 是语义值。
+    * ret-continuation: stem:[(k~ret~V)], 其中 k 是 p-continuation。
+
+定义求值函数如下：
+
+[stem]
+++++
+eval_\text{CESK}(M) = (V, s)~\text{if} \\
+\left\langle M, \emptyset, \emptyset, (stop) \right\rangle \overset{\text{CESK}^+}{\longmapsto}
+\left\langle \ddagger, \emptyset, s, ((stop)~ret~V) \right\rangle
+++++
+
+延续在抽象机寻找 redex 的时候负责“记忆下一个可执行表达式的上下文”。而 redex 要么是一个标识符（位置），要么是一个应用，
+其中函数位置和参数位置都应该是语义值。
+
+sk-上下文：
+
+- stem:[[~\]] 是一个上下文
+- stem:[V~C[~\]] 是一个上下文，其中 V 是语义值
+- stem:[C[~\]~M] 是一个上下文，其中 M 为任意 stem:[\lambda_\sigma] 表达式
+
+CESK 机的求值规则：
+
+[stem]
+++++
+\begin{aligned}
+\langle x, e, s, k \rangle
+    &\overset{\text{CESK}^+}{\longmapsto}
+\langle \ddag, \emptyset, s, (k~ret~s(e(x))) \rangle \\
+\langle \lambda x.M, e, s, k \rangle 
+    &\overset{\text{CESK}^+}{\longmapsto}
+\langle \ddag, \emptyset, s, (k~ret~\langle \lambda x.M, s\rangle) \rangle \\
+\langle M~N, e, s, k \rangle
+    &\overset{\text{CESK}^+}{\longmapsto}
+\langle M, e, s, (k~arg~N~e) \rangle \\
+\langle \ddag, \emptyset, s, ((k~arg~N~e)~ret~V) \rangle
+    &\overset{\text{CESK}^+}{\longmapsto}
+\langle N, e, s, (k~fun~V) \rangle \\
+\langle \ddag, \emptyset, s, ((k~fun~\langle\lambda x.M, e\rangle)~ret~V) \rangle
+    &\overset{\text{CESK}^+}{\longmapsto}
+\langle M, e[x := n] , s[n := V], k \rangle ~ \text{where} ~ n \notin \text{Dom}(s) \\
+\langle \sigma x.M, e, s, k \rangle
+    &\overset{\text{CESK}^+}{\longmapsto}
+\langle \ddag, \emptyset, s, (k~ret~\langle \sigma x.M, e\rangle) \rangle \\
+\langle \ddag, \emptyset, s, ((k~ret~\langle \sigma x.M, e\rangle)~ret~V) \rangle
+    &\overset{\text{CESK}^+}{\longmapsto}
+\langle M, e, s[e(x) := V], k \rangle
+\end{aligned}
+++++
