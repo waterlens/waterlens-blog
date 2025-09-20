@@ -8,6 +8,19 @@
 
 使用倒序方式记录。
 
+[#date-20250920]
+== <<date-20250920, 2025 年 9 月 20 日>>
+
+GPU 峰值算力计算方法：
+
+Tesla V100 为例：2 是 FMA 包含的两次算数操作。
+
+[stem]
+++++
+2560 \text{ FP64 CUDA cores } \times 
+2{\frac{\text{flop}}{\text{core}\cdot\text{cycle}}} \times 1.53{\frac{\text{Gcycle}}{\text{s}}} \approx 7.8 {\frac{\text{Tflop}}{\text{s}}}
+++++
+
 [#date-20250919]
 == <<date-20250919, 2025 年 9 月 19 日>>
 
