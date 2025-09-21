@@ -1,0 +1,29 @@
+= xref:.[内存一致性模型]
+:showtitle:
+:lang: zh-hans
+:stem: latexmath
+
+== 模型
+
+TSO (Total Store Ordering)：模型为每个硬件线程都有其独立的写缓冲区。这允许了 Test SB 的情况。
+
+Relaxed：对不同位置的写可以以乱序发生，这意味着其他线程读取时也可能是乱序的。这允许了 Test MP 的情况。
+
+多复制原子（multi-copy atomicity）：对不同位置的写入以相同的顺序传播到多个其他线程。
+非多复制原子性可以由 Test WRC+addr 验证。
+
+== 内存模型测试
+
+po 代表程序顺序关系，rf 代表读取关系。小写字母是内存位置，初始值均为 0。
+
+- Test SB
+
+image::/resource/TestSB.svg["", 18rem]
+
+- Test MP
+
+image::/resource/TestMP.svg["", 18rem]
+
+- Test WRC+addr
+
+image::/resource/TestWRCaddr.svg["", 22rem]

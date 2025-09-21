@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-hans">
+<head>
+  <meta charset="utf-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="Asciidoctor 2.0.23 with Waterlens HTML Backend 0.1.0">
+  <title>内存一致性模型</title>
+</head>
+<body>
+  <article>
+    <header>
+      <h1><a href=".">内存一致性模型</a></h1>
+    </header>
+    <hr>
+    <div id="content">
+      <section class="sect1">
+        <h2 id="_模型">模型</h2>
+        <p>TSO (Total Store Ordering)：模型为每个硬件线程都有其独立的写缓冲区。这允许了 Test SB 的情况。</p>
+        <p>Relaxed：对不同位置的写可以以乱序发生，这意味着其他线程读取时也可能是乱序的。这允许了 Test MP 的情况。</p>
+        <p>多复制原子（multi-copy atomicity）：对不同位置的写入以相同的顺序传播到多个其他线程。 非多复制原子性可以由 Test WRC+addr 验证。</p>
+      </section>
+      <section class="sect1">
+        <h2 id="_内存模型测试">内存模型测试</h2>
+        <p>po 代表程序顺序关系，rf 代表读取关系。小写字母是内存位置，初始值均为 0。</p>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>Test SB</p>
+            </li>
+          </ul>
+        </div>
+        <div class="imageblock">
+          <div class="content"><img src="/resource/TestSB.svg" alt="" style="width: 18rem;"></div>
+        </div>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>Test MP</p>
+            </li>
+          </ul>
+        </div>
+        <div class="imageblock">
+          <div class="content"><img src="/resource/TestMP.svg" alt="" style="width: 18rem;"></div>
+        </div>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>Test WRC+addr</p>
+            </li>
+          </ul>
+        </div>
+        <div class="imageblock">
+          <div class="content"><img src="/resource/TestWRCaddr.svg" alt="" style="width: 22rem;"></div>
+        </div>
+      </section>
+    </div>
+    <hr>
+    <footer>
+      <p><a property="dct:title" rel="cc:attributionURL" href="/zh/index.html">本站</a> 由 <span property="cc:attributionName">Waterlens</span> 创作的一切内容 © 2021 - 2025 在 <a href="http://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">知识共享 署名 - 相同方式共享 4.0 协议 <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1"></a> 之条款下提供。</p>
+    </footer>
+  </article>
+</body>
+</html>
