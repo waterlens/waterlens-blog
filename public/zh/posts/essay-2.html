@@ -14,15 +14,46 @@
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="generator" content="Asciidoctor 2.0.23 with Waterlens HTML Backend 0.1.0">
-  <title>随记:（二）</title>
+  <title>随记: （二）</title>
 </head>
 <body>
   <article>
     <header>
-      <h1><a href=".">随记</a>:（二）</h1>
+      <h1><a href=".">随记</a></h1>
+      <h2 class="subtitle">（二）</h2>
     </header>
     <hr>
     <div id="content">
+      <section class="sect1">
+        <h2 id="_你对_compilerpl_的兴趣变化了吗">你对 Compiler/PL 的兴趣变化了吗？</h2>
+        <p>不然。直到现在我最爱的仍然是编译器和编程语言方向，然而不得不感叹， 伴随着 CS 领域持续的人才流入，即便是在细分方向上，仍然充斥着激烈的竞争。 这个时候，我会考虑以下两个问题：</p>
+        <div class="olist arabic">
+          <ol class="arabic">
+            <li>
+              <p>我能否在这种竞争中存活下来？</p>
+            </li>
+            <li>
+              <p>我能否在竞争中保持对此领域的深入？</p>
+            </li>
+          </ol>
+        </div>
+        <p>对于第一个问题来说，我的答案是能也不能。 从最细分角度 (也就是对泛 Compiler/PL 方向的进一步细分) 来看， 我占据的生态位是非常独特的：懂点 PLT, 懂点编译器，懂点体系结构。 这相当于跨越了完整的编程语言设计 + 编译器开发 + 性能向各环节， 因此在这一类别上直接与我竞争的人并不多。</p>
+        <p>然而，这一生态位是否是当下所需求的？显然不。 伴随着 AI 狂潮，供需关系就是可以用电力消耗来 衡量的算力和 AI 吃也吃不够的互联/存储/算力需求间的关系。 在这一视角下，编程语言其本身扮演的角色的地位正在下滑。 如果人们需要极致的性能，基于有限的硬件算力， 那他们会毫不犹豫的雇佣劳动力在最底层实现他们所需的各种算子； 如果人们需要抽象，那则会直接诉诸于 Python 等胶水语言或者上层的 DSL。 这两者都并非尔等所能轻易触及：本质上他们都是 HPC/AI 交叉需求而非 PL 需求， 因此 PL 知识并无增益，而未涉及调度的基础 Compiler 知识几乎毫无用处 (竞争对手几乎都有)。 在这种情形下，对于想要投身于 MLSys 和 Compiler 交叉的那一部分人来说， 学习事实上的成功编译框架如 LLVM/MLIR， 然后深入可被纳入 HPC 范畴的计算优化，才可谓唯一的正道。</p>
+        <p>在这种情况下，我将处在一个陌生的环境下去和从一开始就专注于此路线的人进行竞争， 而这是很困难的，并且会浪费自己已经点上的技能点。这就是所谓“不能”。</p>
+        <p>可以见得，上述世界远非 PL 人的天堂，那么在何种改变下，我们可以预见更有利的未来呢？</p>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>LLM 达到了其顶峰以至于不能够靠提升算力来继续提高 LLM 表现。</p>
+            </li>
+            <li>
+              <p>硬件算力充分冗余导致人们不必压榨出每一份性能。</p>
+            </li>
+          </ul>
+        </div>
+        <p>这两点都不是短期内可以预见的。</p>
+        <p>对于第二个问题，我的看法是：很难。 “良禽择木而栖”，在当前中国作为追赶者的背景下， 大多数相关工作仍停留在模仿与改进的阶段。 而模仿与改进，不能说没有其意义，但对人的培养作用是相对较弱的， 反而容易使得让人陷入细节，对特定框架过拟合。 即便是那些颇有新意的项目， 也可能由于没有资金支持或者用户群体过小而无法继续发展。 不论何种情况，这对于个人的深入发展都是不利的。</p>
+      </section>
       <section class="sect1">
         <h2 id="_附录未完工的开发项目">附录：未完工的开发项目</h2>
         <section class="sect2">
