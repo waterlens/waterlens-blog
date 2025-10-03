@@ -24,6 +24,30 @@
     <hr>
     <div id="content">
       <section class="sect1">
+        <h2 id="_哈希">哈希</h2>
+        <section class="sect2">
+          <h3 id="_顺序无关的双射哈希">顺序无关的双射哈希</h3>
+          <p>当哈希值与顺序无关，序列 \([a,b,c]\) 和 \([c,a,b]\) 被认为是相同的输入。它们的本质区别在于元素的种类和计数，正是多重集的定义。 如果元素类型是有限的（例如 K 种类型），那么任何序列都可以唯一地表示为一个长度为 K 的计数向量。</p>
+          <p>将<strong>计数向量</strong> \(\mathbf{C}\) 映射到一个唯一的整数，需要确定每个计数 \(c_i\) 的最大可能值 \(M_i\)（例如序列的最大长度 \(N\)）。</p>
+          <p>假设： * \(c_{i, \text{max}}\) 是元素 \(e_i\) 可能的最大计数（例如，序列的最大长度 \(N\)）。 * 哈希值 \(H\) 是一个大的整数。</p>
+          <div class="stem">
+            <div class="content">
+              \[H(\mathbf{C}) = \sum_{i=1}^{K} \left( c_i \cdot \prod_{j=1}^{i-1} (c_{j, \text{max}} + 1) \right)\]
+            </div>
+          </div>
+          <div class="olist arabic">
+            <ol class="arabic">
+              <li>
+                <p>双射性保证：只要所有 \(c_i \le c_{i, \text{max}}\)，这个映射就是严格的<strong>一一对应关系</strong>，即双射。</p>
+              </li>
+              <li>
+                <p>哈希值大小：哈希值 \(H\) 的最大值会非常大。如果 \(K=10\) 种元素，最大序列长度 \(N=10\)，哈希值 \(H\) 最大可能达到 \((10+1)^{10} \approx 2.6 \times 10^{10}\)。您需要足够大的整数类型（如 64 位或 128 位）来存储 \(H\)。</p>
+              </li>
+            </ol>
+          </div>
+        </section>
+      </section>
+      <section class="sect1">
         <h2 id="_bfs">BFS</h2>
         <section class="sect2">
           <h3 id="_可获取层号的_bfs">可获取层号的 BFS</h3>

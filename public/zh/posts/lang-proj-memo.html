@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&amp;display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="Asciidoctor 2.0.23 with Waterlens HTML Backend 0.1.0">
+  <title>小而完整的语言/VM 项目方法论 + A–F 方向实施备忘（Cheat Sheet）</title>
+</head>
+<body>
+  <article>
+    <header>
+      <h1>小而完整的语言/VM 项目方法论 + A–F 方向实施备忘（Cheat Sheet）</h1>
+    </header>
+    <hr>
+    <div id="content">
+      <p>面向对象</p>
+      <div class="ulist">
+        <ul>
+          <li>
+            <p>想做 TinyCC / QuickJS / LuaJIT 那样“小、独立、完整”的项目</p>
+          </li>
+          <li>
+            <p>正在选择并落地 A–F 方向之一</p>
+          </li>
+        </ul>
+      </div>
+      <section class="sect1">
+        <h2 id="_1_通用方法论与工程纪律">1. 通用方法论与工程纪律</h2>
+        <section class="sect2">
+          <h3 id="_a_心态与基础mindset_foundation">A. 心态与基础（mindset & foundation）</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>核心目标只选一件（体积/确定性/嵌入性/标准兼容/吞吐/延迟/安全性）</p>
+              </li>
+              <li>
+                <p>深厚基石：编译原理（词法/语法/语义/IR/优化/后端）、VM 设计（栈机/寄存器机/指令集/闭包/GC）、OS/ABI（调用约定/W^X/内存布局）、C 专家级（指针/未定义行为/跨平台）</p>
+              </li>
+              <li>
+                <p>大量读源：Lua / TCC / QuickJS / LuaJIT；理解“极简而强”的折中</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_b_先立界再施工边界与非目标">B. 先立界，再施工（边界与非目标）</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>体量目标：MVP 7–12k LOC；零/极少依赖；C89/C99，可跨 Windows/Linux/macOS</p>
+              </li>
+              <li>
+                <p>非目标：起步不做 JIT/复杂优化/庞大标准库，不追“所有语法/所有平台”</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_c_mvp_路径最小闭环_渐进增强">C. MVP 路径（最小闭环 → 渐进增强）</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>词法/语法（手写递归下降）→ AST → 树遍历解释器（先通）</p>
+              </li>
+              <li>
+                <p>升级：字节码 VM（大 <code>switch</code>）→ 快路径/IC/quickening →（可选）baseline JIT</p>
+              </li>
+              <li>
+                <p>坚持“慢且正确”，每步优化均可回退</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_d_架构与关键抉择cheat_sheet">D. 架构与关键抉择（cheat sheet）</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>VM：stack VM（实现小）vs register VM（优化友好；Lua 使用寄存器机）</p>
+              </li>
+              <li>
+                <p>值表示：tagged union 起步 → 性能极限再 NaN-boxing</p>
+              </li>
+              <li>
+                <p>GC：mark-sweep 或 RC 起步；低停顿用增量/分代；实时倾向 RC + 周期检测或 <code>arena</code></p>
+              </li>
+              <li>
+                <p>解析：手写递归下降可读好调；PEG/packrat 语法友好但注意性能/内存</p>
+              </li>
+              <li>
+                <p>调试：字节码携带文件/行列/常量池 <code>idx</code>；完整 stack trace</p>
+              </li>
+              <li>
+                <p>可移植：JIT 抽象为后端；解释器永远可用；注意 W^X</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_e_工程质量三板斧">E. 工程质量（三板斧）</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>差分测试：慢速“模型执行器”vs VM，比对结果/副作用</p>
+              </li>
+              <li>
+                <p>Fuzz：语法/运行时/FFI/GC/资源预算；崩溃最小复现自动化</p>
+              </li>
+              <li>
+                <p>度量可视化：指令计数/分配/GC/RC/IC 命中/热点位点/预算消耗</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_f_通用_12_周里程碑模板">F. 通用 12 周里程碑（模板）</h3>
+          <div class="olist arabic">
+            <ol class="arabic">
+              <li>
+                <p>解析/AST；树解释器（可选）</p>
+              </li>
+              <li>
+                <p>字节码 VM + 基本指令 + 闭包/异常/调试信息</p>
+              </li>
+              <li>
+                <p>值/对象模型 + 内存（GC 或 RC/<code>arena</code>）+ 字符串驻留</p>
+              </li>
+              <li>
+                <p>资源/限额（步/内存/时间）+ 错误模型</p>
+              </li>
+              <li>
+                <p>并发原语（协程/状态机/迭代器）或领域关键能力</p>
+              </li>
+              <li>
+                <p>IC/quickening/常量折叠/尾调用等低风险优化</p>
+              </li>
+              <li>
+                <p>FFI + 最小标准库 + 宿主集成</p>
+              </li>
+              <li>
+                <p>REPL/disasm/profiler 等工具与可视化</p>
+              </li>
+              <li>
+                <p>fuzz/压力/跨平台 CI</p>
+              </li>
+              <li>
+                <p>文档/示例/基准/验收</p>
+              </li>
+              <li>
+                <p>预发布回归与性能稳定</p>
+              </li>
+              <li>
+                <p>发布与反馈收集</p>
+              </li>
+            </ol>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_g_代码结构与文档建议">G. 代码结构与文档（建议）</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p><code>core/</code>（<code>lexer</code>、<code>parser</code>、AST、<code>codegen</code>、VM、<code>bytecode</code>）</p>
+              </li>
+              <li>
+                <p><code>runtime/</code>（对象模型、GC/RC/arena、标准库）</p>
+              </li>
+              <li>
+                <p><code>embed/</code>（C API/FFI/沙箱）</p>
+              </li>
+              <li>
+                <p><code>tools/</code>（REPL、disasm、profiler、fuzz harness）</p>
+              </li>
+              <li>
+                <p><code>tests/</code>（语义、性能、GC/RC、FFI、资源、差分）</p>
+              </li>
+              <li>
+                <p><code>docs/</code>（设计记录、语言规范草案、嵌入指南、示例）</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+      </section>
+      <section class="sect1">
+        <h2 id="_2_方向速查与对比表">2. 方向速查与对比表</h2>
+        <table class="table frame-all grid-all stretch">
+          <colgroup>
+            <col style="width: 14.2857%;">
+            <col style="width: 14.2857%;">
+            <col style="width: 14.2857%;">
+            <col style="width: 14.2857%;">
+            <col style="width: 14.2857%;">
+            <col style="width: 14.2857%;">
+            <col style="width: 14.2858%;">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="table halign-left valign-top">方向</th>
+              <th class="table halign-left valign-top">核心诉求</th>
+              <th class="table halign-left valign-top">典型场景</th>
+              <th class="table halign-left valign-top">可行性</th>
+              <th class="table halign-left valign-top">难度</th>
+              <th class="table halign-left valign-top">差异化</th>
+              <th class="table halign-left valign-top">MVP 体量</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="table halign-left valign-top">
+                <p class="table">A 确定性/硬实时脚本 VM</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">可预算、可证明停顿上限</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">游戏帧逻辑、机器人、低延迟撮合</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">强</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">中</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">强</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">7–12k LOC</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="table halign-left valign-top">
+                <p class="table">B 数据处理脚本</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">结构化数据 + pipeline + 惰性</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">CLI/ETL、日志/JSON/CSV 处理</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">强</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">中</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">中强</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">8–12k LOC</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="table halign-left valign-top">
+                <p class="table">C 嵌入式 Datalog</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">声明式规则 + 增量推理</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">权限/策略、配置校验、AI</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">中强</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">中</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">强</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">6–10k LOC</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="table halign-left valign-top">
+                <p class="table">D 类型化连接式</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">栈效应类型 + HM 推断</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">嵌入/教学/DSL/AOT 到 C/Wasm</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">中</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">中高</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">中强</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">6–9k LOC</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="table halign-left valign-top">
+                <p class="table">E 代数效应小语言</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">effects/handlers 教学可用</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">协程/异步建模、嵌入</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">中</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">中</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">中强</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">4–7k LOC</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="table halign-left valign-top">
+                <p class="table">F 安全系统级脚本</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">无 GC/确定性内存 + 线性类型</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">实时/嵌入/高可靠插件</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">中强</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">中高</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">强</p>
+              </td>
+              <td class="table halign-left valign-top">
+                <p class="table">8–12k LOC</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="admonition tip">
+          <table>
+            <tr>
+              <td class="icon">
+                <div class="title">
+                  Tip
+                </div>
+              </td>
+              <td class="content">若追真实需求与快速形成差异化，优先 A；偏工具链与数据工程选 B；偏声明式/形式化选 C；偏范式与类型系统选 D/E；追系统级安全与确定性选 F（或 A+F 融合）。</td>
+            </tr>
+          </table>
+        </div>
+      </section>
+      <section class="sect1">
+        <h2 id="_3_方向_a确定性硬实时脚本_vm强推">3. 方向 A：确定性/硬实时脚本 VM（强推）</h2>
+        <section class="sect2">
+          <h3 id="_a1_定位与目标">A1. 定位与目标</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>承诺：每帧/每 tick 延迟上限可控；时间/内存预算超限可捕获，不产生 STW 卡顿</p>
+              </li>
+              <li>
+                <p>用途：游戏（客户端/服务器）、机器人/控制、低延迟后端</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_a2_语言语义约束">A2. 语言/语义约束</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>类 Lua 语法；限制递归深度；显式分配域：<code>frame.*</code> vs <code>persist.*</code></p>
+              </li>
+              <li>
+                <p><code>yield</code> 不分配；时间与随机需显式注入，保证可复现</p>
+              </li>
+              <li>
+                <p>三类异常：资源（步/内存）、类型/边界、FFI 错配；均携带源位置信息</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_a3_执行模型字节码成本">A3. 执行模型/字节码/成本</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>stack VM；字节码位点携带文件/行列/常量池 <code>idx</code></p>
+              </li>
+              <li>
+                <p>成本表（VM 步示例）：<code>LOAD</code>/<code>CONST</code>=1，算术=2，<code>CALL</code>=5+ 参数数；属性访问 IC 命中=3/未命中=12</p>
+              </li>
+              <li>
+                <p>IC + quickening：对热点全局/属性专用化</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_a4_内存模型双区">A4. 内存模型（双区）</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>frame 区（<code>arena</code>）：bump-pointer；帧末 O(1) <code>reset</code>；热对象尽量放这里</p>
+              </li>
+              <li>
+                <p>持久区（RC + 可选周期检测/增量标记）：对象头 <code>rc</code>、写屏障；优先避免环</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_a5_协程调度">A5. 协程/调度</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>用户态状态机；<code>resume(co, steps)</code>；耗尽返回 <code>EXHAUSTED</code>，异常可捕获</p>
+              </li>
+              <li>
+                <p>宿主按帧调度：<code>set_frame()</code> 重置 <code>arena</code> → 轮询协程</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_a6_ffi嵌入">A6. FFI/嵌入</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>C API：<code>vm_create</code>/<code>vm_load</code>/<code>vm_call</code>/<code>vm_set_budget</code>/<code>vm_poll</code>；FFI 签名注解内存语义与 worst-case 成本</p>
+              </li>
+              <li>
+                <p>I/O 与系统能力仅通过宿主注入（默认沙箱）</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_a7_标准库优化工具">A7. 标准库/优化/工具</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>标准库：数组/表（frame/persist 构造器）、字符串驻留、数学、时间（注入）</p>
+              </li>
+              <li>
+                <p>优化：常量折叠/尾调用 → IC/quickening → 热点专用化（可选 baseline JIT）</p>
+              </li>
+              <li>
+                <p>工具：REPL、disasm、profiler（预算报告/IC 命中/热点）</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_a8_12_周里程碑">A8. 12 周里程碑</h3>
+          <div class="olist arabic">
+            <ol class="arabic">
+              <li>
+                <p>解析/AST/字节码生成</p>
+              </li>
+              <li>
+                <p>VM + 闭包/异常 + 源级栈</p>
+              </li>
+              <li>
+                <p><code>arena</code> + RC + 字符串驻留</p>
+              </li>
+              <li>
+                <p>预算系统（步/内存）+ 资源异常</p>
+              </li>
+              <li>
+                <p>协程 + 宿主帧调度</p>
+              </li>
+              <li>
+                <p>IC/quickening + 热点统计</p>
+              </li>
+              <li>
+                <p>FFI + 最小标准库</p>
+              </li>
+              <li>
+                <p>profiler + 预算可视化</p>
+              </li>
+              <li>
+                <p>fuzz/压力/跨平台</p>
+              </li>
+              <li>
+                <p>文档/示例/基准</p>
+              </li>
+              <li>
+                <p>回归与性能稳定</p>
+              </li>
+              <li>
+                <p>发布与集成样例</p>
+              </li>
+            </ol>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_a9_风险与对策">A9. 风险与对策</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>GC 暂停/写屏障成本 → 热对象入帧区、持久区增量、减少跨区写</p>
+              </li>
+              <li>
+                <p>隐式分配 → API 标注 + lint/静态检查 + 运行时告警</p>
+              </li>
+              <li>
+                <p>预算标定不准 → 以 VM 步为基准、离线校准、FFI 强制注解</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_a10_指标体量">A10. 指标/体量</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>启动 &lt; 30ms；空 VM 常驻 &lt; 10MB；无长尾；算术/控制流性能≈Lua 5.x ±30%</p>
+              </li>
+              <li>
+                <p>LOC：7–12k</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+      </section>
+      <section class="sect1">
+        <h2 id="_4_方向_b数据处理脚本语言data_wrangling">4. 方向 B：数据处理脚本语言（data-wrangling）</h2>
+        <section class="sect2">
+          <h3 id="_b1_定位与目标">B1. 定位与目标</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>一体化处理 JSON/CSV/YAML/TOML + pipeline + 惰性迭代；介于 jq/awk 与 Python/Pandas 之间</p>
+              </li>
+              <li>
+                <p>启动快、占用小、组合性强，适合 CLI/ETL 与嵌入</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_b2_语言语义">B2. 语言/语义</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>语法：管道 <code>|</code>、占位符 <code>_</code>、路径 <code>.a.b[0]</code>、模式匹配 <code>match</code></p>
+              </li>
+              <li>
+                <p>值：Null/Bool/Int/Float/String/Array/Map/Bytes/DateTime（可迭代）</p>
+              </li>
+              <li>
+                <p>惰性流：<code>Iterator&lt;Value&gt;</code>，边读边算，避免全量载入</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_b3_执行vm优化">B3. 执行/VM/优化</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>stack VM；管道编译为算子链；算子融合（map→map、filter 合并），谓词下推到 reader</p>
+              </li>
+              <li>
+                <p>热点路径访问 IC；CSV/JSON 流式解析；外部排序/分块聚合</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_b4_标准库ffi">B4. 标准库/FFI</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>I/O：<code>from_json</code> / <code>from_csv</code>、<code>to_json</code> / <code>to_csv</code>、<code>read_lines</code> / <code>write_file</code></p>
+              </li>
+              <li>
+                <p>算子：<code>map</code>、<code>filter</code>、<code>select</code>、<code>group</code>、<code>reduce</code>、<code>sort</code>、<code>unique</code>、<code>join</code>（渐进补齐）</p>
+              </li>
+              <li>
+                <p>FFI：注册原生数据函数；可桥接外部进程（受限沙箱）</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_b5_工具里程碑指标">B5. 工具/里程碑/指标</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>工具：CLI/REPL、profiler（算子吞吐/丢弃率/耗时）、formatter/linter</p>
+              </li>
+              <li>
+                <p>12 周里程碑</p>
+                <div class="olist arabic">
+                  <ol class="arabic">
+                    <li>
+                      <p>语法/解析（递归下降）+ AST + 基本值类型</p>
+                    </li>
+                    <li>
+                      <p>stack VM + 基础算子（<code>map/filter/select/reduce</code>）</p>
+                    </li>
+                    <li>
+                      <p>JSON/CSV reader/writer（流式）+ 路径访问器</p>
+                    </li>
+                    <li>
+                      <p>管道优化（算子融合）+ 错误上下文（文件/行/列/路径）</p>
+                    </li>
+                    <li>
+                      <p>profiler 与统计（算子级吞吐/丢弃率/耗时）</p>
+                    </li>
+                    <li>
+                      <p>C API/FFI + 最小标准库补齐</p>
+                    </li>
+                    <li>
+                      <p>排序/<code>group_by</code>（外部内存友好小顶堆/归并）</p>
+                    </li>
+                    <li>
+                      <p><code>regex</code>/时间解析等实用函数</p>
+                    </li>
+                    <li>
+                      <p>fuzz（随机 JSON/CSV）+ 差分测试（对标 jq/csvkit）</p>
+                    </li>
+                    <li>
+                      <p>跨平台打包</p>
+                    </li>
+                    <li>
+                      <p>文档/示例集完善</p>
+                    </li>
+                    <li>
+                      <p>发布与反馈</p>
+                    </li>
+                  </ol>
+                </div>
+              </li>
+              <li>
+                <p>指标：启动 &lt; 30ms；JSON 行吞吐 ≥ 200k lines/s；流式常驻 &lt; 10MB</p>
+              </li>
+              <li>
+                <p>LOC：8–12k</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_b6_风险对策">B6. 风险对策</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>大文件内存峰值 → 严格流式 + 外部排序/分块</p>
+              </li>
+              <li>
+                <p>复杂路径性能 → IC + 字段缓存</p>
+              </li>
+              <li>
+                <p>标准库膨胀 → 明确核心 + 插件化</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+      </section>
+      <section class="sect1">
+        <h2 id="_5_方向_c嵌入式_datalog规则引擎">5. 方向 C：嵌入式 Datalog/规则引擎</h2>
+        <section class="sect2">
+          <h3 id="_c1_定位与目标">C1. 定位与目标</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>小而可嵌入的 Datalog 引擎；声明式规则 + 增量推理</p>
+              </li>
+              <li>
+                <p>场景：权限/策略、配置校验、依赖分析、游戏 AI</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_c2_语言执行">C2. 语言/执行</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>正 Datalog（可选分层否定）；facts/rules，集合语义</p>
+              </li>
+              <li>
+                <p>半朴素评估（Δ 驱动）直到固定点；按谓词分表、列式存储、索引（主键/二级）</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_c3_优化ffi">C3. 优化/FFI</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>索引建议与简单 join 规划；小规模 hash join/索引嵌套循环</p>
+              </li>
+              <li>
+                <p>C API：<code>add_fact</code> / <code>retract_fact</code> / <code>query</code>，<code>register_external</code>（纯外部谓词）</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_c4_工具里程碑指标">C4. 工具/里程碑/指标</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>工具：可视化（依赖图/层次图）、统计（物化规模/命中率）</p>
+              </li>
+              <li>
+                <p>12 周里程碑</p>
+                <div class="olist arabic">
+                  <ol class="arabic">
+                    <li>
+                      <p>解析 + AST/IR（谓词/项/规则）+ 正 Datalog 安全性检查</p>
+                    </li>
+                    <li>
+                      <p>关系存储（列式 + 基本索引）+ 去重集合</p>
+                    </li>
+                    <li>
+                      <p>半朴素评估（Δ 驱动）+ 迭代直至固定点</p>
+                    </li>
+                    <li>
+                      <p>外部谓词（比较/算术）+ 模式匹配查询接口</p>
+                    </li>
+                    <li>
+                      <p>C API + 批量导入/导出（CSV）</p>
+                    </li>
+                    <li>
+                      <p>增量更新（EDB 变更影响集）+ 统计</p>
+                    </li>
+                    <li>
+                      <p>规则规划器（启发式 join 顺序）+ 性能基准</p>
+                    </li>
+                    <li>
+                      <p>可选分层否定 + 安全性/层次检查</p>
+                    </li>
+                    <li>
+                      <p>fuzz（随机规则/事实）+ 差分（对标 Soufflé/小样本）</p>
+                    </li>
+                    <li>
+                      <p>文档/案例库（权限策略/配置验证）</p>
+                    </li>
+                    <li>
+                      <p>包装与跨平台 CI</p>
+                    </li>
+                    <li>
+                      <p>发布与反馈</p>
+                    </li>
+                  </ol>
+                </div>
+              </li>
+              <li>
+                <p>指标：百万级事实/秒（视规则形态）；内存（字典压缩）可控</p>
+              </li>
+              <li>
+                <p>LOC：6–10k</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_c5_风险对策">C5. 风险对策</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>连接爆炸 → 强制索引/限制 join 宽度/基数驱动顺序</p>
+              </li>
+              <li>
+                <p>去重成本高 → 排序去重 + 分块 + 压缩编码</p>
+              </li>
+              <li>
+                <p>否定复杂 → MVP 先不做或仅做分层否定</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+      </section>
+      <section class="sect1">
+        <h2 id="_6_方向_d类型化连接式语言forthjoy_hm">6. 方向 D：类型化连接式语言（Forth/Joy + HM）</h2>
+        <section class="sect2">
+          <h3 id="_d1_定位与目标">D1. 定位与目标</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>连接式范式 + 强类型（栈效应 + HM 推断）；零运行时类型检查；可 AOT 到 C/Wasm</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_d2_语言类型">D2. 语言/类型</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>词即函数（后缀）；组合子丰富；块 <code>[ ... ]</code> 作为一等值</p>
+              </li>
+              <li>
+                <p>栈效应类型：<code>dup: a -- a a</code>，<code>add: Int Int -- Int</code></p>
+              </li>
+              <li>
+                <p>多态 + HM：剩余栈变量 <code>'S</code>；常用容器/ADT（可选）</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_d3_编译执行优化">D3. 编译/执行/优化</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>类型期生成/合并栈效应约束（HM 统一）；到字节码或 AOT C（热点单态化）</p>
+              </li>
+              <li>
+                <p>运行：stack VM，tagged union；优化：词内联/常量/栈折叠</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_d4_ffi里程碑指标">D4. FFI/里程碑/指标</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>FFI：为词声明栈效应 + C 函数指针</p>
+              </li>
+              <li>
+                <p>12 周里程碑</p>
+                <div class="olist arabic">
+                  <ol class="arabic">
+                    <li>
+                      <p>词法/解析（后缀语法 + 引用块 <code>[ ... ]</code>）</p>
+                    </li>
+                    <li>
+                      <p>类型系统（<code>'S</code> 剩余栈 + HM 统一）+ 友好错误信息</p>
+                    </li>
+                    <li>
+                      <p>stack VM + 基本词实现 + 容器与 RC</p>
+                    </li>
+                    <li>
+                      <p>标准库（栈/算术/容器/控制组合子）</p>
+                    </li>
+                    <li>
+                      <p>AOT 到 C（基础单态化）+ 运行库雏形</p>
+                    </li>
+                    <li>
+                      <p>FFI（注册外部词）+ 示例集</p>
+                    </li>
+                    <li>
+                      <p>优化（词内联/常量折叠/栈折叠）</p>
+                    </li>
+                    <li>
+                      <p>文档与类型推断可视化</p>
+                    </li>
+                    <li>
+                      <p>fuzz（随机词序列 + 类型约束）+ 差分（解释器 vs AOT）</p>
+                    </li>
+                    <li>
+                      <p>打包/跨平台发布</p>
+                    </li>
+                    <li>
+                      <p>回归与性能稳定</p>
+                    </li>
+                    <li>
+                      <p>发布与反馈</p>
+                    </li>
+                  </ol>
+                </div>
+              </li>
+              <li>
+                <p>指标：编译期推断 &lt; 数百 ms；AOT 1.5–3× 解释器</p>
+              </li>
+              <li>
+                <p>LOC：6–9k</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_d5_风险对策">D5. 风险对策</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>类型错误可读性差 → 生成“期望栈 vs 实际栈”可视化</p>
+              </li>
+              <li>
+                <p>多态爆炸 → 仅单态化热点；保留解释路径</p>
+              </li>
+              <li>
+                <p>组合子复杂控制流 → 限制递归，偏迭代组合子</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+      </section>
+      <section class="sect1">
+        <h2 id="_7_方向_e代数效应小语言effectshandlers">7. 方向 E：代数效应小语言（effects/handlers）</h2>
+        <section class="sect2">
+          <h3 id="_e1_定位与目标">E1. 定位与目标</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>ML 核心 + effects/handlers；单文件/可嵌入；协程/异步建模教学利器</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_e2_语义实现">E2. 语义/实现</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p><code>perform Op(args)</code> 与 <code>handle expr with { case Op(x, k) -&gt; ...; return v -&gt; ... }</code></p>
+              </li>
+              <li>
+                <p>解释器采用 CPS + defunctionalization；one-shot 续延（多次恢复可后加复制）</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_e3_运行时优化ffi">E3. 运行时/优化/FFI</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>值：tagged union；闭包捕获环境</p>
+              </li>
+              <li>
+                <p>优化：闭包分配优化、模式匹配编译、热门 handler 内联</p>
+              </li>
+              <li>
+                <p>FFI：注册原生效应与处理器；宿主可控制续延恢复策略</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_e4_工具里程碑指标">E4. 工具/里程碑/指标</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>工具：REPL、续延/处理器栈可视化、效应触发统计</p>
+              </li>
+              <li>
+                <p>12 周里程碑</p>
+                <div class="olist arabic">
+                  <ol class="arabic">
+                    <li>
+                      <p>语法 + 模式匹配 + AST</p>
+                    </li>
+                    <li>
+                      <p>CPS 解释器骨架 + 闭包/环境捕获</p>
+                    </li>
+                    <li>
+                      <p>effects/handlers 语义 + 续延表示（one-shot）</p>
+                    </li>
+                    <li>
+                      <p>标准库（console/state）+ 错误栈与未处理效应报告</p>
+                    </li>
+                    <li>
+                      <p>FFI（注册效应/处理器）+ 示例</p>
+                    </li>
+                    <li>
+                      <p>优化（匹配编译/常量折叠）</p>
+                    </li>
+                    <li>
+                      <p>可视化与调试（续延/处理器栈快照）</p>
+                    </li>
+                    <li>
+                      <p>async 模型（可选）+ 限流策略</p>
+                    </li>
+                    <li>
+                      <p>fuzz（随机模式/效应）+ 行为回归集</p>
+                    </li>
+                    <li>
+                      <p>文档/单文件打包</p>
+                    </li>
+                    <li>
+                      <p>回归与性能稳定</p>
+                    </li>
+                    <li>
+                      <p>发布与反馈</p>
+                    </li>
+                  </ol>
+                </div>
+              </li>
+              <li>
+                <p>指标：效应开销微秒级（解释器）；单文件 4–7k LOC</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_e5_风险对策">E5. 风险对策</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>续延实现复杂 → 避免 OS 栈操作；纯 CPS/one-shot 起步</p>
+              </li>
+              <li>
+                <p>多次恢复需求 → 复制续延或限制模式</p>
+              </li>
+              <li>
+                <p>性能忧虑 → 小而精 + 内联 handler 足以覆盖教学与嵌入</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+      </section>
+      <section class="sect1">
+        <h2 id="_8_方向_f安全的系统级脚本无_gc确定性内存">8. 方向 F：安全的系统级脚本（无 GC/确定性内存）</h2>
+        <section class="sect2">
+          <h3 id="_f1_定位与目标">F1. 定位与目标</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>“脚本灵活 + 内存确定性/安全”；无 STW GC；适用于实时/嵌入/高可靠插件</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_f2_语言安全模型">F2. 语言/安全模型</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>默认 move-only（线性类型）；MVP 无借用或仅只读短借用</p>
+              </li>
+              <li>
+                <p>资源类型显式 <code>drop</code>；<code>Result&lt;T, E&gt;</code> 与 <code>?</code> 传播；开发态 <code>panic</code></p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_f3_运行时内存验证">F3. 运行时/内存/验证</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>RC + <code>Cow</code>；<code>pinned buffer</code>（稳定地址）供 FFI 零拷贝</p>
+              </li>
+              <li>
+                <p>字节码验证器：装载期检查 use-after-move/双释放/别名违规</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_f4_ffi优化工具">F4. FFI/优化/工具</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>FFI 签名需注解：<code>noalloc</code>/<code>alloc</code>/<code>borrowed</code>/<code>transfer</code> 与 worst-case 成本</p>
+              </li>
+              <li>
+                <p>优化：逃逸分析（栈/<code>arena</code> 分配）、边界检查消除、IC</p>
+              </li>
+              <li>
+                <p>工具：生命周期图、泄漏统计、RC 热点</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_f5_里程碑指标风险">F5. 里程碑/指标/风险</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>12 周里程碑</p>
+                <div class="olist arabic">
+                  <ol class="arabic">
+                    <li>
+                      <p>语法 + 类型（线性/move）设计与解析</p>
+                    </li>
+                    <li>
+                      <p>寄存器 VM + 值模型（线性资源/普通值）</p>
+                    </li>
+                    <li>
+                      <p>静态检查（use-after-move）+ 字节码验证器</p>
+                    </li>
+                    <li>
+                      <p>基础容器（<code>Vec</code>/<code>Map</code>，move 语义）+ RC/<code>Cow</code></p>
+                    </li>
+                    <li>
+                      <p>FFI（内存语义注解）+ <code>pinned buffer</code></p>
+                    </li>
+                    <li>
+                      <p>文件/网络资源封装（自动 <code>drop</code>）</p>
+                    </li>
+                    <li>
+                      <p>逃逸分析（栈/<code>arena</code> 分配）</p>
+                    </li>
+                    <li>
+                      <p>优化（边界检查消除）+ 基准</p>
+                    </li>
+                    <li>
+                      <p>fuzz（移动/借用/FFI 混合）+ 崩溃最小化</p>
+                    </li>
+                    <li>
+                      <p>文档/示例（嵌入式/游戏服/插件）</p>
+                    </li>
+                    <li>
+                      <p>回归与性能稳定</p>
+                    </li>
+                    <li>
+                      <p>发布与反馈</p>
+                    </li>
+                  </ol>
+                </div>
+              </li>
+              <li>
+                <p>指标：无 STW；错误多数编译期捕获；延迟抖动可控</p>
+              </li>
+              <li>
+                <p>LOC：8–12k</p>
+              </li>
+              <li>
+                <p>风险对策：先不做借用、避免 RC 循环（<code>Weak</code>/约束）；FFI 强制注解 + 断言</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+      </section>
+      <section class="sect1">
+        <h2 id="_9_统一的交付质量验收清单">9. 统一的交付/质量/验收清单</h2>
+        <section class="sect2">
+          <h3 id="_a_交付物">A. 交付物</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>源码（<code>core/runtime/embed/tools/tests/docs</code>）</p>
+              </li>
+              <li>
+                <p>语言规范草案 + 嵌入/FFI 指南 + 示例集</p>
+              </li>
+              <li>
+                <p>工具：REPL、disasm、profiler、fuzz harness</p>
+              </li>
+              <li>
+                <p>基准：micro（算术/容器/调用）+ macro（场景特定）</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_b_质量门槛">B. 质量门槛</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>单测覆盖核心语义路径与错误路径</p>
+              </li>
+              <li>
+                <p>差分测试：模型执行器 vs VM（或对标参考实现）</p>
+              </li>
+              <li>
+                <p>模糊测试：语法 + 运行时 + FFI + 资源预算</p>
+              </li>
+              <li>
+                <p>资源/长稳：小时级压力测试；崩溃最小复现自动入回归集</p>
+              </li>
+              <li>
+                <p>安全/可移植：未定义行为/对齐/大小端；W^X（若 JIT）；沙箱默认开启</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_c_验收指标按方向补充">C. 验收指标（按方向补充）</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>启动时延、常驻内存、吞吐/延迟、GC/RC 次数与时长、IC 命中、热点 top-N</p>
+              </li>
+              <li>
+                <p>方向特定：</p>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>A：无长尾帧；预算可日志/可捕获</p>
+                    </li>
+                    <li>
+                      <p>B：流式内存 &lt; 10MB；数据吞吐达标</p>
+                    </li>
+                    <li>
+                      <p>C：百万事实/秒；规则规划正确性</p>
+                    </li>
+                    <li>
+                      <p>D：类型推断时间/错误可读性</p>
+                    </li>
+                    <li>
+                      <p>E：效应触发开销；续延正确恢复</p>
+                    </li>
+                    <li>
+                      <p>F：无 STW；编译期捕获资源错误</p>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </section>
+      </section>
+      <section class="sect1">
+        <h2 id="_10_参考资料与下一步">10. 参考资料与下一步</h2>
+        <section class="sect2">
+          <h3 id="_资料">资料</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>Lua 5.x、Wren、Janet 源码（小型 VM 的黄金标准）</p>
+              </li>
+              <li>
+                <p>Crafting Interpreters（从零到解释器/字节码）</p>
+              </li>
+              <li>
+                <p>Engineering a Compiler / Modern Compiler Implementation（IR/优化）</p>
+              </li>
+              <li>
+                <p>The Garbage Collection Handbook（GC 设计权衡）</p>
+              </li>
+              <li>
+                <p>LuaJIT：DynASM 与 tracing 论文/博客</p>
+              </li>
+              <li>
+                <p>TCC / QuickJS 源码（Bellard 风格的“极简而强”）</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_下一步行动清单">下一步（行动清单）</h3>
+          <div class="olist arabic">
+            <ol class="arabic">
+              <li>
+                <p>今天：确定主目标与非目标；项目骨架与目录搭好；起步即写“慢速模型执行器”</p>
+              </li>
+              <li>
+                <p>本周：解析/AST 通关；最小 VM 跑起；引入差分与 fuzz harness</p>
+              </li>
+              <li>
+                <p>本月：对象/内存落地；FFI 定签名规范；profiler 能出第一张图</p>
+              </li>
+              <li>
+                <p>季度：方向特定能力完整；文档/示例/基准齐备；对外发布 MVP</p>
+              </li>
+            </ol>
+          </div>
+        </section>
+      </section>
+    </div>
+    <hr>
+    <footer>
+      <p>The content on <a property="dct:title" rel="cc:attributionURL" href="/">this website</a> © 2021 - 2025 by <span property="cc:attributionName">Waterlens</span> is licensed under <a href="http://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">CC BY-SA 4.0 <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1"></a></p>
+    </footer>
+  </article>
+</body>
+</html>
