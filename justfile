@@ -8,7 +8,7 @@ clean:
 render-typ:
   #!/usr/bin/env sh
   TYPST=typst
-  for file in $(find resource/typst -type f -print0 | xargs -0); do
+  for file in $(find resource/typst -type f -name '*.typ' -print0 | xargs -0); do
     NAME=${file#resource/typst/}
     NAME="${NAME%.typ}.svg"
     echo "Typst is compiling $file to public/resource/$NAME"

@@ -16,7 +16,7 @@ $
         "if" italic("result")(e_1 ') = const(fals),
       I space e_2 space gamma_1 space rho space
         (#sym.lambda space e_2 ' space . space I space e_3 space gamma_1 space rho space k_2)
-        "otherwise, where" \
+        "otherwise, where",
         space.quad space.quad space.quad #box(
           $
             k_2 space.med e_3 '= cases(

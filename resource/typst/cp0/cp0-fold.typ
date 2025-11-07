@@ -13,7 +13,7 @@ $
     &#box([
       $
         "where" k_1 space e_1' space rho_1 = cases(
-          k const(c') sigma_2 &"if" result(e_1') = const(c) "and" p(c) = c' \
+          k const(c') sigma_2 &"if" result(e_1') = const(c) "and" p(c) = c',
                               &"where" sigma_2 = sigma_1[l_gamma |-> { inlined } union sigma_1(l_gamma)],
           k primref(p) sigma_1 space.quad &"otherwise"
         )

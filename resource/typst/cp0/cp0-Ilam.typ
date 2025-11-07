@@ -8,7 +8,7 @@ $
   cases(
     k const(tru) sigma &"if" gamma = test,
     k const(void) sigma &"if" gamma = effect,
-    I space e value rho_1 k_1 sigma_1 &"if" gamma = value "where" x "abbreviates" vars(x, null, s, l_x) \
+    I space e value rho_1 k_1 sigma_1 &"if" gamma = value "where" x "abbreviates" vars(x, null, s, l_x),
       & space #box([
         $
           &x' "abbreviates" vars(x, null, s, l_x) space.quad space.quad x', l_x' "fresh" \

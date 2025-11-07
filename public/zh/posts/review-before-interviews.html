@@ -13,7 +13,7 @@
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Asciidoctor 2.0.23 with Waterlens HTML Backend 0.1.0">
+  <meta name="generator" content="Asciidoctor 2.0.26 with Waterlens HTML Backend 0.1.0">
   <title>知识点回顾</title>
 </head>
 <body>
@@ -2095,6 +2095,66 @@ WAW 和 WAR 冲突通过重命名目标寄存器得以避免；因为指令的�
         <h2 id="_游戏引擎开发面试相关">游戏引擎开发面试相关</h2>
         <section class="sect2">
           <h3 id="_c">C++</h3>
+          <section class="sect3">
+            <h4 id="_address_sanitizer">Address Sanitizer</h4>
+            <p><strong>影子内存</strong>：影子内存分配在程序的高地址处，影子内存中的每个字节都描述了进程可能访问的相应内存块的可访问性状态。</p>
+            <div class="listing">
+              <div class="content">
+                <pre class="highlight"><code>Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Partially addressable: 01 02 03 04 05 06 07
+  Heap left redzone:       fa
+  Freed heap region:       fd
+  Stack left redzone:      f1
+  Stack mid redzone:       f2
+  Stack right redzone:     f3
+  Stack after return:      f5
+  Stack use after scope:   f8
+  Global redzone:          f9
+  Global init order:       f6
+  Poisoned by user:        f7
+  Container overflow:      fc
+  Array cookie:            ac
+  Intra object redzone:    bb
+  ASan internal:           fe
+  Left alloca redzone:     ca
+  Right alloca redzone:    cb</code></pre>
+              </div>
+            </div>
+            <p><strong>红区</strong>：红区是插入到进程内存中的内存区域，它们充当缓冲区，用被污染的内存将内存中的不同对象隔离开来。 因此，使用 ASan 编译程序会改变其内存布局。红区不会添加到数组元素之间或结构体成员变量之间。 这是因为这样做会破坏许多依赖于结构体布局、大小或仅仅是数组在内存中是连续的应用程序。</p>
+            <p><strong>插桩</strong>：内存读取/写入；malloc/free；new/delete</p>
+            <p><strong>可能的遗漏</strong>：非对齐内存访问（读取的第一个字节和最后一个字节不在同一个粒度）； 结构体间的变量；填充字节等等</p>
+            <p><strong>仅毒化后缀</strong>： 因为 ASan 目前在影子内存中的值数量非常有限，它只能毒化内存颗粒的后缀。 换句话说，影子内存中没有这样的值编码来告知 ASan，对于一个粒度，如果一个给定的字节在一个不可访问（已毒化）字节之后，那么它是可访问的。 举例来说，如果一个粒度中的第三个字节没有被“毒化”，那么前两个字节也不会被“毒化”，即使从逻辑上讲它们应该被“毒化”。 这也意味着，假设一个对象/变量/缓冲区从一个粒度的中间或最后一个字节开始，那么最多有七个字节可能不会被毒化。</p>
+          </section>
+          <section class="sect3">
+            <h4 id="_thread_sanitizer">Thread Sanitizer</h4>
+            <p><strong>影子内存</strong>:</p>
+            <div class="ulist">
+              <ul>
+                <li>
+                  <p>上次访问的线程 ID。16-bit（可配置）</p>
+                </li>
+                <li>
+                  <p>纪元（每个线程的逻辑时间计数器）。42-bit（可配置）</p>
+                </li>
+                <li>
+                  <p>是否写入。1-bit</p>
+                </li>
+                <li>
+                  <p>访问类型（读取或写入）。2-bit</p>
+                </li>
+                <li>
+                  <p>访问在八字节字中的大小和位置。3-bit</p>
+                </li>
+              </ul>
+            </div>
+            <p>程序执行时，插入的插桩会在内存访问前后调用 TSan 的运行时库。 运行时库会用每次访问的详细信息更新影子内存。 当发生内存访问时，TSan 会检查其影子内存， 以查看最近是否有冲突访问（例如，另一个线程在没有同步的情况下进行的写入）发生在同一内存位置。 如果两个或多个线程同时访问同一内存位置，并且至少有一个访问是写入操作， 并且没有适当的同步（如锁或原子操作）来排序这些访问，则 TSan 会检测到数据竞争。</p>
+            <p>TSan 能够识别常见的同步原语，例如互斥锁、条件变量和原子操作。它利用这些知识来避免对正确同步的内存访问报告误报。</p>
+          </section>
+          <section class="sect3">
+            <h4 id="_valgrind">Valgrind</h4>
+            <p>Valgrind 的使用即时编译（JIT）将输入程序翻译成一个等效的、带有额外检查的版本。 对于 memcheck 工具，它会实际查看可执行文件中的 x86 代码，并检测哪些指令代表内存访问。 这些指令被沙盒化，以便它可以捕获对未初始化内存的访问（即使这些访问不会导致页面错误或段错误）。 memcheck 工具还对 malloc() 和 free() 等例程有特殊了解，因此它可以跟踪程序终止时哪些内存仍然“可达”。</p>
+          </section>
           <section class="sect3">
             <h4 id="_虚表">虚表</h4>
             <p>简明解释： <a href="https://ww2.ii.uj.edu.pl/~kapela/pn/cpp_vtable.html">C++ 虚表</a></p>

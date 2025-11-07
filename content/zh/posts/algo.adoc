@@ -1,4 +1,4 @@
-= xref:.[知识点回顾]
+= xref:.[算法]
 :showtitle:
 :lang: zh-hans
 :stem: latexmath
@@ -34,3 +34,131 @@ H(\mathbf{C}) = \sum_{i=1}^{K} \left( c_i \cdot \prod_{j=1}^{i-1} (c_{j, \text{m
 我们可以一次性处理同一层的所有节点，并将下一层的所有后代加入队列中。
 只需要获取队列初始大小 n 并在一轮中恰好处理 n 个节点即可保证这一点。
 正确性可以通过数学归纳法获得。
+
+== Parsing 相关
+
+[discrete]
+==== LeetCode 32
+最长有效括号序列
+
+stack invariant:
+
+- 栈底元素：最后一个不匹配的右括号
+- 其余元素：上述右括号后尚未匹配的左括号位置
+
+
+== DP
+
+=== 区间 DP
+
+==== LeetCode 198
+
+[stem]
+++++
+\begin{cases}
+    dp[0] =& a_0 \\
+    dp[1] =& \max(a_0, a_1) \\
+    dp[i] =& \max(dp[i-1], dp[i-2] + a_i)
+\end{cases}
+++++
+
+=== ??? DP
+
+==== LeetCode 279
+
+[stem]
+++++
+\begin{cases}
+    dp[i] =& 1~~&\text{if}~i~\text{is a complete square} \\
+    dp[i] =& \min(dp[i-j^2] + 1)~~&\text{for all}~j^2 \le i
+\end{cases}
+++++
+
+==== LeetCode 322
+
+[stem]
+++++
+\begin {cases}
+    dp[0] =& 0 \\
+    dp[i] =& \min(dp[i-c_j] + 1)~~&\text{for all}~c_j \le i
+\end{cases}
+++++
+
+==== LIS 最长递增子序列
+
+注意状态 stem:[dp[i\]] 定义为以 stem:[a[i\]] 结尾的 LIS 长度，而非到 0 到 i 范围内最长的 LIS 长度。
+
+[stem]
+++++
+\begin {cases}
+    dp[i] =& \max(1, \max(dp[j] + 1))~~&\text{for all}~j \lt i~\text{and}~a_j \lt a_i
+\end{cases}
+++++
+
+==== LCS 最长公共子序列
+
+定义状态 stem:[dp[i\][j\]] 为 stem:[s_1[0:i\]] 和 stem:[s_2[0:j\]] 的最长公共子序列长度
+
+[stem]
+++++
+\begin{cases}
+    dp[i][j] =& dp[i - 1][j - 1] + 1 ~~\text{if} ~ s_1[i] = s_2[j] \\
+    dp[i][j] =& \max(dp[i - 1][j], dp[i][j - 1]) ~~otherwise
+\end{cases}
+++++
+
+==== LeetCode 152
+双状态 DP
+
+[stem]
+++++
+\begin{cases}
+    dp_{max}[i] =& \max(dp_{max}[i-1] \cdot a_i, dp_{min}[i-1] \cdot a_i, a_i) \\
+    dp_{min}[i] =& \min(dp_{min}[i-1] \cdot a_i, dp_{max}[i-1] \cdot a_i, a_i)
+\end{cases}
+++++
+
+==== LeetCode 416
+分割问题可以转换为 0/1 背包问题
+
+==== https://www.nowcoder.com/practice/e6c5d74d6d094e25be7468a21925529b
+定义状态 stem:[dp[i\][j\]] 为跳到第 stem:[i] 个点时，使用卡牌的情况为 stem:[j]，其中 stem:[j] 为卡牌排列形成的状态
+
+== 滑动窗口
+
+=== 计算最大值
+
+我们维护一个单调递减的队列，这个队列里存储的是元素在原数组中的索引（index），而不是元素的值。队列中的索引对应的 nums 数组中的值是严格递减的。
+
+为什么这个方法有效？
+
+队列的**队首（front）**永远是当前窗口最大值的索引。
+
+如果一个新元素 stem:[nums[i\]] 比队列尾部的元素 stem:[nums[q.back()\]] 要大，那么说明 stem:[nums[q.back()\]] 已经不可能成为当前窗口以及未来任何窗口的最大值了（因为 stem:[nums[i\]] 不仅比它大，还比它“年轻”，会更晚离开窗口）。因此，我们可以放心地将队尾元素弹出，直到队列重新满足单调递减的性质。
+
+=== 计算方差
+
+维护窗口内的元素总和和元素平方和，然后计算方差。
+
+公式为：
+
+[stem]
+++++
+S^2 = \frac{1}{k - 1}{\sum_{i=1}^{k} (x_i^2 - k\bar{x}^2)}
+++++
+
+== 杂项
+
+*Manacher 算法*
+
+https://oi-wiki.org/string/manacher/
+
+
+*等价二叉树*
+
+朴素递归：复杂度为 stem:[\min(N_1 + N_2)]
+
+标准态遍历：让树中所有节点的左孩子都小于右孩子，如果当前不满足就翻转。我们把这种状态的二叉树称为标准态。复杂度为 stem:[N_1 + N_2]
+
+== 工程
+

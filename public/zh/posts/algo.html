@@ -13,13 +13,13 @@
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Asciidoctor 2.0.23 with Waterlens HTML Backend 0.1.0">
-  <title>知识点回顾</title>
+  <meta name="generator" content="Asciidoctor 2.0.26 with Waterlens HTML Backend 0.1.0">
+  <title>算法</title>
 </head>
 <body>
   <article>
     <header>
-      <h1><a href=".">知识点回顾</a></h1>
+      <h1><a href=".">算法</a></h1>
     </header>
     <hr>
     <div id="content">
@@ -53,6 +53,121 @@
           <h3 id="_可获取层号的_bfs">可获取层号的 BFS</h3>
           <p>要点：正常 BFS 无法区分当前是在处理哪一层的元素；在修改版 BFS 中， 我们通过保证队列中的元素总是属于同一层这一不变量来解决这个问题。 我们可以一次性处理同一层的所有节点，并将下一层的所有后代加入队列中。 只需要获取队列初始大小 n 并在一轮中恰好处理 n 个节点即可保证这一点。 正确性可以通过数学归纳法获得。</p>
         </section>
+      </section>
+      <section class="sect1">
+        <h2 id="_parsing_相关">Parsing 相关</h2>
+        <h4 id="_leetcode_32" class="discrete">LeetCode 32</h4>
+        <p>最长有效括号序列</p>
+        <p>stack invariant:</p>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>栈底元素：最后一个不匹配的右括号</p>
+            </li>
+            <li>
+              <p>其余元素：上述右括号后尚未匹配的左括号位置</p>
+            </li>
+          </ul>
+        </div>
+      </section>
+      <section class="sect1">
+        <h2 id="_dp">DP</h2>
+        <section class="sect2">
+          <h3 id="_区间_dp">区间 DP</h3>
+          <section class="sect3">
+            <h4 id="_leetcode_198">LeetCode 198</h4>
+            <div class="stem">
+              <div class="content">
+                \[\begin{cases} dp[0] =& a_0 \\ dp[1] =& \max(a_0, a_1) \\ dp[i] =& \max(dp[i-1], dp[i-2] + a_i) \end{cases}\]
+              </div>
+            </div>
+          </section>
+        </section>
+        <section class="sect2">
+          <h3 id="_dp_2">??? DP</h3>
+          <section class="sect3">
+            <h4 id="_leetcode_279">LeetCode 279</h4>
+            <div class="stem">
+              <div class="content">
+                \[\begin{cases} dp[i] =& 1~~&amp;\text{if}~i~\text{is a complete square} \\ dp[i] =& \min(dp[i-j^2] + 1)~~&amp;\text{for all}~j^2 \le i \end{cases}\]
+              </div>
+            </div>
+          </section>
+          <section class="sect3">
+            <h4 id="_leetcode_322">LeetCode 322</h4>
+            <div class="stem">
+              <div class="content">
+                \[\begin {cases} dp[0] =& 0 \\ dp[i] =& \min(dp[i-c_j] + 1)~~&amp;\text{for all}~c_j \le i \end{cases}\]
+              </div>
+            </div>
+          </section>
+          <section class="sect3">
+            <h4 id="_lis_最长递增子序列">LIS 最长递增子序列</h4>
+            <p>注意状态 \(dp[i]\) 定义为以 \(a[i]\) 结尾的 LIS 长度，而非到 0 到 i 范围内最长的 LIS 长度。</p>
+            <div class="stem">
+              <div class="content">
+                \[\begin {cases} dp[i] =& \max(1, \max(dp[j] + 1))~~&amp;\text{for all}~j \lt i~\text{and}~a_j \lt a_i \end{cases}\]
+              </div>
+            </div>
+          </section>
+          <section class="sect3">
+            <h4 id="_lcs_最长公共子序列">LCS 最长公共子序列</h4>
+            <p>定义状态 \(dp[i][j]\) 为 \(s_1[0:i]\) 和 \(s_2[0:j]\) 的最长公共子序列长度</p>
+            <div class="stem">
+              <div class="content">
+                \[\begin{cases} dp[i][j] =& dp[i - 1][j - 1] + 1 ~~\text{if} ~ s_1[i] = s_2[j] \\ dp[i][j] =& \max(dp[i - 1][j], dp[i][j - 1]) ~~otherwise \end{cases}\]
+              </div>
+            </div>
+          </section>
+          <section class="sect3">
+            <h4 id="_leetcode_152">LeetCode 152</h4>
+            <p>双状态 DP</p>
+            <div class="stem">
+              <div class="content">
+                \[\begin{cases} dp_{max}[i] =& \max(dp_{max}[i-1] \cdot a_i, dp_{min}[i-1] \cdot a_i, a_i) \\ dp_{min}[i] =& \min(dp_{min}[i-1] \cdot a_i, dp_{max}[i-1] \cdot a_i, a_i) \end{cases}\]
+              </div>
+            </div>
+          </section>
+          <section class="sect3">
+            <h4 id="_leetcode_416">LeetCode 416</h4>
+            <p>分割问题可以转换为 0/1 背包问题</p>
+          </section>
+          <section class="sect3">
+            <h4 id="_httpswww_nowcoder_compracticee6c5d74d6d094e25be7468a21925529b"><a href="https://www.nowcoder.com/practice/e6c5d74d6d094e25be7468a21925529b" class="bare">https://www.nowcoder.com/practice/e6c5d74d6d094e25be7468a21925529b</a></h4>
+            <p>定义状态 \(dp[i][j]\) 为跳到第 \(i\) 个点时，使用卡牌的情况为 \(j\)，其中 \(j\) 为卡牌排列形成的状态</p>
+          </section>
+        </section>
+      </section>
+      <section class="sect1">
+        <h2 id="_滑动窗口">滑动窗口</h2>
+        <section class="sect2">
+          <h3 id="_计算最大值">计算最大值</h3>
+          <p>我们维护一个单调递减的队列，这个队列里存储的是元素在原数组中的索引（index），而不是元素的值。队列中的索引对应的 nums 数组中的值是严格递减的。</p>
+          <p>为什么这个方法有效？</p>
+          <p>队列的<strong>队首（front）</strong>永远是当前窗口最大值的索引。</p>
+          <p>如果一个新元素 \(nums[i]\) 比队列尾部的元素 \(nums[q.back()]\) 要大，那么说明 \(nums[q.back()]\) 已经不可能成为当前窗口以及未来任何窗口的最大值了（因为 \(nums[i]\) 不仅比它大，还比它“年轻”，会更晚离开窗口）。因此，我们可以放心地将队尾元素弹出，直到队列重新满足单调递减的性质。</p>
+        </section>
+        <section class="sect2">
+          <h3 id="_计算方差">计算方差</h3>
+          <p>维护窗口内的元素总和和元素平方和，然后计算方差。</p>
+          <p>公式为：</p>
+          <div class="stem">
+            <div class="content">
+              \[S^2 = \frac{1}{k - 1}{\sum_{i=1}^{k} (x_i^2 - k\bar{x}^2)}\]
+            </div>
+          </div>
+        </section>
+      </section>
+      <section class="sect1">
+        <h2 id="_杂项">杂项</h2>
+        <p><strong>Manacher 算法</strong></p>
+        <p><a href="https://oi-wiki.org/string/manacher/" class="bare">https://oi-wiki.org/string/manacher/</a></p>
+        <p><strong>等价二叉树</strong></p>
+        <p>朴素递归：复杂度为 \(\min(N_1 + N_2)\)</p>
+        <p>标准态遍历：让树中所有节点的左孩子都小于右孩子，如果当前不满足就翻转。我们把这种状态的二叉树称为标准态。复杂度为 \(N_1 + N_2\)</p>
+      </section>
+      <section class="sect1">
+        <h2 id="_工程">工程</h2>
       </section>
     </div>
     <hr>
