@@ -1,7 +1,6 @@
 = xref:.[魔方]
 :showtitle:
 :lang: zh-hans
-:stem: latexmath
 
 [.centered]
 image::/resource/rubiks-cube/cube.svg[]
