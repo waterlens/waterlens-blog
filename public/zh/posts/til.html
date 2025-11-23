@@ -27,6 +27,14 @@
       <p>不定时更新，记录我在浏览网页、阅读论文、逛社媒时看到的细碎知识和技巧。</p>
       <p>使用倒序方式记录。</p>
       <section class="sect1">
+        <h2 id="date-20251123"><a href="#data-20251123">2025 年 11 月 23 日</a></h2>
+        <p>关于 LuaJIT 编译器中代码生成技巧的临时总结： LuaJIT 里使用单个 ExpDesc 去表示在代码生成过程中出现的常量、已被 GC 管理的装箱值、pending 状态的表达式描述、已经生成的指令、和跳转目标等信息。 它基于表达式树分配寄存器/堆栈槽，但针对特定逻辑有一些特殊处理（如 index）部分。有大量辅助函数用于减少临时堆栈槽的分配和操作数内联进指令的优化。具体使用方式的关系图如下</p>
+        <div class="imageblock centered">
+          <div class="content"><img src="/resource/luajit-expr-gen.svg" alt="LuaJIT ExpDesc" style="width: 40rem;"></div>
+        </div>
+        <p>尽管其本身在具体实现上可以称作 masterpiece，具体在代码生成方面，混合常量、GC 管理的装箱值、语法树节点描述等的状态在确保正确性的情况下还是非常烧脑的。这大概也是 LuaJIT 相关 folklore 的重要来源之一吧（其他来源包括解释器、JIT 等部分）。我认为这也限制了 LuaJIT 的扩展性，使得其难以支持新的语法特性，可能也是 Mike Pall 不愿意支持后续 Lua 版本的重要原因。</p>
+      </section>
+      <section class="sect1">
         <h2 id="date-20251010"><a href="#date-20251010">2025 年 10 月 10 日</a></h2>
         <p>在尝试在纯 pratt parsing 的基础上编写 single-pass 编译器时遇到了一点代码生成上的困难， 总结如下：</p>
         <p>为了便于手写，代码生成必须是 top-down 的； 这就要求 parsing 过程的 nud 不能被第一时间处理（发射出代码），而需要等待后续的 led 处理完。 在这个过程中，我们需要数据结构来暂存 nud 处理的结果。</p>
