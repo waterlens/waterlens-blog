@@ -38,3 +38,11 @@ $keys = Invoke-RestMethod -Uri https://github.com/waterlens.keys -Method Get
 Add-Content -Force -Path $env:ProgramData\ssh\administrators_authorized_keys -Value $keys
 icacls.exe "$env:ProgramData\ssh\administrators_authorized_keys" /inheritance:r /grant "Administrators:F" /grant "SYSTEM:F"
 ----
+
+[discrete]
+=== 使用 fd 查找包含特定后缀（如 .h, .hpp）文件的文件夹，并进行去重
+
+[source,bash]
+----
+fd -e h -e hpp -e inc -x echo {//} | sort -u
+----

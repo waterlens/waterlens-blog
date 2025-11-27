@@ -47,6 +47,12 @@ Add-Content -Force -Path $env:ProgramData\ssh\administrators_authorized_keys -Va
 icacls.exe "$env:ProgramData\ssh\administrators_authorized_keys" /inheritance:r /grant "Administrators:F" /grant "SYSTEM:F"</code></pre>
         </div>
       </div>
+      <h3 id="_使用_fd_查找包含特定后缀如_h_hpp文件的文件夹并进行去重" class="discrete">使用 fd 查找包含特定后缀（如 .h, .hpp）文件的文件夹，并进行去重</h3>
+      <div class="listing">
+        <div class="content">
+          <pre class="highlightjs highlight"><code class="language-bash hljs" data-noescape="true" data-lang="bash">fd -e h -e hpp -e inc -x echo {//} | sort -u</code></pre>
+        </div>
+      </div>
     </div>
     <hr>
     <footer>
