@@ -3,10 +3,58 @@
 :showtitle:
 :lang: zh-hans
 :stem: latexmath
+:source-highlighter: highlight.js
+:highlightjs-theme: atom-one-light
+:highlightjs-languages: scheme, c++
+
 
 不定时更新，记录我在浏览网页、阅读论文、逛社媒时看到的细碎知识和技巧。
 
 使用倒序方式记录。
+
+[#date-20260104]
+== <<date-20260104, 2026 年 1 月 4 日>>
+
+Man-or-boy 测试：
+
+这段代码是 Donald Knuth 在 1964 年设计的，用于测试 Algol 60 编译器是否正确实现了递归、嵌套作用域以及 CBN 调用。
+
+[source, algol]
+----
+begin
+   real procedure A (k, x1, x2, x3, x4, x5);
+   
+   comment k 是 call-by-value，在 A 的栈帧中有一份独立的拷贝;
+   value k; integer k;
+   
+   comment x1 到 x5 是 call-by-name，类似于 thunk;
+   real x1, x2, x3, x4, x5;
+   
+   begin
+      comment 定义嵌套函数 B，它形成了一个闭包，捕获了 A 的环境;
+      real procedure B;
+      begin 
+            comment B 修改的是它被定义时所在的那个 A 实例中的 k;
+            comment 这是一个非局部变量的修改副作用;
+            k := k - 1;
+            
+            comment 递归核心:
+            comment 1. 递归调用 A;
+            comment 2. 注意参数错位: 当前的函数 B 被当作参数传给了 x1 的位置;
+            comment 3. 设置 A 和 B 的返回值;
+            B := A := A (k, B, x1, x2, x3, x4);
+      end;
+      
+      comment 递归终止与 Thunk 求值:
+      comment 如果 k <= 0，计算 x4 + x5。此时会强制执行传入的 x4 和 x5 (可能指向函数 B);
+      comment 否则，调用 B (这将导致 k 减小并产生新的递归);
+      if k <= 0 then A := x4 + x5 else B;
+   end;
+   
+   comment 程序入口: 初始 k=10，其余参数为常数;
+   outreal (A (10, 1, -1, -1, 1, 1));
+end;
+----
 
 [#date-20251123]
 == <<data-20251123, 2025 年 11 月 23 日>>

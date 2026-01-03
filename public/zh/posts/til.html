@@ -27,6 +27,48 @@
       <p>不定时更新，记录我在浏览网页、阅读论文、逛社媒时看到的细碎知识和技巧。</p>
       <p>使用倒序方式记录。</p>
       <section class="sect1">
+        <h2 id="date-20260104"><a href="#date-20260104">2026 年 1 月 4 日</a></h2>
+        <p>Man-or-boy 测试：</p>
+        <p>这段代码是 Donald Knuth 在 1964 年设计的，用于测试 Algol 60 编译器是否正确实现了递归、嵌套作用域以及 CBN 调用。</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlightjs highlight"><code class="language-algol hljs" data-noescape="true" data-lang="algol">begin
+   real procedure A (k, x1, x2, x3, x4, x5);
+
+   comment k 是 call-by-value，在 A 的栈帧中有一份独立的拷贝;
+   value k; integer k;
+
+   comment x1 到 x5 是 call-by-name，类似于 thunk;
+   real x1, x2, x3, x4, x5;
+
+   begin
+      comment 定义嵌套函数 B，它形成了一个闭包，捕获了 A 的环境;
+      real procedure B;
+      begin
+            comment B 修改的是它被定义时所在的那个 A 实例中的 k;
+            comment 这是一个非局部变量的修改副作用;
+            k := k - 1;
+
+            comment 递归核心:
+            comment 1. 递归调用 A;
+            comment 2. 注意参数错位: 当前的函数 B 被当作参数传给了 x1 的位置;
+            comment 3. 设置 A 和 B 的返回值;
+            B := A := A (k, B, x1, x2, x3, x4);
+      end;
+
+      comment 递归终止与 Thunk 求值:
+      comment 如果 k &lt;= 0，计算 x4 + x5。此时会强制执行传入的 x4 和 x5 (可能指向函数 B);
+      comment 否则，调用 B (这将导致 k 减小并产生新的递归);
+      if k &lt;= 0 then A := x4 + x5 else B;
+   end;
+
+   comment 程序入口: 初始 k=10，其余参数为常数;
+   outreal (A (10, 1, -1, -1, 1, 1));
+end;</code></pre>
+          </div>
+        </div>
+      </section>
+      <section class="sect1">
         <h2 id="date-20251123"><a href="#data-20251123">2025 年 11 月 23 日</a></h2>
         <p>关于 LuaJIT 编译器中代码生成技巧的临时总结： LuaJIT 里使用单个 ExpDesc 去表示在代码生成过程中出现的常量、已被 GC 管理的装箱值、pending 状态的表达式描述、已经生成的指令、和跳转目标等信息。 它基于表达式树分配寄存器/堆栈槽，但针对特定逻辑有一些特殊处理（如 index）部分。有大量辅助函数用于减少临时堆栈槽的分配和操作数内联进指令的优化。具体使用方式的关系图如下</p>
         <div class="imageblock centered">
@@ -103,7 +145,7 @@
         <p>reset/shift 的操作语义如下：</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlight"><code class="language-text" data-lang="text">M[(reset V)] = M[V]
+            <pre class="highlightjs highlight"><code class="language-text hljs" data-noescape="true" data-lang="text">M[(reset V)] = M[V]
 M[(reset C[(shift f E)])] = M[(reset (let f = \x. (reset C[x]) in E))]</code></pre>
           </div>
         </div>
@@ -111,7 +153,7 @@ M[(reset C[(shift f E)])] = M[(reset (let f = \x. (reset C[x]) in E))]</code></p
         <p>与之对应的 CPS 转换如下：</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlight"><code class="language-text" data-lang="text">CPS{(reset E)}   = \c. c (CPS{E} \x. x)
+            <pre class="highlightjs highlight"><code class="language-text hljs" data-noescape="true" data-lang="text">CPS{(reset E)}   = \c. c (CPS{E} \x. x)
 CPS{(shift f E)} = \c. let f = \x. \c2. c2 (c x) in
                        CPS{E} \x. x</code></pre>
           </div>
@@ -168,7 +210,7 @@ CPS{(shift f E)} = \c. let f = \x. \c2. c2 (c x) in
         <p>例子：</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlight"><code class="language-c++" data-lang="c++">struct Set&lt;a, r, e&gt; {
+            <pre class="highlightjs highlight"><code class="language-c++ hljs" data-noescape="true" data-lang="c++">struct Set&lt;a, r, e&gt; {
   list_t&lt;a, r&gt; elts;
   int (*cmp)(a, a; e);
 }</code></pre>
@@ -177,7 +219,7 @@ CPS{(shift f E)} = \c. let f = \x. \c2. c2 (c x) in
         <p>这里的 <code>e</code> 就是一个效果变量，然而 Cyclone 并不支持。用 <code>regions_of</code> 运算符，可以改写为：</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlight"><code class="language-c++" data-lang="c++">struct Set&lt;a, r&gt; {
+            <pre class="highlightjs highlight"><code class="language-c++ hljs" data-noescape="true" data-lang="c++">struct Set&lt;a, r&gt; {
   list_t&lt;a, r&gt; elts;
   int (*cmp)(a, a; regions_of(e));
 }</code></pre>
@@ -193,7 +235,7 @@ CPS{(shift f E)} = \c. let f = \x. \c2. c2 (c x) in
         <p>在 ISLE 中，我们用 S-表达式表示一个术语：</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlight"><code class="language-scheme" data-lang="scheme">(a (b c 1 2) (d) (e 3 4))</code></pre>
+            <pre class="highlightjs highlight"><code class="language-scheme hljs" data-noescape="true" data-lang="scheme">(a (b c 1 2) (d) (e 3 4))</code></pre>
           </div>
         </div>
         <p>每个术语要么为一个原语；要么为一个构造；要么为一个提取。构造由构造器和参数组成。参数也是术语。构造器可以接受元数个参数。类似地，提取由提取器和参数组成，其中参数为模式。</p>
@@ -202,7 +244,7 @@ CPS{(shift f E)} = \c. let f = \x. \c2. c2 (c x) in
         <p>例如，可以在 ISLE 中编写一条规则如下所示：</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlight"><code class="language-scheme" data-lang="scheme">(rule
+            <pre class="highlightjs highlight"><code class="language-scheme hljs" data-noescape="true" data-lang="scheme">(rule
   ;; left-hand side (pattern): if the input matches this ...
   (A (B _ x) (C y))
   ;; ... then rewrite to this:
@@ -242,7 +284,7 @@ CPS{(shift f E)} = \c. let f = \x. \c2. c2 (c x) in
         <p>类型要么是一个原语（如整数类型或者导入的类型），要么是一个枚举（和类型）</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlight"><code class="language-scheme" data-lang="scheme">(type u32 (primitive u32))
+            <pre class="highlightjs highlight"><code class="language-scheme hljs" data-noescape="true" data-lang="scheme">(type u32 (primitive u32))
   (type MyType
     (enum
       (A (x u32) (y u32))
@@ -254,14 +296,14 @@ CPS{(shift f E)} = \c. let f = \x. \c2. c2 (c x) in
         <p>对应地，我们可以在 ISLE 中声明构造器、参数和返回值的类型。</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlight"><code class="language-scheme" data-lang="scheme">(decl Term1 (u32 u32) MyType)
+            <pre class="highlightjs highlight"><code class="language-scheme hljs" data-noescape="true" data-lang="scheme">(decl Term1 (u32 u32) MyType)
 (decl Term2 () u32)</code></pre>
           </div>
         </div>
         <p>而在定义枚举时，其变体也会被隐式声明为构造器，例如上述枚举会自动等价于以下内容的构造器：</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlight"><code class="language-scheme" data-lang="scheme">(decl MyType.A (u32 u32) MyType)
+            <pre class="highlightjs highlight"><code class="language-scheme hljs" data-noescape="true" data-lang="scheme">(decl MyType.A (u32 u32) MyType)
 (decl MyType.B (u32) MyType)
 (decl MyType.C () MyType)
 
@@ -272,7 +314,7 @@ CPS{(shift f E)} = \c. let f = \x. \c2. c2 (c x) in
         <p>对此的解决方案是，定义一个顶级的构造器作为“驱动程序”。</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlight"><code class="language-scheme" data-lang="scheme">(type T1 ...)
+            <pre class="highlightjs highlight"><code class="language-scheme hljs" data-noescape="true" data-lang="scheme">(type T1 ...)
 (type T2 ...)
 
 (decl Translate (T1) T2)
@@ -287,7 +329,7 @@ CPS{(shift f E)} = \c. let f = \x. \c2. c2 (c x) in
         <p>我们可以使用如下方法声明内部提取器。</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlight"><code class="language-scheme" data-lang="scheme">(decl A (u32 u32) T)
+            <pre class="highlightjs highlight"><code class="language-scheme hljs" data-noescape="true" data-lang="scheme">(decl A (u32 u32) T)
 (extractor (A pat1 pat2)
            (and
              (extractArg1 pat1)
@@ -302,7 +344,7 @@ CPS{(shift f E)} = \c. let f = \x. \c2. c2 (c x) in
         <p>rule 被允许包含子匹配，其语法如下：</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlight"><code class="language-scheme" data-lang="scheme">(rule LHS_PATTERN
+            <pre class="highlightjs highlight"><code class="language-scheme hljs" data-noescape="true" data-lang="scheme">(rule LHS_PATTERN
   (if-let PAT2 EXPR2)
   (if-let PAT3 EXPR3)
   ...
@@ -357,7 +399,7 @@ CPS{(shift f E)} = \c. let f = \x. \c2. c2 (c x) in
         <p>同时定义三个模态 many, shared, global 来表示模式三元组间的变换。</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">shared (a, u, l) = (a, shared, l)
+            <pre class="highlightjs highlight"><code class="language-ocaml hljs" data-noescape="true" data-lang="ocaml">shared (a, u, l) = (a, shared, l)
 many (a, u, l) = (many, u, l)
 global (a, u, l) = (a, shared, global)</code></pre>
           </div>
@@ -370,7 +412,7 @@ global (a, u, l) = (a, shared, global)</code></pre>
         <p>有一个示例如下：</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">type 'a list = Nil | Cons of { hd : 'a; tl : 'a list }
+            <pre class="highlightjs highlight"><code class="language-ocaml hljs" data-noescape="true" data-lang="ocaml">type 'a list = Nil | Cons of { hd : 'a; tl : 'a list }
 let rec rev_append xs acc =
   match xs with
   | Nil -&gt; acc
@@ -380,7 +422,7 @@ let rec rev_append xs acc =
         <p>上述片段如果传入的列表并不是 unique 的话，则是有问题的，因此我们希望 reverse 具有如下类型：</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">let reverse xs = rev_append xs Nil
+            <pre class="highlightjs highlight"><code class="language-ocaml hljs" data-noescape="true" data-lang="ocaml">let reverse xs = rev_append xs Nil
 val reverse : 'a list @ unique -&gt; 'a list @ unique</code></pre>
           </div>
         </div>
@@ -390,7 +432,7 @@ val reverse : 'a list @ unique -&gt; 'a list @ unique</code></pre>
         <p>需要注意到光有 uniqueness 是不够的，因为我们仍然轻松构造出有问题的代码。</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">let rejected =
+            <pre class="highlightjs highlight"><code class="language-ocaml hljs" data-noescape="true" data-lang="ocaml">let rejected =
   let xs @ unique : int list = [1;2;3] in
   let f = fun zs -&gt; rev_append xs zs in
   let ys = f [4] in
@@ -403,7 +445,7 @@ val reverse : 'a list @ unique -&gt; 'a list @ unique</code></pre>
         <p>为了让上文代码正确，我们选择让 f 变为 once 模式，从而拒绝以上代码。</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">... let f @ once = fun zs -&gt; rev_append xs zs in ...</code></pre>
+            <pre class="highlightjs highlight"><code class="language-ocaml hljs" data-noescape="true" data-lang="ocaml">... let f @ once = fun zs -&gt; rev_append xs zs in ...</code></pre>
           </div>
         </div>
         <h5 id="_locality_局部性" class="discrete">Locality 局部性</h5>
@@ -414,7 +456,7 @@ val reverse : 'a list @ unique -&gt; 'a list @ unique</code></pre>
         <p>例如我们可以定义如下的 <code>borrow</code> 函数。</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlight"><code class="language-ocaml" data-lang="ocaml">val borrow : 'a @ unique -&gt; ('a @ local -&gt; 'b) -&gt; ('a * 'b shared) @ unique
+            <pre class="highlightjs highlight"><code class="language-ocaml hljs" data-noescape="true" data-lang="ocaml">val borrow : 'a @ unique -&gt; ('a @ local -&gt; 'b) -&gt; ('a * 'b shared) @ unique
 let borrow x f =
   let result = f &amp;x in
   x, { s = result }</code></pre>
@@ -447,7 +489,7 @@ let borrow x f =
         <p>关于内联优化：有一个 <code>g x</code>，其中我们将 <code>j x</code> 视为一个汇合点</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlight"><code class="language-haskell" data-lang="haskell">g x = let j x = f x
+            <pre class="highlightjs highlight"><code class="language-haskell hljs" data-noescape="true" data-lang="haskell">g x = let j x = f x
       in case x of A -&gt; j 1
                    B -&gt; j 2</code></pre>
           </div>
@@ -455,7 +497,7 @@ let borrow x f =
         <p>如果在另一个函数 <code>a</code> 中我们调用 <code>h (g x)</code>，那么在内联 <code>g</code> 后可能会想到将的调用推入 <code>g</code> 的分支：</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlight"><code class="language-haskell" data-lang="haskell">a x = h (g x)
+            <pre class="highlightjs highlight"><code class="language-haskell hljs" data-noescape="true" data-lang="haskell">a x = h (g x)
 →
 a x = let j x = f x
       in case x of A -&gt; h (j 1)
@@ -465,7 +507,7 @@ a x = let j x = f x
         <p>如果这样我们就失去了对汇合点可以尾调用的性质。为了避免这种情况，我们需要将 <code>h</code> 直接推入汇合点。</p>
         <div class="listing">
           <div class="content">
-            <pre class="highlight"><code class="language-haskell" data-lang="haskell">a x = let j x = h (f x)
+            <pre class="highlightjs highlight"><code class="language-haskell hljs" data-noescape="true" data-lang="haskell">a x = let j x = h (f x)
       in case x of A -&gt; j 1
                    B -&gt; j 2</code></pre>
           </div>
@@ -475,8 +517,16 @@ a x = let j x = f x
     </div>
     <hr>
     <footer>
-      <p><a property="dct:title" rel="cc:attributionURL" href="/zh/index.html">本站</a> 由 <span property="cc:attributionName">Waterlens</span> 创作的一切内容 © 2021 - 2025 在 <a href="http://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">知识共享 署名 - 相同方式共享 4.0 协议 <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1"></a> 之条款下提供。</p>
+      <p><a property="dct:title" rel="cc:attributionURL" href="/zh/index.html">本站</a> 由 <span property="cc:attributionName">Waterlens</span> 创作的一切内容 © 2021 - 2026 在 <a href="http://creativecommons.org/licenses/by-sa/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display:inline-block;">知识共享 署名 - 相同方式共享 4.0 协议 <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/cc.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/by.svg?ref=chooser-v1"> <img alt="" style="height:22px!important;margin-left:3px;vertical-align:text-bottom;" src="https://mirrors.creativecommons.org/presskit/icons/sa.svg?ref=chooser-v1"></a> 之条款下提供。</p>
     </footer>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.3/styles/atom-one-light.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.3/highlight.min.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.3/languages/scheme.min.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.3/languages/c++.min.js"></script> 
+    <script>
+
+    hljs.highlightAll();
+    </script>
   </article>
 </body>
 </html>
