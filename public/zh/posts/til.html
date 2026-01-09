@@ -27,6 +27,98 @@
       <p>不定时更新，记录我在浏览网页、阅读论文、逛社媒时看到的细碎知识和技巧。</p>
       <p>使用倒序方式记录。</p>
       <section class="sect1">
+        <h2 id="date-20260109"><a href="#date-20260109">2026 年 1 月 9 日</a></h2>
+        <section class="sect2">
+          <h3 id="_核心定义">核心定义</h3>
+          <p>在传统的 <strong>Syntactic Typing</strong> 中，类型系统的定义就是那堆推导规则（Inference Rules）。如果规则说它是 <code>int</code>，它就是 <code>int</code>。</p>
+          <p>但在 <strong>Semantic Typing (Logical Relations)</strong> 中：</p>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p><strong>类型（Type）</strong> 被定义为一个 <strong>谓词（Predicate）</strong> 或 <strong>关系（Relation）</strong>，作用于程序的运行行为上。</p>
+              </li>
+              <li>
+                <p>一个项 \(t\) 拥有类型 \(\tau\)，不是因为有一条规则推导出来的，而是因为 <strong>\(t\) 的行为表现得像 \(\tau\)</strong>。</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_如何构建">如何构建</h3>
+          <p>Logical Relations 的核心思想是 <strong>基于类型的结构归纳</strong> 来定义项的集合。这一过程通常分为三步：</p>
+          <section class="sect3">
+            <h4 id="_第一步定义操作语义_operational_semantics">第一步：定义操作语义 (Operational Semantics)</h4>
+            <p>首先，必须有一个无类型的（untyped）或擦除类型的语言，定义它在机器上实际上是怎么跑的（比如 \(t \longrightarrow t'\)）。</p>
+          </section>
+          <section class="sect3">
+            <h4 id="_第二步定义值的解释_mathcalvllbracket_tau_rrbracket_value_interpretation">第二步：定义“值”的解释 \(\mathcal{V}\llbracket \tau \rrbracket\) (Value Interpretation)</h4>
+            <p>我们定义一个函数 \(\mathcal{V}\)，将每个类型 \(\tau\) 映射为一组“表现良好”的值的集合。</p>
+            <div class="ulist">
+              <ul>
+                <li>
+                  <p><strong>基本类型 (Base Types):</strong></p>
+                  <div class="stem">
+                    <div class="content">
+                      \[\mathcal{V}\llbracket \text{Bool} \rrbracket = \{ \text{true}, \text{false} \}\]
+                    </div>
+                  </div>
+                  <p>（这很简单，布尔值就是这两个常量）</p>
+                </li>
+                <li>
+                  <p><strong>函数类型 (Function Types)</strong></p>
+                  <p>如何定义一个值属于 \(\tau_1 \to \tau_2\)？ 在 Logical Relations 中，我们说函数 \(f\) 属于 \(\tau_1 \to \tau_2\)，当且仅当： <strong>对于任何</strong>属于输入类型 \(\tau_1\) 的参数 \(v\)，应用 \(f(v)\) 后得到的结果，其行为必须符合输出类型 \(\tau_2\) 的定义。</p>
+                  <div class="stem">
+                    <div class="content">
+                      \[\mathcal{V}\llbracket \tau_1 \to \tau_2 \rrbracket = \{ f \mid \forall v \in \mathcal{V}\llbracket \tau_1 \rrbracket. \ f(v) \in \mathcal{E}\llbracket \tau_2 \rrbracket \}\]
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+          <section class="sect3">
+            <h4 id="_第三步定义_semantic_typing_judgment">第三步：定义 Semantic Typing Judgment</h4>
+            <p>现在我们定义什么是 \(\Gamma \vDash t : \tau\)（注意这里用的是双模态符号 \(\vDash\)，表示语义上的真，而不是语法的 \(\vdash\)）。</p>
+            <p>我们说 \(t\) 在语义上通过了类型 \(\tau\) 的检查，是指：如果我们把环境 \(\Gamma\) 中所有的变量都替换成符合逻辑关系的值，那么 \(t\) 在运行之后，最终也会变成一个符合 \(\tau\) 逻辑关系的值。</p>
+          </section>
+        </section>
+        <section class="sect2">
+          <h3 id="_动机">动机</h3>
+          <p><em>“Wright & Felleisen 的 Progress + Preservation (Syntactic approach) 已经很好用了，为什么还要搞这么复杂的 Semantic Typing？”</em></p>
+          <p>这是因为在处理某些复杂语言特性时，Syntactic Proofs 会失效或变得极度困难：</p>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p><strong>强规范化 (Strong Normalization):</strong> 如果想证明在这个语言里 <strong>所有程序都会终止</strong>，语法证明通常无能为力。需要 Logical Relations 来建立一个模型，证明所有良类型的项都在“终止项”的集合里。</p>
+              </li>
+              <li>
+                <p><strong>编译器正确性 (Compiler Correctness):</strong> 当把一种语言编译成另一种语言（比如 System F 到 Assembly），语法规则都不一样了，怎么证明类型安全没被破坏？需要 Logical Relations 来定义源语言类型和目标语言行为之间的关系。</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_命名原因">命名原因</h3>
+          <p>这个名字来源于它总是通过 <strong>归纳类型的逻辑结构</strong> 来定义关系：</p>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p><strong>积类型 (Product Type \(\tau_1 \times \tau_2\)):</strong> 关系定义为组件的逻辑关系的 <strong>合取 (Conjunction)</strong>。</p>
+              </li>
+              <li>
+                <p><strong>和类型 (Sum Type \(\tau_1 + \tau_2\)):</strong> 关系定义为组件的逻辑关系的 <strong>析取 (Disjunction)</strong>。</p>
+              </li>
+              <li>
+                <p><strong>函数类型 (\(\tau_1 \to \tau_2\)):</strong> 关系定义为 <strong>蕴含 (Implication)</strong>。</p>
+              </li>
+              <li>
+                <p><strong>全称量化 (\(\forall \alpha. \tau\)):</strong> 关系定义为 <strong>全称量化 (Universal Quantification)</strong>（这通常涉及到 Parametricity）。</p>
+              </li>
+            </ul>
+          </div>
+        </section>
+      </section>
+      <section class="sect1">
         <h2 id="date-20260108"><a href="#date-20260108">2026 年 1 月 8 日</a></h2>
         <p>一个分析优化向 IR 的基本要求：</p>
         <p>名字必须绑定单个值，从而避免分析过程中需要顺着控制流维护一个名字的所有版本的信息。这个是 SSA 的主要卖点，但对 CPS 来说是 FP 的天然属性。</p>

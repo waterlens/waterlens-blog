@@ -12,6 +12,76 @@
 
 使用倒序方式记录。
 
+[#date-20260109]
+== <<date-20260109, 2026 年 1 月 9 日>>
+
+=== 核心定义
+
+在传统的 **Syntactic Typing** 中，类型系统的定义就是那堆推导规则（Inference Rules）。如果规则说它是 `int`，它就是 `int`。
+
+但在 **Semantic Typing (Logical Relations)** 中：
+
+- **类型（Type）** 被定义为一个 **谓词（Predicate）** 或 **关系（Relation）**，作用于程序的运行行为上。
+- 一个项 stem:[t] 拥有类型 stem:[\tau]，不是因为有一条规则推导出来的，而是因为 **stem:[t] 的行为表现得像 stem:[\tau]**。
+
+=== 如何构建
+
+Logical Relations 的核心思想是 **基于类型的结构归纳** 来定义项的集合。这一过程通常分为三步：
+
+==== 第一步：定义操作语义 (Operational Semantics)
+
+首先，必须有一个无类型的（untyped）或擦除类型的语言，定义它在机器上实际上是怎么跑的（比如 stem:[t \longrightarrow t']）。
+
+==== 第二步：定义“值”的解释 stem:[\mathcal{V}\llbracket \tau \rrbracket] (Value Interpretation)
+
+我们定义一个函数 stem:[\mathcal{V}]，将每个类型 stem:[\tau] 映射为一组“表现良好”的值的集合。
+
+* **基本类型 (Base Types):**
++
+[stem]
+++++
+\mathcal{V}\llbracket \text{Bool} \rrbracket = \{ \text{true}, \text{false} \}
+++++
+（这很简单，布尔值就是这两个常量）
+
+* **函数类型 (Function Types) **
++
+如何定义一个值属于 stem:[\tau_1 \to \tau_2]？
+在 Logical Relations 中，我们说函数 stem:[f] 属于 stem:[\tau_1 \to \tau_2]，当且仅当：
+**对于任何**属于输入类型 stem:[\tau_1] 的参数 stem:[v]，应用 stem:[f(v)] 后得到的结果，其行为必须符合输出类型 stem:[\tau_2] 的定义。
++
+[stem]
+++++
+\mathcal{V}\llbracket \tau_1 \to \tau_2 \rrbracket = \{ f \mid \forall v \in \mathcal{V}\llbracket \tau_1 \rrbracket. \ f(v) \in \mathcal{E}\llbracket \tau_2 \rrbracket \}
+++++
+
+==== 第三步：定义 Semantic Typing Judgment
+
+现在我们定义什么是 stem:[\Gamma \vDash t : \tau]（注意这里用的是双模态符号 stem:[\vDash]，表示语义上的真，而不是语法的 stem:[\vdash]）。
+
+我们说 stem:[t] 在语义上通过了类型 stem:[\tau] 的检查，是指：如果我们把环境 stem:[\Gamma] 中所有的变量都替换成符合逻辑关系的值，那么 stem:[t] 在运行之后，最终也会变成一个符合 stem:[\tau] 逻辑关系的值。
+
+=== 动机
+
+_“Wright & Felleisen 的 Progress + Preservation (Syntactic approach) 已经很好用了，为什么还要搞这么复杂的 Semantic Typing？”_
+
+这是因为在处理某些复杂语言特性时，Syntactic Proofs 会失效或变得极度困难：
+
+- **强规范化 (Strong Normalization):**
+如果想证明在这个语言里 **所有程序都会终止**，语法证明通常无能为力。需要 Logical Relations 来建立一个模型，证明所有良类型的项都在“终止项”的集合里。
+
+- **编译器正确性 (Compiler Correctness):**
+当把一种语言编译成另一种语言（比如 System F 到 Assembly），语法规则都不一样了，怎么证明类型安全没被破坏？需要 Logical Relations 来定义源语言类型和目标语言行为之间的关系。
+
+=== 命名原因
+
+这个名字来源于它总是通过 **归纳类型的逻辑结构** 来定义关系：
+
+* **积类型 (Product Type stem:[\tau_1 \times \tau_2]):** 关系定义为组件的逻辑关系的 **合取 (Conjunction)**。
+* **和类型 (Sum Type stem:[\tau_1 + \tau_2]):** 关系定义为组件的逻辑关系的 **析取 (Disjunction)**。
+* **函数类型 (stem:[\tau_1 \to \tau_2]):** 关系定义为 **蕴含 (Implication)**。
+* **全称量化 (stem:[\forall \alpha. \tau]):** 关系定义为 **全称量化 (Universal Quantification)**（这通常涉及到 Parametricity）。
+
 [#date-20260108]
 == <<date-20260108, 2026 年 1 月 8 日>>
 
