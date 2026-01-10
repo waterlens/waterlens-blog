@@ -1,0 +1,21 @@
+= xref:.[Shell 命令合集]
+:showtitle:
+:lang: zh-hans
+
+[discrete]
+=== KiCAD 导出文件用于 JLCPCB 打印的参数
+
+绘制勾选：
+
+- 剔除阻焊开窗中的丝印
+- 使用 Protel 文件拓展名
+
+绘制取消勾选：
+
+- 使用 Gerber X2
+- 生成 Gerber 作业文件
+- 包含网表特性
+
+钻孔勾选：
+
+- 将 PTH 和 NPTH 合并到单个文件中
