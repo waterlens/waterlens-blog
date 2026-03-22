@@ -27,6 +27,44 @@
       <p>不定时更新，记录我在浏览网页、阅读论文、逛社媒时看到的细碎知识和技巧。</p>
       <p>使用倒序方式记录。</p>
       <section class="sect1">
+        <h2 id="date-20260322"><a href="#date-20260322">2026 年 3 月 22 日</a></h2>
+        <p><a href="http://arxiv.org/abs/2601.18793">Handling Scope Checks</a></p>
+        <p>多阶段编程里 Scope Extrusion （<strong>生成的</strong> 代码里的变量逃离作用域）问题的现有方案，静态的表达能力太弱类型系统复杂； 动态检查中的 lazy check 太晚，eager check 误报多。这篇在有 effect handler 出现的背景下提出了一个 C4C 方案:</p>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>muted variables 集合 M 用来暂时容忍某些已经越界、但未来可能被 continuation 重新绑定的变量。</p>
+            </li>
+            <li>
+              <p>stack mark I 用来记录“哪些栈帧从未被 effect capture 过”，从而判断何时可以安全地把 muted variables 重新 unmute。</p>
+            </li>
+          </ul>
+        </div>
+        <p>I 记录栈至少要退回到哪里，才能确定已经没有 continuation 能把 muted 变量重新变为安全的。 论文中定义成“从未被 effect handler capture 过的那段栈的最大长度”的标记。 初始时 I = ⊤，每次 effect 被处理时，I 会更新成 min(len(E1), I)。 所以 I 只会被 raised effects 变小，不会变大。</p>
+        <p>I 什么时候触发 unmute：当执行退回到某个点，满足当前栈深度 len(E) &lt;= I，这时无法让 muted variables 恢复，因此：</p>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>清空 M</p>
+            </li>
+            <li>
+              <p>把 I 重置回 ⊤</p>
+            </li>
+          </ul>
+        </div>
+        <p>这个动作主要挂在 dlet 和 tls 上：</p>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>dlet：如果 len(E) &lt;= I，就 unmute；否则不动。</p>
+            </li>
+            <li>
+              <p>tls：无条件 unmute，因为 top-level splice 外面的上下文不可能再被 handler capture。</p>
+            </li>
+          </ul>
+        </div>
+      </section>
+      <section class="sect1">
         <h2 id="date-20260109"><a href="#date-20260109">2026 年 1 月 9 日</a></h2>
         <section class="sect2">
           <h3 id="_核心定义">核心定义</h3>
