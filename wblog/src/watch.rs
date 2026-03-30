@@ -3,6 +3,8 @@ use std::time::Duration;
 use anyhow::{Result, bail};
 use notify_debouncer_mini::{DebounceEventResult, new_debouncer, notify::RecursiveMode};
 use tokio::sync::mpsc;
+use tokio::sync::mpsc::error::TryRecvError;
+use tokio::task::JoinHandle;
 
 use crate::build_graph::ChangeScope;
 use crate::cli::{BuildFilterArgs, BuildKind, ServeArgs, WatchArgs, WatchServeArgs};
@@ -27,6 +29,8 @@ pub async fn watch(mut context: Context, args: WatchArgs) -> Result<()> {
     }
 
     let mut server = tokio::spawn(serve::serve(serve_args));
+    let mut build = None::<JoinHandle<Result<()>>>;
+    let mut pending = ChangeScope::default();
 
     loop {
         tokio::select! {
@@ -37,35 +41,45 @@ pub async fn watch(mut context: Context, args: WatchArgs) -> Result<()> {
                 }
                 return Ok(());
             }
+            result = async {
+                let task = build.as_mut().expect("build branch should only run when active");
+                task.await
+            }, if build.is_some() => {
+                build = None;
+                match result {
+                    Ok(Ok(())) => {}
+                    Ok(Err(error)) => {
+                        eprintln!(
+                            "{} build failed: {error:#}",
+                            output::tag_stderr("watch", output::YELLOW),
+                        );
+                    }
+                    Err(error) => return Err(error.into()),
+                }
+
+                if !pending.is_empty() {
+                    let scope = take_pending_scope(&context.paths, &mut rx, &mut pending);
+                    build = Some(start_build(context.clone(), args.filter.clone(), scope));
+                }
+            }
             maybe_result = rx.recv() => {
                 let Some(result) = maybe_result else {
                     return Ok(());
                 };
 
-                match result {
-                    Ok(events) => {
-                        let scope = ChangeScope::from_events(
-                            &context.paths,
-                            events.into_iter().map(|event| event.path),
-                        );
-                        if scope.is_empty() {
-                            continue;
-                        }
-
-                        if let Err(error) = run_build(context.clone(), args.filter.clone(), scope).await {
-                            eprintln!(
-                                "{} build failed: {error:#}",
-                                output::tag_stderr("watch", output::YELLOW),
-                            );
-                        }
-                    }
-                    Err(error) => {
-                        eprintln!(
-                            "{} {error:#}",
-                            output::tag_stderr("watch", output::YELLOW),
-                        );
-                    }
+                let mut scope = ChangeScope::default();
+                absorb_result(&context.paths, &mut scope, result);
+                if scope.is_empty() {
+                    continue;
                 }
+
+                if build.is_some() {
+                    pending.merge(scope);
+                    continue;
+                }
+
+                drain_ready_results(&context.paths, &mut rx, &mut scope);
+                build = Some(start_build(context.clone(), args.filter.clone(), scope));
             }
             signal = tokio::signal::ctrl_c() => {
                 signal?;
@@ -76,18 +90,58 @@ pub async fn watch(mut context: Context, args: WatchArgs) -> Result<()> {
     }
 }
 
-async fn run_build(
+fn start_build(
     context: Context,
     filter: crate::cli::BuildFilterArgs,
     changes: ChangeScope,
-) -> Result<()> {
-    tokio::task::spawn_blocking(move || context.build_for_changes(&filter, changes)).await??;
-    Ok(())
+) -> JoinHandle<Result<()>> {
+    tokio::task::spawn_blocking(move || context.build_for_changes(&filter, changes))
 }
 
 async fn run_initial_build(context: Context, filter: crate::cli::BuildFilterArgs) -> Result<()> {
     tokio::task::spawn_blocking(move || context.build_incremental(&filter)).await??;
     Ok(())
+}
+
+fn take_pending_scope(
+    paths: &crate::paths::RepoPaths,
+    rx: &mut mpsc::UnboundedReceiver<DebounceEventResult>,
+    pending: &mut ChangeScope,
+) -> ChangeScope {
+    let mut scope = std::mem::take(pending);
+    drain_ready_results(paths, rx, &mut scope);
+    scope
+}
+
+fn drain_ready_results(
+    paths: &crate::paths::RepoPaths,
+    rx: &mut mpsc::UnboundedReceiver<DebounceEventResult>,
+    scope: &mut ChangeScope,
+) {
+    loop {
+        match rx.try_recv() {
+            Ok(result) => absorb_result(paths, scope, result),
+            Err(TryRecvError::Empty) | Err(TryRecvError::Disconnected) => return,
+        }
+    }
+}
+
+fn absorb_result(
+    paths: &crate::paths::RepoPaths,
+    scope: &mut ChangeScope,
+    result: DebounceEventResult,
+) {
+    match result {
+        Ok(events) => {
+            scope.merge(ChangeScope::from_events(
+                paths,
+                events.into_iter().map(|event| event.path),
+            ));
+        }
+        Err(error) => {
+            eprintln!("{} {error:#}", output::tag_stderr("watch", output::YELLOW),);
+        }
+    }
 }
 
 fn resolve_output_root(
@@ -226,9 +280,13 @@ fn push_watch(
 mod tests {
     use std::path::Path;
 
-    use notify_debouncer_mini::notify::RecursiveMode;
+    use notify_debouncer_mini::{DebouncedEvent, DebouncedEventKind, notify::RecursiveMode};
 
-    use super::{push_watch, resolve_output_root, resolve_serve_args, watch_targets};
+    use super::{
+        absorb_result, drain_ready_results, push_watch, resolve_output_root, resolve_serve_args,
+        watch_targets,
+    };
+    use crate::build_graph::ChangeScope;
     use crate::cli::{BuildFilterArgs, BuildKind, WatchServeArgs};
     use crate::commands::Context;
     use crate::paths::RepoPaths;
@@ -316,5 +374,43 @@ mod tests {
             &output_root,
         );
         assert_eq!(serve_args.root, output_root);
+    }
+
+    #[test]
+    fn absorb_result_tracks_changed_source_paths() {
+        let context = fixture_context();
+        let mut scope = ChangeScope::default();
+        absorb_result(
+            &context.paths,
+            &mut scope,
+            Ok(vec![DebouncedEvent::new(
+                context.paths.content_dir.join("post.adoc"),
+                DebouncedEventKind::Any,
+            )]),
+        );
+
+        assert!(scope.tracks_source(&context.paths.content_dir.join("post.adoc")));
+    }
+
+    #[test]
+    fn drain_ready_results_merges_batched_events() {
+        let context = fixture_context();
+        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+        tx.send(Ok(vec![DebouncedEvent::new(
+            context.paths.content_dir.join("first.adoc"),
+            DebouncedEventKind::Any,
+        )]))
+        .unwrap();
+        tx.send(Ok(vec![DebouncedEvent::new(
+            context.paths.static_dir.join("index.html"),
+            DebouncedEventKind::AnyContinuous,
+        )]))
+        .unwrap();
+
+        let mut scope = ChangeScope::default();
+        drain_ready_results(&context.paths, &mut rx, &mut scope);
+
+        assert!(scope.tracks_source(&context.paths.content_dir.join("first.adoc")));
+        assert!(scope.tracks_source(&context.paths.static_dir.join("index.html")));
     }
 }

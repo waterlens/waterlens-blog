@@ -27,9 +27,56 @@
       <p>不定时更新，记录我在浏览网页、阅读论文、逛社媒时看到的细碎知识和技巧。</p>
       <p>使用倒序方式记录。</p>
       <section class="sect1">
+        <h2 id="date-20260330"><a href="#date-20260330">2026 年 3 月 30 日</a></h2>
+        <p><a href="https://dl.acm.org/doi/10.1145/3704859">Data Race Freedom à la Mode</a></p>
+        <p>DRFCaml 在之前的 modal types 进一步拓展了两个 axis: contention 和 portability。</p>
+        <h3 id="_contention" class="discrete">contention</h3>
+        <p>分为：</p>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>uncontented: fields 可被当前线程写和读</p>
+            </li>
+            <li>
+              <p>shared: fields 被线程共享且只可以读</p>
+            </li>
+            <li>
+              <p>contented: fields 在当前线程不可操作</p>
+            </li>
+          </ul>
+        </div>
+        <h3 id="_portability" class="discrete">portability</h3>
+        <p>分为:</p>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>portable: 可以在线程间被传递</p>
+            </li>
+            <li>
+              <p>nonportable: 不能被传递到其他线程</p>
+            </li>
+          </ul>
+        </div>
+        <h3 id="_contention_和_portability_的关系" class="discrete">contention 和 portability 的关系</h3>
+        <p>这两个 axis 有如下的作用关系：</p>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>portable → contented</p>
+            </li>
+            <li>
+              <p>shared | uncontented → nonportable</p>
+            </li>
+          </ul>
+        </div>
+        <h3 id="_内部可变性" class="discrete">内部可变性</h3>
+        <p>Capsules 通过一个 ghost key 静态地确保在任意时刻只有<strong>单个</strong> 线程可以修改一组内部可以有任意别名的 uncontented 数据。</p>
+        <p>Rw Lock 允许在线程间传递对 ghost key 的 unique (可读或写) 或者 shared (只读) 的所有权。</p>
+      </section>
+      <section class="sect1">
         <h2 id="date-20260322"><a href="#date-20260322">2026 年 3 月 22 日</a></h2>
         <p><a href="http://arxiv.org/abs/2601.18793">Handling Scope Checks</a></p>
-        <p>多阶段编程里 Scope Extrusion （<strong>生成的</strong> 代码里的变量逃离作用域）问题的现有方案，静态的表达能力太弱类型系统复杂； 动态检查中的 lazy check 太晚，eager check 误报多。这篇在有 effect handler 出现的背景下提出了一个 C4C 方案:</p>
+        <p>多阶段编程里 Scope Extrusion （<strong>生成的</strong>代码里的变量逃离作用域）问题的现有方案，静态的表达能力太弱类型系统复杂； 动态检查中的 lazy check 太晚，eager check 误报多。这篇在有 effect handler 出现的背景下提出了一个 C4C 方案:</p>
         <div class="ulist">
           <ul>
             <li>

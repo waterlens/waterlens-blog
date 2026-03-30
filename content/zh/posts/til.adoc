@@ -12,12 +12,53 @@
 
 使用倒序方式记录。
 
+[#date-20260330]
+== <<date-20260330, 2026 年 3 月 30 日>>
+
+https://dl.acm.org/doi/10.1145/3704859[Data Race Freedom à la Mode]
+
+DRFCaml 在之前的 modal types 进一步拓展了两个 axis: contention 和 portability。
+
+[discrete]
+=== contention
+
+分为：
+
+- uncontented: fields 可被当前线程写和读
+- shared: fields 被线程共享且只可以读
+- contented: fields 在当前线程不可操作
+
+[discrete]
+=== portability
+
+分为:
+
+- portable: 可以在线程间被传递
+- nonportable: 不能被传递到其他线程
+
+[discrete]
+=== contention 和 portability 的关系
+
+这两个 axis 有如下的作用关系：
+
+- portable -> contented
+- shared | uncontented -> nonportable
+
+[discrete]
+=== 内部可变性
+
+Capsules 通过一个 ghost key 静态地确保在任意时刻只有**单个**
+线程可以修改一组内部可以有任意别名的 uncontented 数据。
+
+Rw Lock 允许在线程间传递对 ghost key 的 unique (可读或写) 或者 shared (只读)
+的所有权。
+
 [#date-20260322]
 == <<date-20260322, 2026 年 3 月 22 日>>
 
 http://arxiv.org/abs/2601.18793[Handling Scope Checks]
 
-多阶段编程里 Scope Extrusion （**生成的** 代码里的变量逃离作用域）问题的现有方案，静态的表达能力太弱类型系统复杂；
+多阶段编程里 Scope Extrusion （**生成的**代码里的变量逃离作用域）问题的现有方案，静态的表达能力太弱类型系统复杂；
 动态检查中的 lazy check 太晚，eager check 误报多。这篇在有 effect handler 出现的背景下提出了一个 C4C 方案:
 
 - muted variables 集合 M 用来暂时容忍某些已经越界、但未来可能被 continuation 重新绑定的变量。

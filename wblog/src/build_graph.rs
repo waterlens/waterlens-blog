@@ -82,11 +82,23 @@ impl ChangeScope {
         scope
     }
 
+    pub fn merge(&mut self, other: Self) {
+        self.sources.extend(other.sources);
+        self.sass_tree_changed |= other.sass_tree_changed;
+        self.adoc_tooling_changed |= other.adoc_tooling_changed;
+        self.tidy_config_changed |= other.tidy_config_changed;
+    }
+
     pub fn is_empty(&self) -> bool {
         self.sources.is_empty()
             && !self.sass_tree_changed
             && !self.adoc_tooling_changed
             && !self.tidy_config_changed
+    }
+
+    #[cfg(test)]
+    pub fn tracks_source(&self, path: &Path) -> bool {
+        self.sources.contains(path)
     }
 }
 
@@ -144,11 +156,13 @@ pub fn execute_plan(paths: &RepoPaths, tools: &ToolResolver, request: BuildReque
     );
     if wanted.is_empty() {
         write_manifest(paths, &planned.managed_outputs)?;
-        println!(
-            "{} {}",
-            output::tag_stdout("skip", output::BLUE),
-            output::accent_stdout("No matching targets.", output::DIM),
-        );
+        if should_print_skip_message(&request) {
+            println!(
+                "{} {}",
+                output::tag_stdout("skip", output::BLUE),
+                output::accent_stdout("No matching targets.", output::DIM),
+            );
+        }
         return Ok(());
     }
 
@@ -172,6 +186,10 @@ pub fn execute_plan(paths: &RepoPaths, tools: &ToolResolver, request: BuildReque
     Ok(())
 }
 
+fn should_print_skip_message(request: &BuildRequest) -> bool {
+    request.changes.is_none()
+}
+
 impl PlannedGraph {
     fn select(
         &self,
@@ -187,11 +205,13 @@ impl PlannedGraph {
                 continue;
             }
 
-            if let Some(scope) = changes {
-                if !matches_target(scope, target) {
-                    continue;
-                }
-            } else if !full && !is_dirty(paths, target) {
+            if let Some(scope) = changes
+                && !matches_target(scope, target)
+            {
+                continue;
+            }
+
+            if !full && !is_dirty(paths, target) {
                 continue;
             }
 
@@ -906,9 +926,12 @@ fn string_to_dyn(message: String) -> DynError {
 
 #[cfg(test)]
 mod tests {
+    use std::time::Duration;
+
     use super::{
         BuildSelection, ChangeScope, ManagedGroup, ManagedOutput, PlannedGraph, TargetFamily,
-        cleanup_stale_outputs, matches_target, read_manifest, write_manifest,
+        cleanup_stale_outputs, matches_target, read_manifest, should_print_skip_message,
+        write_manifest,
     };
     use crate::cli::BuildKind;
     use crate::paths::RepoPaths;
@@ -995,6 +1018,87 @@ mod tests {
             output: repo.join("public/index.html"),
         };
         assert!(matches_target(&scope, &target));
+    }
+
+    #[test]
+    fn change_scope_merge_unions_paths_and_flags() {
+        let root = temp_root();
+        let repo = root.path();
+        let mut scope = ChangeScope {
+            sources: [repo.join("content/post.adoc")].into_iter().collect(),
+            sass_tree_changed: true,
+            ..ChangeScope::default()
+        };
+        scope.merge(ChangeScope {
+            sources: [repo.join("static/index.html")].into_iter().collect(),
+            tidy_config_changed: true,
+            ..ChangeScope::default()
+        });
+
+        assert!(scope.sources.contains(&repo.join("content/post.adoc")));
+        assert!(scope.sources.contains(&repo.join("static/index.html")));
+        assert!(scope.sass_tree_changed);
+        assert!(scope.tidy_config_changed);
+    }
+
+    #[test]
+    fn change_based_selection_skips_up_to_date_targets() {
+        let root = temp_root();
+        let repo = root.path();
+        let paths = repo_paths(repo);
+        let source = repo.join("content/post.adoc");
+        let output = repo.join("public/post.html");
+        std::fs::create_dir_all(source.parent().unwrap()).unwrap();
+        std::fs::create_dir_all(output.parent().unwrap()).unwrap();
+        std::fs::write(&source, "post").unwrap();
+        std::thread::sleep(Duration::from_millis(20));
+        std::fs::write(&output, "rendered").unwrap();
+
+        let planned = PlannedGraph {
+            graph: GraphBuilder::new().build().unwrap(),
+            targets: vec![super::BuildTarget {
+                id: dummy_build_id(),
+                kind: BuildKind::Adoc,
+                family: TargetFamily::AdocHtml,
+                source: source.clone(),
+                output,
+            }],
+            managed_outputs: Default::default(),
+        };
+        let scope = ChangeScope {
+            sources: [source].into_iter().collect(),
+            ..ChangeScope::default()
+        };
+
+        let wanted = planned.select(
+            &paths,
+            &BuildSelection::new([BuildKind::Adoc]),
+            false,
+            Some(&scope),
+        );
+        assert!(wanted.is_empty());
+    }
+
+    #[test]
+    fn skip_message_is_suppressed_for_change_driven_builds() {
+        let request = super::BuildRequest {
+            selection: BuildSelection::new([BuildKind::Adoc]),
+            full: false,
+            changes: Some(ChangeScope::default()),
+        };
+
+        assert!(!should_print_skip_message(&request));
+    }
+
+    #[test]
+    fn skip_message_is_retained_for_explicit_builds() {
+        let request = super::BuildRequest {
+            selection: BuildSelection::new([BuildKind::Adoc]),
+            full: false,
+            changes: None,
+        };
+
+        assert!(should_print_skip_message(&request));
     }
 
     #[test]
