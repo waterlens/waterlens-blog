@@ -1,5 +1,5 @@
-[submodule "w-asciidoc"]
-	path = w-asciidoc
+[submodule "tools/asciidoc"]
+	path = tools/asciidoc
 	url = git@github.com:waterlens/w-asciidoc.git
 [submodule "resource/typst/rubiks-cube"]
 	path = resource/typst/rubiks-cube
