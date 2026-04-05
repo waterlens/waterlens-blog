@@ -170,6 +170,15 @@ textarea {
   min-height: 50px
 }
 
+.table-wrapper {
+  overflow-x: auto;
+  margin-bottom: 1.25em
+}
+
+.table-wrapper > table {
+  margin-bottom: 0
+}
+
 table {
   border-collapse: collapse;
   border-spacing: 0;
@@ -641,8 +650,6 @@ hr {
   display: table
 }
 
-#footer::after,
-#footer::before,
 #footnotes::after,
 #footnotes::before,
 #header::after,
@@ -656,7 +663,6 @@ hr {
 }
 
 #content::after,
-#footer::after,
 #footnotes::after,
 #header::after,
 .clearfix::after,
@@ -822,7 +828,6 @@ p a>code:hover {
 }
 
 #content,
-#footer,
 #footnotes,
 #header {
   width: 100%;
@@ -834,10 +839,6 @@ p a>code:hover {
   max-width: min(80rem, 100% - 2rem);
   padding-left: .9375em;
   padding-right: .9375em
-}
-
-#footer {
-  margin: 0 auto
 }
 
 #content {
@@ -1060,17 +1061,6 @@ ul.unstyled {
 #content #toc>:last-child,
 .admonition>table td.content>:last-child>:last-child {
   margin-bottom: 0
-}
-
-#footer {
-  max-width: none;
-  background: #000;
-  padding: 1.25em
-}
-
-#footer-text {
-  color: rgba(255, 255, 255, .8);
-  line-height: 1.4
 }
 
 #content {
@@ -2314,7 +2304,6 @@ p {
   }
 
   #content,
-  #footer,
   #footnotes,
   #header {
     max-width: none
@@ -2373,10 +2362,6 @@ p {
     page-break-before: always
   }
 
-  #footer {
-    padding: 0 .9375em
-  }
-
   .hide-on-print {
     display: none !important
   }
@@ -2407,21 +2392,11 @@ print {
   .sect1+.sect1 {
     border: 0
   }
-
-  #footer {
-    background: 0 0
-  }
-
-  #footer-text {
-    color: rgba(0, 0, 0, .6);
-    font-size: .9em
-  }
 }
 
 @media amzn-kf8 {
 
   #content,
-  #footer,
   #footnotes,
   #header {
     padding: 0

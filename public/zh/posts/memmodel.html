@@ -5,7 +5,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@400;700&amp;display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&amp;display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
@@ -27,7 +26,7 @@
         <h2 id="_模型">模型</h2>
         <p>TSO (Total Store Ordering)：模型为每个硬件线程都有其独立的写缓冲区。这允许了 Test SB 的情况。</p>
         <p>Relaxed：对不同位置的写可以以乱序发生，这意味着其他线程读取时也可能是乱序的。这允许了 Test MP 的情况。</p>
-        <p>多复制原子（multi-copy atomicity）：对不同位置的写入以相同的顺序传播到多个其他线程。 非多复制原子性可以由 Test WRC+addr 验证。</p>
+        <p>多复制原子（multi-copy atomicity）：对不同位置的写入以相同的顺序传播到多个其他线程。非多复制原子性可以由 Test WRC+addr 验证。</p>
       </section>
       <section class="sect1">
         <h2 id="_内存模型测试">内存模型测试</h2>

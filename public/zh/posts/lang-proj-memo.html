@@ -5,7 +5,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@400;700&amp;display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&amp;display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
@@ -190,168 +189,170 @@
       </section>
       <section class="sect1">
         <h2 id="_2_方向速查与对比表">2. 方向速查与对比表</h2>
-        <table class="table frame-all grid-all stretch">
-          <colgroup>
-            <col style="width: 14.2857%;">
-            <col style="width: 14.2857%;">
-            <col style="width: 14.2857%;">
-            <col style="width: 14.2857%;">
-            <col style="width: 14.2857%;">
-            <col style="width: 14.2857%;">
-            <col style="width: 14.2858%;">
-          </colgroup>
-          <thead>
-            <tr>
-              <th class="table halign-left valign-top">方向</th>
-              <th class="table halign-left valign-top">核心诉求</th>
-              <th class="table halign-left valign-top">典型场景</th>
-              <th class="table halign-left valign-top">可行性</th>
-              <th class="table halign-left valign-top">难度</th>
-              <th class="table halign-left valign-top">差异化</th>
-              <th class="table halign-left valign-top">MVP 体量</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="table halign-left valign-top">
-                <p class="table">A 确定性/硬实时脚本 VM</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">可预算、可证明停顿上限</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">游戏帧逻辑、机器人、低延迟撮合</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">强</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">中</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">强</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">7–12k LOC</p>
-              </td>
-            </tr>
-            <tr>
-              <td class="table halign-left valign-top">
-                <p class="table">B 数据处理脚本</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">结构化数据 + pipeline + 惰性</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">CLI/ETL、日志/JSON/CSV 处理</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">强</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">中</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">中强</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">8–12k LOC</p>
-              </td>
-            </tr>
-            <tr>
-              <td class="table halign-left valign-top">
-                <p class="table">C 嵌入式 Datalog</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">声明式规则 + 增量推理</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">权限/策略、配置校验、AI</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">中强</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">中</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">强</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">6–10k LOC</p>
-              </td>
-            </tr>
-            <tr>
-              <td class="table halign-left valign-top">
-                <p class="table">D 类型化连接式</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">栈效应类型 + HM 推断</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">嵌入/教学/DSL/AOT 到 C/Wasm</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">中</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">中高</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">中强</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">6–9k LOC</p>
-              </td>
-            </tr>
-            <tr>
-              <td class="table halign-left valign-top">
-                <p class="table">E 代数效应小语言</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">effects/handlers 教学可用</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">协程/异步建模、嵌入</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">中</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">中</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">中强</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">4–7k LOC</p>
-              </td>
-            </tr>
-            <tr>
-              <td class="table halign-left valign-top">
-                <p class="table">F 安全系统级脚本</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">无 GC/确定性内存 + 线性类型</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">实时/嵌入/高可靠插件</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">中强</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">中高</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">强</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">8–12k LOC</p>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-wrapper">
+          <table class="table frame-all grid-all stretch">
+            <colgroup>
+              <col style="width: 14.2857%;">
+              <col style="width: 14.2857%;">
+              <col style="width: 14.2857%;">
+              <col style="width: 14.2857%;">
+              <col style="width: 14.2857%;">
+              <col style="width: 14.2857%;">
+              <col style="width: 14.2858%;">
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="table halign-left valign-top">方向</th>
+                <th class="table halign-left valign-top">核心诉求</th>
+                <th class="table halign-left valign-top">典型场景</th>
+                <th class="table halign-left valign-top">可行性</th>
+                <th class="table halign-left valign-top">难度</th>
+                <th class="table halign-left valign-top">差异化</th>
+                <th class="table halign-left valign-top">MVP 体量</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table">A 确定性/硬实时脚本 VM</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">可预算、可证明停顿上限</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">游戏帧逻辑、机器人、低延迟撮合</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">强</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">中</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">强</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">7–12k LOC</p>
+                </td>
+              </tr>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table">B 数据处理脚本</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">结构化数据 + pipeline + 惰性</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">CLI/ETL、日志/JSON/CSV 处理</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">强</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">中</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">中强</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">8–12k LOC</p>
+                </td>
+              </tr>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table">C 嵌入式 Datalog</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">声明式规则 + 增量推理</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">权限/策略、配置校验、AI</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">中强</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">中</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">强</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">6–10k LOC</p>
+                </td>
+              </tr>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table">D 类型化连接式</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">栈效应类型 + HM 推断</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">嵌入/教学/DSL/AOT 到 C/Wasm</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">中</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">中高</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">中强</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">6–9k LOC</p>
+                </td>
+              </tr>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table">E 代数效应小语言</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">effects/handlers 教学可用</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">协程/异步建模、嵌入</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">中</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">中</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">中强</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">4–7k LOC</p>
+                </td>
+              </tr>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table">F 安全系统级脚本</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">无 GC/确定性内存 + 线性类型</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">实时/嵌入/高可靠插件</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">中强</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">中高</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">强</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">8–12k LOC</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         <div class="admonition tip">
           <table>
             <tr>

@@ -5,7 +5,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@400;700&amp;display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&amp;display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
@@ -70,13 +69,13 @@
           </ul>
         </div>
         <h3 id="_内部可变性" class="discrete">内部可变性</h3>
-        <p>Capsules 通过一个 ghost key 静态地确保在任意时刻只有<strong>单个</strong> 线程可以修改一组内部可以有任意别名的 uncontented 数据。</p>
+        <p>Capsules 通过一个 ghost key 静态地确保在任意时刻只有<strong>单个</strong>线程可以修改一组内部可以有任意别名的 uncontented 数据。</p>
         <p>Rw Lock 允许在线程间传递对 ghost key 的 unique (可读或写) 或者 shared (只读) 的所有权。</p>
       </section>
       <section class="sect1">
         <h2 id="date-20260322"><a href="#date-20260322">2026 年 3 月 22 日</a></h2>
         <p><a href="http://arxiv.org/abs/2601.18793">Handling Scope Checks</a></p>
-        <p>多阶段编程里 Scope Extrusion （<strong>生成的</strong>代码里的变量逃离作用域）问题的现有方案，静态的表达能力太弱类型系统复杂； 动态检查中的 lazy check 太晚，eager check 误报多。这篇在有 effect handler 出现的背景下提出了一个 C4C 方案:</p>
+        <p>多阶段编程里 Scope Extrusion （<strong>生成的</strong>代码里的变量逃离作用域）问题的现有方案，静态的表达能力太弱类型系统复杂；动态检查中的 lazy check 太晚，eager check 误报多。这篇在有 effect handler 出现的背景下提出了一个 C4C 方案:</p>
         <div class="ulist">
           <ul>
             <li>
@@ -87,7 +86,7 @@
             </li>
           </ul>
         </div>
-        <p>I 记录栈至少要退回到哪里，才能确定已经没有 continuation 能把 muted 变量重新变为安全的。 论文中定义成“从未被 effect handler capture 过的那段栈的最大长度”的标记。 初始时 I = ⊤，每次 effect 被处理时，I 会更新成 min(len(E1), I)。 所以 I 只会被 raised effects 变小，不会变大。</p>
+        <p>I 记录栈至少要退回到哪里，才能确定已经没有 continuation 能把 muted 变量重新变为安全的。论文中定义成“从未被 effect handler capture 过的那段栈的最大长度”的标记。初始时 I = ⊤，每次 effect 被处理时，I 会更新成 min(len(E1), I)。所以 I 只会被 raised effects 变小，不会变大。</p>
         <p>I 什么时候触发 unmute：当执行退回到某个点，满足当前栈深度 len(E) &lt;= I，这时无法让 muted variables 恢复，因此：</p>
         <div class="ulist">
           <ul>
@@ -151,7 +150,7 @@
                 </li>
                 <li>
                   <p><strong>函数类型 (Function Types)</strong></p>
-                  <p>如何定义一个值属于 \(\tau_1 \to \tau_2\)？ 在 Logical Relations 中，我们说函数 \(f\) 属于 \(\tau_1 \to \tau_2\)，当且仅当： <strong>对于任何</strong>属于输入类型 \(\tau_1\) 的参数 \(v\)，应用 \(f(v)\) 后得到的结果，其行为必须符合输出类型 \(\tau_2\) 的定义。</p>
+                  <p>如何定义一个值属于 \(\tau_1 \to \tau_2\)？在 Logical Relations 中，我们说函数 \(f\) 属于 \(\tau_1 \to \tau_2\)，当且仅当：<strong>对于任何</strong>属于输入类型 \(\tau_1\) 的参数 \(v\)，应用 \(f(v)\) 后得到的结果，其行为必须符合输出类型 \(\tau_2\) 的定义。</p>
                   <div class="stem">
                     <div class="content">
                       \[\mathcal{V}\llbracket \tau_1 \to \tau_2 \rrbracket = \{ f \mid \forall v \in \mathcal{V}\llbracket \tau_1 \rrbracket. \ f(v) \in \mathcal{E}\llbracket \tau_2 \rrbracket \}\]
@@ -174,10 +173,10 @@
           <div class="ulist">
             <ul>
               <li>
-                <p><strong>强规范化 (Strong Normalization):</strong> 如果想证明在这个语言里 <strong>所有程序都会终止</strong>，语法证明通常无能为力。需要 Logical Relations 来建立一个模型，证明所有良类型的项都在“终止项”的集合里。</p>
+                <p><strong>强规范化 (Strong Normalization):</strong>如果想证明在这个语言里 <strong>所有程序都会终止</strong>，语法证明通常无能为力。需要 Logical Relations 来建立一个模型，证明所有良类型的项都在“终止项”的集合里。</p>
               </li>
               <li>
-                <p><strong>编译器正确性 (Compiler Correctness):</strong> 当把一种语言编译成另一种语言（比如 System F 到 Assembly），语法规则都不一样了，怎么证明类型安全没被破坏？需要 Logical Relations 来定义源语言类型和目标语言行为之间的关系。</p>
+                <p><strong>编译器正确性 (Compiler Correctness):</strong>当把一种语言编译成另一种语言（比如 System F 到 Assembly），语法规则都不一样了，怎么证明类型安全没被破坏？需要 Logical Relations 来定义源语言类型和目标语言行为之间的关系。</p>
               </li>
             </ul>
           </div>
@@ -253,7 +252,7 @@ end;</code></pre>
       </section>
       <section class="sect1">
         <h2 id="date-20251123"><a href="#data-20251123">2025 年 11 月 23 日</a></h2>
-        <p>关于 LuaJIT 编译器中代码生成技巧的临时总结： LuaJIT 里使用单个 ExpDesc 去表示在代码生成过程中出现的常量、已被 GC 管理的装箱值、pending 状态的表达式描述、已经生成的指令、和跳转目标等信息。 它基于表达式树分配寄存器/堆栈槽，但针对特定逻辑有一些特殊处理（如 index）部分。有大量辅助函数用于减少临时堆栈槽的分配和操作数内联进指令的优化。具体使用方式的关系图如下</p>
+        <p>关于 LuaJIT 编译器中代码生成技巧的临时总结： LuaJIT 里使用单个 ExpDesc 去表示在代码生成过程中出现的常量、已被 GC 管理的装箱值、pending 状态的表达式描述、已经生成的指令、和跳转目标等信息。它基于表达式树分配寄存器/堆栈槽，但针对特定逻辑有一些特殊处理（如 index）部分。有大量辅助函数用于减少临时堆栈槽的分配和操作数内联进指令的优化。具体使用方式的关系图如下</p>
         <div class="imageblock centered">
           <div class="content"><img src="/resource/luajit-expr-gen.svg" alt="LuaJIT ExpDesc" style="width: 40rem;"></div>
         </div>
@@ -261,10 +260,10 @@ end;</code></pre>
       </section>
       <section class="sect1">
         <h2 id="date-20251010"><a href="#date-20251010">2025 年 10 月 10 日</a></h2>
-        <p>在尝试在纯 pratt parsing 的基础上编写 single-pass 编译器时遇到了一点代码生成上的困难， 总结如下：</p>
-        <p>为了便于手写，代码生成必须是 top-down 的； 这就要求 parsing 过程的 nud 不能被第一时间处理（发射出代码），而需要等待后续的 led 处理完。 在这个过程中，我们需要数据结构来暂存 nud 处理的结果。</p>
-        <p>不同于只用 pratt parsing 进行中缀表达式解析，在一个纯 pratt parsing 的系统中， nud 可能的左侧结果是非常多样化的。因此，所需要用于存储 nud 结果的数据结构在实质上等价于语法树， 并最终需要在 led 处理过程中或者完成后进行代码生成，而这往往需要在 led 中插入 nud 处理代码。 这些耦合的处理代码进一步恶化了 parser + codegen 的复杂度。</p>
-        <p>由此我们可以得出结论，如果需要进行 single-pass 代码生成，那么 parsing 不应该完全由 pratt 算法负责。 例如，应该只将计算性质的二元运算符，至多加上一元前缀或者后缀运算符交给 pratt 算法处理， 因为它们遵循正常的获取“右值”操作数、运算的代码生成规律。赋值等需求“左值”的逻辑不同，共享代码生成代码不太整洁。 工程上最佳的实践反而是分开编写不同语法结构的递归下降算法，分隔开后可以自然地插入对应的 codegen 代码。</p>
+        <p>在尝试在纯 pratt parsing 的基础上编写 single-pass 编译器时遇到了一点代码生成上的困难，总结如下：</p>
+        <p>为了便于手写，代码生成必须是 top-down 的；这就要求 parsing 过程的 nud 不能被第一时间处理（发射出代码），而需要等待后续的 led 处理完。在这个过程中，我们需要数据结构来暂存 nud 处理的结果。</p>
+        <p>不同于只用 pratt parsing 进行中缀表达式解析，在一个纯 pratt parsing 的系统中， nud 可能的左侧结果是非常多样化的。因此，所需要用于存储 nud 结果的数据结构在实质上等价于语法树，并最终需要在 led 处理过程中或者完成后进行代码生成，而这往往需要在 led 中插入 nud 处理代码。这些耦合的处理代码进一步恶化了 parser + codegen 的复杂度。</p>
+        <p>由此我们可以得出结论，如果需要进行 single-pass 代码生成，那么 parsing 不应该完全由 pratt 算法负责。例如，应该只将计算性质的二元运算符，至多加上一元前缀或者后缀运算符交给 pratt 算法处理，因为它们遵循正常的获取“右值”操作数、运算的代码生成规律。赋值等需求“左值”的逻辑不同，共享代码生成代码不太整洁。工程上最佳的实践反而是分开编写不同语法结构的递归下降算法，分隔开后可以自然地插入对应的 codegen 代码。</p>
       </section>
       <section class="sect1">
         <h2 id="date-20250920"><a href="#date-20250920">2025 年 9 月 20 日</a></h2>
@@ -284,15 +283,15 @@ end;</code></pre>
         <h2 id="date-20250908"><a href="#date-20250908">2025 年 9 月 8 日</a></h2>
         <p>James Morris 的观察等价/外延等价概念：</p>
         <p>两个表达式 \(e_1\) 和 \(e_2\) 被称为“观察等价”，如果对于每一个上下文 \(C\)，我们有：\(C[e_1]\) 停止当且仅当 \(C[e_2]\) 停止。</p>
-        <p>本地转换和非局部转换的定义： 如果功能 \(X\) 可以在语言 \(L\) 中作为本地转换实现以获得语言 \(L+X\)，那么对于任何在 \(L\) 中观察上等价的表达式 \(e_1\) 和 \(e_2\)，它们在 \(L+X\) 中也是观察上等价的。</p>
-        <p>例子：考虑 \(e_1 = \lambda f. loop\) 和 \(e_2 = \lambda f. (f~0) loop\)，它们在 \(L\) （不含有异常）中观察上等价， 因为对于任何上下文 \(C\)，我们有：\(C[e_1]\) 停止当且仅当 \(C[e_2]\) 停止。 但在 \(L+halt\) 中，\(e_1\) 和 \(e_2\) 并不观察上等价，因为对于 \(C = (\cdot~halt)\) 它们并不同时停止。</p>
+        <p>本地转换和非局部转换的定义：如果功能 \(X\) 可以在语言 \(L\) 中作为本地转换实现以获得语言 \(L+X\)，那么对于任何在 \(L\) 中观察上等价的表达式 \(e_1\) 和 \(e_2\)，它们在 \(L+X\) 中也是观察上等价的。</p>
+        <p>例子：考虑 \(e_1 = \lambda f. loop\) 和 \(e_2 = \lambda f. (f~0) loop\)，它们在 \(L\) （不含有异常）中观察上等价，因为对于任何上下文 \(C\)，我们有：\(C[e_1]\) 停止当且仅当 \(C[e_2]\) 停止。但在 \(L+halt\) 中，\(e_1\) 和 \(e_2\) 并不观察上等价，因为对于 \(C = (\cdot~halt)\) 它们并不同时停止。</p>
       </section>
       <section class="sect1">
         <h2 id="date-20250703"><a href="#date-20250703">2025 年 7 月 3 日</a></h2>
         <p><a href="https://dl.acm.org/doi/10.1145/3519939.3523701">All you need is superword-level parallelism: systematic control-flow vectorization with SLP</a></p>
-        <p>超级字并行（Superword-level parallelism, SLP）在直线代码中寻找连续的同构指令模式，并将其向量化。 这样做的好处是避免了有循环情况下的复杂依赖分析。 也因为这个特性，SLP 向量化不能发现在横跨多个基本块或循环的并行模式。</p>
-        <p>所以这篇工作拓展了出来了一个基于所谓 Predicated SSA 的向量化框架，并且表示在这个框架下， SLP 向量化可以横跨多个控制流区域工作。 那么这里说的 Predicated SSA 起到了什么作用？</p>
-        <p>Predicated SSA 抛弃了 CFG 结构，将程序视为指令或循环序列， 并使用一个布尔谓词来表示指令的控制流依赖性。 这样做的好处是代码移动变得更容易（也就是简单的指令重排序）。</p>
+        <p>超级字并行（Superword-level parallelism, SLP）在直线代码中寻找连续的同构指令模式，并将其向量化。这样做的好处是避免了有循环情况下的复杂依赖分析。也因为这个特性，SLP 向量化不能发现在横跨多个基本块或循环的并行模式。</p>
+        <p>所以这篇工作拓展了出来了一个基于所谓 Predicated SSA 的向量化框架，并且表示在这个框架下， SLP 向量化可以横跨多个控制流区域工作。那么这里说的 Predicated SSA 起到了什么作用？</p>
+        <p>Predicated SSA 抛弃了 CFG 结构，将程序视为指令或循环序列，并使用一个布尔谓词来表示指令的控制流依赖性。这样做的好处是代码移动变得更容易（也就是简单的指令重排序）。</p>
         <p>然后，工作流程就变成了：</p>
         <div class="ulist">
           <ul>
@@ -314,7 +313,7 @@ end;</code></pre>
           </ul>
         </div>
         <p>关于 SLP 打包，感觉这里有一些“叙事技巧”，就是这个框架在使用 SLP 打包前还是要合并循环的： “首先，如果我们打包来自不同循环的指令，我们将转换这些循环，使得任何给定向量打包的指令属于同一个循环。” 所以听起来大概是这样工作的：转换成 Predicated SSA 形式 → 更容易做 Loop Fusion → Fuse 完之后进行通常的 SLP 打包。</p>
-        <p>关于评估部分，相比于 LLVM 的向量化有好有坏，好的相对多一点。 不过在视频里，有人提问用了 ISPC 测试集但为什么没和 ISPC 比较（笑）， 作者解释是说 ISPC 在这些样例上确实有优势，但主要是 ISPC 支持用户手动标注之类的辅助向量化的提示， 比自动向量化效果好也是正常的，而论文讨论的主要是自动向量化，因此就没有比较了。</p>
+        <p>关于评估部分，相比于 LLVM 的向量化有好有坏，好的相对多一点。不过在视频里，有人提问用了 ISPC 测试集但为什么没和 ISPC 比较（笑），作者解释是说 ISPC 在这些样例上确实有优势，但主要是 ISPC 支持用户手动标注之类的辅助向量化的提示，比自动向量化效果好也是正常的，而论文讨论的主要是自动向量化，因此就没有比较了。</p>
       </section>
       <section class="sect1">
         <h2 id="date-20250413"><a href="#date-20250413">2025 年 4 月 13 日</a></h2>
@@ -341,7 +340,7 @@ CPS{(shift f E)} = \c. let f = \x. \c2. c2 (c x) in
                        CPS{E} \x. x</code></pre>
           </div>
         </div>
-        <p>然而对于 reset/shift0, prompt/control 和 prompt/control0, 其 CPS 转换变得相对复杂 (且不实用)。 参考 <a href="https://homes.luddy.indiana.edu/ccshan/recur/recur.pdf">Shift to control</a>。</p>
+        <p>然而对于 reset/shift0, prompt/control 和 prompt/control0, 其 CPS 转换变得相对复杂 (且不实用)。参考 <a href="https://homes.luddy.indiana.edu/ccshan/recur/recur.pdf">Shift to control</a>。</p>
       </section>
       <section class="sect1">
         <h2 id="date-20240929"><a href="#date-20240929">2024 年 9 月 29 日</a></h2>
@@ -461,7 +460,7 @@ CPS{(shift f E)} = \c. let f = \x. \c2. c2 (c x) in
           </ul>
         </div>
         <p>而右侧的表达式则允许以下内容： * 整数和符号常量 * 布尔变量（使用 Scheme 语法） * 术语构造 <code>(ctor EXP1 EXP2 …​)</code> * 变量绑定 <code>(let ((var1 type1 EXP1) (var2 type2 EXP2) …​) BODY …​)</code></p>
-        <p>ISLE 使用启发式方法决定应用适用规则中的某一条。 例如，当多条规则匹配同一个术语时，会优先选择更具体的那条，也就是说，如果规则 1 已经完成匹配，而规则 2 有相同前缀，但可以继续执行后续匹配并成功，则选择规则 2 进行重写。</p>
+        <p>ISLE 使用启发式方法决定应用适用规则中的某一条。例如，当多条规则匹配同一个术语时，会优先选择更具体的那条，也就是说，如果规则 1 已经完成匹配，而规则 2 有相同前缀，但可以继续执行后续匹配并成功，则选择规则 2 进行重写。</p>
         <p>如果确实需要，也可以手动指定优先级。优先级为一个有符号整数，数值大小表示优先级高低，默认情况下规则的优先级为 0。</p>
         <p>ISLE 中存在类型。</p>
         <p>类型要么是一个原语（如整数类型或者导入的类型），要么是一个枚举（和类型）</p>
@@ -521,7 +520,7 @@ CPS{(shift f E)} = \c. let f = \x. \c2. c2 (c x) in
         </div>
         <p>其作用类似于语法宏，也就是任何模式 <code>(A PAT1 PAT2)</code> 都会被拓展为 <code>(and (extractArg1 PAT1) (extractArg2 PAT2))</code>。</p>
         <p>而外部构造器、提取器，则对应宿主语言中的一个函数。</p>
-        <p>如果构造器具有类型 <code>T1 → T2</code>, 则要求宿主语言中也有一个相同类型的函数； 如果提取器具有类型 <code>T1 → T2</code>，则要求宿主语言中具有对应的 <code>T2 → Option[T1]</code> 类型的函数，其中 <code>Option</code> 可以用来表示提取（匹配）是否成功。</p>
+        <p>如果构造器具有类型 <code>T1 → T2</code>, 则要求宿主语言中也有一个相同类型的函数；如果提取器具有类型 <code>T1 → T2</code>，则要求宿主语言中具有对应的 <code>T2 → Option[T1]</code> 类型的函数，其中 <code>Option</code> 可以用来表示提取（匹配）是否成功。</p>
         <p>外部提取器可以被声明为 infallible 的，可以提高生成代码的效率。在这种情况下，对应的外部函数具有签名 <code>T2 → T1</code>。</p>
         <p>除此之外，ISLE 具有一些语法糖：</p>
         <p>rule 被允许包含子匹配，其语法如下：</p>
@@ -591,7 +590,7 @@ global (a, u, l) = (a, shared, global)</code></pre>
         <p>可以给 record 的 field 标注模态，如 <code>type 'a shared = { s : 'a @@ shared }</code>。</p>
         <p>如果 record r 本身具有模式 m，且 field f 具有模态 n，则称 r.f 具有模式 n(m)。</p>
         <h5 id="_uniqueness_单一性" class="discrete">Uniqueness 单一性</h5>
-        <p>其中 uniqueness 允许安全的进行 in-place 更新，也就是最近很火的 reuse。 这里不等同于传统 OCaml 的 mut 关键词带来的可变性。 基于 uniqueness 的可变性在语义上仍然是函数式的，不会引起外部状态的改变。</p>
+        <p>其中 uniqueness 允许安全的进行 in-place 更新，也就是最近很火的 reuse。这里不等同于传统 OCaml 的 mut 关键词带来的可变性。基于 uniqueness 的可变性在语义上仍然是函数式的，不会引起外部状态的改变。</p>
         <p>有一个示例如下：</p>
         <div class="listing">
           <div class="content">
@@ -623,8 +622,8 @@ val reverse : 'a list @ unique -&gt; 'a list @ unique</code></pre>
   in ...</code></pre>
           </div>
         </div>
-        <p>例如这里的函数闭包 <code>f</code>，持有了唯一的对 <code>xs</code> 的引用； 即便我们让 <code>f</code> 亦为 unique，我们也不能阻止对 unique 调用两次，最终获得预期之外的结果（因为 xs 被反转了两次）。</p>
-        <p>因此引入了 affinity，我们使用此模式来限制对值使用的次数。 它和 uniqueness 的核心区别在于，uniqueness 是对过去的总结；而 affinity 是对未来的限制。</p>
+        <p>例如这里的函数闭包 <code>f</code>，持有了唯一的对 <code>xs</code> 的引用；即便我们让 <code>f</code> 亦为 unique，我们也不能阻止对 unique 调用两次，最终获得预期之外的结果（因为 xs 被反转了两次）。</p>
+        <p>因此引入了 affinity，我们使用此模式来限制对值使用的次数。它和 uniqueness 的核心区别在于，uniqueness 是对过去的总结；而 affinity 是对未来的限制。</p>
         <p>为了让上文代码正确，我们选择让 f 变为 once 模式，从而拒绝以上代码。</p>
         <div class="listing">
           <div class="content">
@@ -649,11 +648,11 @@ let borrow x f =
         <h4 id="_or_null_类型" class="discrete"><code>or_null</code> 类型</h4>
         <p>很多语言都会使用可以为 <code>null</code> 的值来作为 option 类型的一种替代品，但是对于 int option option 这种嵌套类型来说只有一个 <code>null</code> 就显得无能为力了。</p>
         <p>那如果反其道而行之，我们只需要一个 <code>null</code>，应该如何设计对应的类型呢？这个 <code>or_null</code> 类型的设计很好地体现了相关的一些考量。</p>
-        <p>为了区分我们是否还可以使用 <code>null</code>，我们将类型分为两类，一种被称作 <code>no-null</code> type， 也就是说其对应的底层表示中并没有使用和 <code>null</code> 相同的模式（例如为一个全 0 的值），例如 string, int 等。 另一种是 <code>with-null</code> type，和上述内容刚好相反。 所以对于 <code>'a or_null</code> 类型，我们希望 <code>'a</code> 是 <code>no-null</code> 的。</p>
+        <p>为了区分我们是否还可以使用 <code>null</code>，我们将类型分为两类，一种被称作 <code>no-null</code> type，也就是说其对应的底层表示中并没有使用和 <code>null</code> 相同的模式（例如为一个全 0 的值），例如 string, int 等。另一种是 <code>with-null</code> type，和上述内容刚好相反。所以对于 <code>'a or_null</code> 类型，我们希望 <code>'a</code> 是 <code>no-null</code> 的。</p>
         <p>在拥有 <code>or_null</code> 类型后，自然地我们可以利用 OCaml 里全 0 表示并不对应任何值的现状，使用该模式表示 <code>null</code>，有效减少了堆分配。</p>
-        <p>不过在抽象类型和类型参数的默认类别应该是 <code>no-null</code> 还是 <code>with-null</code> 的问题上，还有一些问题需要澄清。 另外 OCaml 的 <code>float array</code> 非常特别，也需要特殊处理。</p>
+        <p>不过在抽象类型和类型参数的默认类别应该是 <code>no-null</code> 还是 <code>with-null</code> 的问题上，还有一些问题需要澄清。另外 OCaml 的 <code>float array</code> 非常特别，也需要特殊处理。</p>
         <h4 id="_扁平化字段" class="discrete">扁平化字段</h4>
-        <p>这是一个比较简单的改动，允许用户手动指定一些 field 为未装箱或不需要扫描的。代价是牺牲了 generic 的 compare 操作。 实现上需要在对象头里记录一个数值指定需要扫描的 field 数量。此外需要 layout 重排，将不需要 scan 和需要 scan 的 field 分为两个区域。</p>
+        <p>这是一个比较简单的改动，允许用户手动指定一些 field 为未装箱或不需要扫描的。代价是牺牲了 generic 的 compare 操作。实现上需要在对象头里记录一个数值指定需要扫描的 field 数量。此外需要 layout 重排，将不需要 scan 和需要 scan 的 field 分为两个区域。</p>
       </section>
       <section class="sect1">
         <h2 id="date-20240824"><a href="#date-20240824">2024 年 8 月 24 日</a></h2>

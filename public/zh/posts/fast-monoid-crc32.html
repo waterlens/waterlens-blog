@@ -5,7 +5,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@400;700&amp;display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&amp;display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
@@ -23,9 +22,9 @@
     </header>
     <hr>
     <div id="content">
-      <p>在 <a href="https://www.schoolofhaskell.com/user/edwardk/parallel-crc">并行和增量CRC</a> 中描述的单调半群哈希在某些场景中很有用。一个 <strong>幺半群</strong> 哈希需要定义一个二元操作，可以将两个片段的哈希值结合起来， 并且结合的结果，与连接这两个片段后再哈希是等价的。 此外，还需要有一个单位元，当与任何哈希值结合时，会返回相同的哈希值。</p>
+      <p>在<a href="https://www.schoolofhaskell.com/user/edwardk/parallel-crc">并行和增量CRC</a>中描述的单调半群哈希在某些场景中很有用。一个 <strong>幺半群</strong> 哈希需要定义一个二元操作，可以将两个片段的哈希值结合起来，并且结合的结果，与连接这两个片段后再哈希是等价的。此外，还需要有一个单位元，当与任何哈希值结合时，会返回相同的哈希值。</p>
       <p>然而，原始帖子中描述的朴素算法并没有达到现代硬件的极限。</p>
-      <p>为了更清楚地说明这一点， 我们从快速幺半群 CRC32 计算的核心抽象开始说起。</p>
+      <p>为了更清楚地说明这一点，我们从快速幺半群 CRC32 计算的核心抽象开始说起。</p>
       <div class="ulist">
         <ul>
           <li>
@@ -42,7 +41,7 @@
           </li>
         </ul>
       </div>
-      <p>我们使用 <code>fold_bytes: [u8] → t</code> 而不是 <code>from_byte: u8 → t</code> 。 虽然后一种形式上更为通用，但许多架构支持硬件 CRC32 计算， 这使得 <code>fold_bytes</code> 更有效率。</p>
+      <p>我们使用 <code>fold_bytes: [u8] → t</code> 而不是 <code>from_byte: u8 → t</code> 。虽然后一种形式上更为通用，但许多架构支持硬件 CRC32 计算，这使得 <code>fold_bytes</code> 更有效率。</p>
       <p>关于抽象类型 <code>t</code>，一个合理的表示方法需要包括两个多项式，每个多项式都按位存储到一个 32 位整数中。</p>
       <p>两个多项式分别为标准的 CRC32 值和多项式 \( x^n \bmod p \) , 后者用于编码长度 \( n \)。</p>
       <div class="listing">
@@ -74,9 +73,9 @@ type t = {
   { crc, len }</code></pre>
         </div>
       </div>
-      <p>这次我们使用了两个基本操作：<code>addp32</code> （32 位多项式相加）和 <code>mulp32</code>（32 位多项式相乘并模 P）。</p>
-      <p>对于多项式的加法，只是简单的 <code>xor</code>。 然而，多项式乘法更为复杂。 虽然有相应的硬件指令 （x86-64 的 <code>clmul</code> 和 AArch64 的 <code>pmull</code>），在得到加宽后的乘积后，结果必须对 CRC32 多项式 P 取模。 这一运算本身未被硬件加速。</p>
-      <p>作为背景， <a href="https://www.corsix.org/content/galois-field-instructions-2021-cpus">2021 年的 CPU 上的伽罗瓦域运算指令</a> 建议使用 crc32 指令进行取模。</p>
+      <p>这次我们使用了两个基本操作：<code>addp32</code> （32 位多项式相加）和<code>mulp32</code>（32 位多项式相乘并模 P）。</p>
+      <p>对于多项式的加法，只是简单的 <code>xor</code>。然而，多项式乘法更为复杂。虽然有相应的硬件指令（x86-64 的 <code>clmul</code> 和 AArch64 的 <code>pmull</code>），在得到加宽后的乘积后，结果必须对 CRC32 多项式 P 取模。这一运算本身未被硬件加速。</p>
+      <p>作为背景，<a href="https://www.corsix.org/content/galois-field-instructions-2021-cpus">2021 年的 CPU 上的伽罗瓦域运算指令</a>建议使用 crc32 指令进行取模。</p>
       <p>然而，也可以选择了另外一种方法，明确地使用如下等式对结果进行模运算。</p>
       <div class="stem">
         <div class="content">
@@ -129,7 +128,7 @@ uint32_t clmulr32(uint32_t a, uint32_t b) {
 }</code></pre>
         </div>
       </div>
-      <p>基准数据显示这对我应用程序来说足够高效。 现在，让我们总结一下快速幺半群 CRC32 哈希的最后一部分，单位元的定义。</p>
+      <p>基准数据显示这对我应用程序来说足够高效。现在，让我们总结一下快速幺半群 CRC32 哈希的最后一部分，单位元的定义。</p>
       <div class="listing">
         <div class="content">
           <pre class="highlightjs highlight"><code class="language-ocaml hljs" data-noescape="true" data-lang="ocaml">let identity = {

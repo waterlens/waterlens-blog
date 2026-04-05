@@ -5,7 +5,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
   <link href="https://fonts.googleapis.com/css2?family=Oxygen:wght@400;700&amp;display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&amp;display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&amp;display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
@@ -269,62 +268,64 @@ When an edit operation e occurs
         <p>It contains 4 sub-algorithms. Each of sub-algorithms may contain one or multiple dynamic programming matrices. The difficulty depends on if the implementers are familiar with dynamic programming.</p>
         <h4 id="_note_4" class="discrete">Note</h4>
         <p>There is a common metric for string comparison, longest common subsequences (LCS). The incremental computation here means that when knowing LCS(A, B), how to incrementally calculate the LCS after adding a character as a suffix or a prefix to one of the strings. The sub-algorithms have different time complexities and space complexities as follows:</p>
-        <table class="table frame-all grid-all stretch">
-          <colgroup>
-            <col style="width: 50%;">
-            <col style="width: 50%;">
-          </colgroup>
-          <tbody>
-            <tr>
-              <td class="table halign-left valign-top">
-                <p class="table">Algorithm</p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table">Time Complexity</p>
-              </td>
-            </tr>
-            <tr>
-              <td class="table halign-left valign-top">
-                <p class="table"><code>LCS(aA, B)</code></p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table"><code>O(LCS(A, B))</code></p>
-              </td>
-            </tr>
-            <tr>
-              <td class="table halign-left valign-top">
-                <p class="table"><code>LCS(Aa, B)</code></p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table"><code>O(LCS(A, B))</code></p>
-              </td>
-            </tr>
-            <tr>
-              <td class="table halign-left valign-top">
-                <p class="table"><code>LCS(A, bB)</code></p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table"><code>O(|A|)</code></p>
-              </td>
-            </tr>
-            <tr>
-              <td class="table halign-left valign-top">
-                <p class="table"><code>LCS(A, Bb)</code></p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table"><code>O(|A|)</code></p>
-              </td>
-            </tr>
-            <tr>
-              <td class="table halign-left valign-top">
-                <p class="table"><code>Total</code></p>
-              </td>
-              <td class="table halign-left valign-top">
-                <p class="table"><code>O(LCS(A, B)*|A| + |B|)</code></p>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-wrapper">
+          <table class="table frame-all grid-all stretch">
+            <colgroup>
+              <col style="width: 50%;">
+              <col style="width: 50%;">
+            </colgroup>
+            <tbody>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table">Algorithm</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">Time Complexity</p>
+                </td>
+              </tr>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table"><code>LCS(aA, B)</code></p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table"><code>O(LCS(A, B))</code></p>
+                </td>
+              </tr>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table"><code>LCS(Aa, B)</code></p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table"><code>O(LCS(A, B))</code></p>
+                </td>
+              </tr>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table"><code>LCS(A, bB)</code></p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table"><code>O(|A|)</code></p>
+                </td>
+              </tr>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table"><code>LCS(A, Bb)</code></p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table"><code>O(|A|)</code></p>
+                </td>
+              </tr>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table"><code>Total</code></p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table"><code>O(LCS(A, B)*|A| + |B|)</code></p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
       <section class="sect1">
         <h2 id="_incremental_inprocessing_in_sat_solving">Incremental Inprocessing in SAT Solving</h2>
