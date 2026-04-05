@@ -3,6 +3,7 @@
 :lang: en
 :stem: latexmath
 :source-highlighter: highlight.js
+:highlightjs-languages: ocaml
 
 The monoid hashing described in
 https://www.schoolofhaskell.com/user/edwardk/parallel-crc[Parallel and Incremental CRCs]

@@ -2,6 +2,7 @@
 :showtitle:
 :lang: en
 :stem: latexmath
+:source-highlighter: highlight.js
 
 This post summarizes some content that I learned from https://xxx[Adapton].
 

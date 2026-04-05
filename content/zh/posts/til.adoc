@@ -5,7 +5,7 @@
 :stem: latexmath
 :source-highlighter: highlight.js
 :highlightjs-theme: atom-one-light
-:highlightjs-languages: scheme, c++
+:highlightjs-languages: scheme, ocaml, haskell
 
 
 不定时更新，记录我在浏览网页、阅读论文、逛社媒时看到的细碎知识和技巧。

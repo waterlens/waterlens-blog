@@ -2,6 +2,7 @@
 :showtitle:
 :lang: en
 :stem: latexmath
+:source-highlighter: highlight.js
 
 == Incremental Parsing
 

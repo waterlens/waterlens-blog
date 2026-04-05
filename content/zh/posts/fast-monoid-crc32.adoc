@@ -3,6 +3,7 @@
 :lang: zh-hans
 :stem: latexmath
 :source-highlighter: highlight.js
+:highlightjs-languages: ocaml
 
 在
 https://www.schoolofhaskell.com/user/edwardk/parallel-crc[并行和增量CRC]
