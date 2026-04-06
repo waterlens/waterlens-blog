@@ -77,10 +77,10 @@ When an edit operation e occurs
               <div class="olist arabic">
                 <ol class="arabic">
                   <li>
-                    <p>Doesn’t improve asymptotic complexity of reparsing compared to the initial parsing. It’s because the memo table is O(1) for indexing (id, pos) key but O(n) for interval overlap queries and apply shifts.</p>
+                    <p>Doesn’t improve asymptotic complexity of reparsing compared to the initial parsing. It’s because the memo table is \(O(1)\) for indexing (id, pos) key but \(O(n)\) for interval overlap queries and apply shifts.</p>
                   </li>
                   <li>
-                    <p>The memo strategy (memo every non-terminal) has high memory overhead and uses O(n) time when reparse with a flat grammar (that doesn’t much nesting of non-terminals).</p>
+                    <p>The memo strategy (memo every non-terminal) has high memory overhead and uses \(O(n)\) time when reparse with a flat grammar (that doesn’t much nesting of non-terminals).</p>
                   </li>
                 </ol>
               </div>
@@ -90,7 +90,7 @@ When an edit operation e occurs
               <div class="olist arabic">
                 <ol class="arabic">
                   <li>
-                    <p>Use interval trees for overlap queries. O(log n) time. With some augmentations (lazy shifts) to improve the performance of shifting.</p>
+                    <p>Use interval trees for overlap queries. \(O(\log n)\) time. With some augmentations (lazy shifts) to improve the performance of shifting.</p>
                   </li>
                   <li>
                     <p>Use tree memoization strategy.</p>
@@ -103,10 +103,10 @@ When an edit operation e occurs
               <div class="ulist">
                 <ul>
                   <li>
-                    <p>Find/Insert/Delete: O(log n)</p>
+                    <p>Find/Insert/Delete: \(O(\log n)\)</p>
                   </li>
                   <li>
-                    <p>Query for all overlapping intervals with a specific interval: O(m + log n) where m is the result size</p>
+                    <p>Query for all overlapping intervals with a specific interval: \(O(m + \log n)\) where \(m\) is the result size</p>
                   </li>
                 </ul>
               </div>
@@ -285,42 +285,42 @@ When an edit operation e occurs
               </tr>
               <tr>
                 <td class="table halign-left valign-top">
-                  <p class="table"><code>LCS(aA, B)</code></p>
+                  <p class="table">\(\mathrm{LCS}(aA, B)\)</p>
                 </td>
                 <td class="table halign-left valign-top">
-                  <p class="table"><code>O(LCS(A, B))</code></p>
-                </td>
-              </tr>
-              <tr>
-                <td class="table halign-left valign-top">
-                  <p class="table"><code>LCS(Aa, B)</code></p>
-                </td>
-                <td class="table halign-left valign-top">
-                  <p class="table"><code>O(LCS(A, B))</code></p>
+                  <p class="table">\(O(\mathrm{LCS}(A, B))\)</p>
                 </td>
               </tr>
               <tr>
                 <td class="table halign-left valign-top">
-                  <p class="table"><code>LCS(A, bB)</code></p>
+                  <p class="table">\(\mathrm{LCS}(Aa, B)\)</p>
                 </td>
                 <td class="table halign-left valign-top">
-                  <p class="table"><code>O(|A|)</code></p>
-                </td>
-              </tr>
-              <tr>
-                <td class="table halign-left valign-top">
-                  <p class="table"><code>LCS(A, Bb)</code></p>
-                </td>
-                <td class="table halign-left valign-top">
-                  <p class="table"><code>O(|A|)</code></p>
+                  <p class="table">\(O(\mathrm{LCS}(A, B))\)</p>
                 </td>
               </tr>
               <tr>
                 <td class="table halign-left valign-top">
-                  <p class="table"><code>Total</code></p>
+                  <p class="table">\(\mathrm{LCS}(A, bB)\)</p>
                 </td>
                 <td class="table halign-left valign-top">
-                  <p class="table"><code>O(LCS(A, B)*|A| + |B|)</code></p>
+                  <p class="table">\(O(\|A\|)\)</p>
+                </td>
+              </tr>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(\mathrm{LCS}(A, Bb)\)</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(\|A\|)\)</p>
+                </td>
+              </tr>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table">Total</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(\mathrm{LCS}(A, B) \cdot \|A\| + \|B\|)\)</p>
                 </td>
               </tr>
             </tbody>

@@ -42,7 +42,7 @@
         </ul>
       </div>
       <p>We use <code>fold_bytes: [u8] → t</code> instead of <code>from_byte: u8 → t</code>. While the latter form is more general, many architectures support hardware CRC32 calculations, which makes <code>fold_bytes</code> more efficient.</p>
-      <p>Regarding the abstract type <code>t</code>, a reasonable and dedicated representation includes two polynomials, each fitting into a 32-bit integer. These polynomials store the standard CRC32 value and an additional value that encodes the length \( n \) as \( x^n \bmod p \).</p>
+      <p>Regarding the abstract type <code>t</code>, a reasonable and dedicated representation includes two polynomials, each fitting into a 32-bit integer. These polynomials store the standard CRC32 value and an additional value that encodes the length \(n\) as \(x^n \bmod p\).</p>
       <div class="listing">
         <div class="content">
           <pre class="highlightjs highlight"><code class="language-ocaml hljs" data-noescape="true" data-lang="ocaml">type r32 = u32 (* r32 means bit-(r)eflecting 32-bit polynomial *)

@@ -27,7 +27,7 @@ https://www.schoolofhaskell.com/user/edwardk/parallel-crc[并行和增量CRC]
 
 关于抽象类型 `t`，一个合理的表示方法需要包括两个多项式，每个多项式都按位存储到一个 32 位整数中。
 
-两个多项式分别为标准的 CRC32 值和多项式 \( x^n \bmod p \) , 后者用于编码长度 \( n \)。
+两个多项式分别为标准的 CRC32 值和多项式 stem:[x^n \bmod p] , 后者用于编码长度 stem:[n]。
 
 [source, ocaml]
 ----
@@ -63,12 +63,12 @@ let combine m n =
 ----
 
 这次我们使用了两个基本操作：`addp32` （32 位多项式相加）和
-`mulp32`（32 位多项式相乘并模 P）。
+`mulp32`（32 位多项式相乘并模 stem:[P]）。
 
 对于多项式的加法，只是简单的 `xor`。
 然而，多项式乘法更为复杂。
 虽然有相应的硬件指令
-（x86-64 的 `clmul` 和 AArch64 的 `pmull`），在得到加宽后的乘积后，结果必须对 CRC32 多项式 P 取模。
+（x86-64 的 `clmul` 和 AArch64 的 `pmull`），在得到加宽后的乘积后，结果必须对 CRC32 多项式 stem:[P] 取模。
 这一运算本身未被硬件加速。
 
 作为背景，

@@ -43,7 +43,7 @@
       </div>
       <p>我们使用 <code>fold_bytes: [u8] → t</code> 而不是 <code>from_byte: u8 → t</code> 。虽然后一种形式上更为通用，但许多架构支持硬件 CRC32 计算，这使得 <code>fold_bytes</code> 更有效率。</p>
       <p>关于抽象类型 <code>t</code>，一个合理的表示方法需要包括两个多项式，每个多项式都按位存储到一个 32 位整数中。</p>
-      <p>两个多项式分别为标准的 CRC32 值和多项式 \( x^n \bmod p \) , 后者用于编码长度 \( n \)。</p>
+      <p>两个多项式分别为标准的 CRC32 值和多项式 \(x^n \bmod p\) , 后者用于编码长度 \(n\)。</p>
       <div class="listing">
         <div class="content">
           <pre class="highlightjs highlight"><code class="language-ocaml hljs" data-noescape="true" data-lang="ocaml">type r32 = u32 (* r32 表示一个 32 位的位反射多项式 *)
@@ -73,8 +73,8 @@ type t = {
   { crc, len }</code></pre>
         </div>
       </div>
-      <p>这次我们使用了两个基本操作：<code>addp32</code> （32 位多项式相加）和<code>mulp32</code>（32 位多项式相乘并模 P）。</p>
-      <p>对于多项式的加法，只是简单的 <code>xor</code>。然而，多项式乘法更为复杂。虽然有相应的硬件指令（x86-64 的 <code>clmul</code> 和 AArch64 的 <code>pmull</code>），在得到加宽后的乘积后，结果必须对 CRC32 多项式 P 取模。这一运算本身未被硬件加速。</p>
+      <p>这次我们使用了两个基本操作：<code>addp32</code> （32 位多项式相加）和<code>mulp32</code>（32 位多项式相乘并模 \(P\)）。</p>
+      <p>对于多项式的加法，只是简单的 <code>xor</code>。然而，多项式乘法更为复杂。虽然有相应的硬件指令（x86-64 的 <code>clmul</code> 和 AArch64 的 <code>pmull</code>），在得到加宽后的乘积后，结果必须对 CRC32 多项式 \(P\) 取模。这一运算本身未被硬件加速。</p>
       <p>作为背景，<a href="https://www.corsix.org/content/galois-field-instructions-2021-cpus">2021 年的 CPU 上的伽罗瓦域运算指令</a>建议使用 crc32 指令进行取模。</p>
       <p>然而，也可以选择了另外一种方法，明确地使用如下等式对结果进行模运算。</p>
       <div class="stem">

@@ -92,14 +92,14 @@
           <div class="imageblock centered">
             <div class="content"><img src="/resource/cp0/cp0-seq.svg" alt="I ref x" style="width: 40rem;"></div>
           </div>
-          <p>如果 <code>e1</code> 只是常量 <code>void</code>，那就仅保留 <code>e2</code>; 如果 <code>e2</code> 同样是一个 <code>seq</code> 结果，则改变其结合性（右结合 \(\rightarrow\) 左结合），来将处理过的表达式“推到一边”。</p>
+          <p>如果 <code>e1</code> 只是常量 <code>void</code>，那就仅保留 <code>e2</code>; 如果 <code>e2</code> 同样是一个 <code>seq</code> 结果，则改变其结合性（右结合 \(\rightarrow\) 左结合），来将处理过的表达式”推到一边”。</p>
         </section>
         <section class="sect2">
           <h3 id="_条件表达式">条件表达式</h3>
           <div class="imageblock centered">
             <div class="content"><img src="/resource/cp0/cp0-Iif.svg" alt="I if e1 e2 e3" style="width: 62rem;"></div>
           </div>
-          <p>条件表达式的优化侧重点是看条件能否在 <strong>Test</strong> 语境下被求值成常量。如果可以的话，就只需要处理对应的分支，抛弃另一方向的死代码，然后保留条件的副作用，将两者放入 <code>seq</code> 结构，依次求值。如果不能在优化时获得条件的具体真假，那么仍然可以在 <code>e2</code> 和 <code>e3</code> 均为相同常量的情况下，将两个分支合二为一。否则，我们就只能递归地处理三个子表达式，然后组合三者为一个新的条件表达式。这里有一个细微的点就是，如果在处理整个条件表达式时，语境 \(\gamma\) 具有 <strong>App</strong>\((op, \gamma_1, l_\gamma)\) 这样的结构，说明我们在分析一个被调用的函数，因此我们会取出其中的调用处语境 \(\gamma_1\) 作为子表达式的语境，以期提供更多信息用于子表达式的优化。</p>
+          <p>条件表达式的优化侧重点是看条件能否在 <strong>Test</strong> 语境下被求值成常量。如果可以的话，就只需要处理对应的分支，抛弃另一方向的死代码，然后保留条件的副作用，将两者放入 <code>seq</code> 结构，依次求值。如果不能在优化时获得条件的具体真假，那么仍然可以在 <code>e2</code> 和 <code>e3</code> 均为相同常量的情况下，将两个分支合二为一。否则，我们就只能递归地处理三个子表达式，然后组合三者为一个新的条件表达式。这里有一个细微的点就是，如果在处理整个条件表达式时，语境 \(\gamma\) 具有 <strong>App</strong> \((op, \gamma_1, l_\gamma)\) 这样的结构，说明我们在分析一个被调用的函数，因此我们会取出其中的调用处语境 \(\gamma_1\) 作为子表达式的语境，以期提供更多信息用于子表达式的优化。</p>
         </section>
         <section class="sect2">
           <h3 id="_result_函数">result 函数</h3>
@@ -149,7 +149,7 @@
           <div class="imageblock centered">
             <div class="content"><img src="/resource/cp0/cp0-Iref.svg" alt="I ref x" style="width: 52rem;"></div>
           </div>
-          <p>访问变量也不会产生副作用。如果这个变量不是由 <code>letrec</code> 引入的或是函数的形式参数，就向存储中添加一个表示（使用环境 \(rho\) 重命名后的）变量已被引用的标志。否则，我们需要像处理调用表达式时一样，去 "visit" 对应的操作数 \(op\)，获取优化后的操作数表达式的结果，并对结果使用 "copy" 进行复制传播 (Copy propagation)。</p>
+          <p>访问变量也不会产生副作用。如果这个变量不是由 <code>letrec</code> 引入的或是函数的形式参数，就向存储中添加一个表示（使用环境 \(\rho\) 重命名后的）变量已被引用的标志。否则，我们需要像处理调用表达式时一样，去 "visit" 对应的操作数 \(op\)，获取优化后的操作数表达式的结果，并对结果使用 "copy" 进行复制传播 (Copy propagation)。</p>
         </section>
         <section class="sect2">
           <h3 id="_常量折叠">常量折叠</h3>

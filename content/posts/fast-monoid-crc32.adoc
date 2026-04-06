@@ -29,7 +29,7 @@ which makes `fold_bytes` more efficient.
 Regarding the abstract type `t`, a reasonable and dedicated representation
 includes two polynomials, each fitting into a 32-bit integer.
 These polynomials store the standard CRC32 value and
-an additional value that encodes the length \( n \) as \( x^n \bmod p \).
+an additional value that encodes the length stem:[n] as stem:[x^n \bmod p].
 
 [source, ocaml]
 ----

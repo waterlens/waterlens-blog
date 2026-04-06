@@ -41,8 +41,8 @@ DRFCaml 在之前的 modal types 进一步拓展了两个 axis: contention 和 p
 
 这两个 axis 有如下的作用关系：
 
-- portable -> contented
-- shared | uncontented -> nonportable
+- stem:[\mathit{portable} \to \mathit{contented}]
+- stem:[\mathit{shared} \mid \mathit{uncontented} \to \mathit{nonportable}]
 
 [discrete]
 === 内部可变性
@@ -66,13 +66,13 @@ http://arxiv.org/abs/2601.18793[Handling Scope Checks]
 
 I 记录栈至少要退回到哪里，才能确定已经没有 continuation 能把 muted 变量重新变为安全的。
 论文中定义成“从未被 effect handler capture 过的那段栈的最大长度”的标记。
-初始时 I = ⊤，每次 effect 被处理时，I 会更新成 min(len(E1), I)。
-所以 I 只会被 raised effects 变小，不会变大。
+初始时 stem:[I = \top]，每次 effect 被处理时，stem:[I] 会更新成 stem:[\min(\mathrm{len}(E_1), I)]。
+所以 stem:[I] 只会被 raised effects 变小，不会变大。
 
-I 什么时候触发 unmute：当执行退回到某个点，满足当前栈深度 len(E) \<= I，这时无法让 muted variables 恢复，因此：
+stem:[I] 什么时候触发 unmute：当执行退回到某个点，满足当前栈深度 stem:[\mathrm{len}(E) \leq I]，这时无法让 muted variables 恢复，因此：
 
-- 清空 M
-- 把 I 重置回 ⊤
+- 清空 stem:[M]
+- 把 stem:[I] 重置回 stem:[\top]
 
 这个动作主要挂在 dlet 和 tls 上：
 
@@ -258,14 +258,14 @@ xref:/zh/posts/cesk.html[CESK 抽象机]
 
 James Morris 的观察等价/外延等价概念：
 
-两个表达式 \(e_1\) 和 \(e_2\) 被称为“观察等价”，如果对于每一个上下文 \(C\)，我们有：\(C[e_1]\) 停止当且仅当 \(C[e_2]\) 停止。
+两个表达式 stem:[e_1] 和 stem:[e_2] 被称为”观察等价”，如果对于每一个上下文 stem:[C]，我们有：stem:[C[e_1\]] 停止当且仅当 stem:[C[e_2\]] 停止。
 
 本地转换和非局部转换的定义：
-如果功能 \(X\) 可以在语言 \(L\) 中作为本地转换实现以获得语言 \(L+X\)，那么对于任何在 \(L\) 中观察上等价的表达式 \(e_1\) 和 \(e_2\)，它们在 \(L+X\) 中也是观察上等价的。
+如果功能 stem:[X] 可以在语言 stem:[L] 中作为本地转换实现以获得语言 stem:[L+X]，那么对于任何在 stem:[L] 中观察上等价的表达式 stem:[e_1] 和 stem:[e_2]，它们在 stem:[L+X] 中也是观察上等价的。
 
-例子：考虑 \(e_1 = \lambda f. loop\) 和 \(e_2 = \lambda f. (f~0) loop\)，它们在 \(L\) （不含有异常）中观察上等价，
-因为对于任何上下文 \(C\)，我们有：\(C[e_1]\) 停止当且仅当 \(C[e_2]\) 停止。
-但在 \(L+halt\) 中，\(e_1\) 和 \(e_2\) 并不观察上等价，因为对于 \(C = (\cdot~halt)\) 它们并不同时停止。
+例子：考虑 stem:[e_1 = \lambda f. loop] 和 stem:[e_2 = \lambda f. (f~0)~loop]，它们在 stem:[L] （不含有异常）中观察上等价，
+因为对于任何上下文 stem:[C]，我们有：stem:[C[e_1\]] 停止当且仅当 stem:[C[e_2\]] 停止。
+但在 stem:[L+halt] 中，stem:[e_1] 和 stem:[e_2] 并不观察上等价，因为对于 stem:[C = (\cdot~halt)] 它们并不同时停止。
 
 [#date-20250703]
 == <<date-20250703, 2025 年 7 月 3 日>>
@@ -560,11 +560,11 @@ ICFP 24 的论文 https://dl.acm.org/doi/pdf/10.1145/3674637[Snapshottable Store
 
 核心算法来自于 Baker 的 Version Tree (1978)。我们需要一个树状的 store 结构来记录历史信息。快照也就是特定时刻的版本树，捕获快照只需要记录特定时刻的树根即可。
 
-对任意可变引用 \([r \mapsto x_1]\)，若要更新其新值为 \(x_2\)，我们创建一个新树根 `new_root = ref Mem`，将旧树根代表的节点对应内容更新为 `Diff(r, x_1, new_root)`，同时将 Store 的树根更新为 `new_root`。因为我们已经记录了引用之前指向的值，此时即可覆写引用指向新值 \(x_2\)。
+对任意可变引用 stem:[[r \mapsto x_1\]]，若要更新其新值为 stem:[x_2]，我们创建一个新树根 `new_root = ref Mem`，将旧树根代表的节点对应内容更新为 `Diff(r, x_1, new_root)`，同时将 Store 的树根更新为 `new_root`。因为我们已经记录了引用之前指向的值，此时即可覆写引用指向新值 stem:[x_2]。
 
 恢复快照可以分为两种情况，其中一种为快照即是当前状态，所以我们什么都不需要做。
 
-另一种情况下，快照的节点指向了一棵子树（包含快照后所做的修改历史），引用的新值即为快照树节点中记录的值。此外，我们需要遍历历史，将这一历史 **反向** 链接。也就是说，对于修改链 \([r \mapsto x_1][r \mapsto x_2][r \mapsto x_3]\)，若要恢复到 \(x_2\) 状态，我们会生成一个新的树，包含有两条链，分别为\([r \mapsto x_1][r \mapsto x_2]\) 和 \([r \mapsto x_3][r \mapsto x_2]\)。
+另一种情况下，快照的节点指向了一棵子树（包含快照后所做的修改历史），引用的新值即为快照树节点中记录的值。此外，我们需要遍历历史，将这一历史 **反向** 链接。也就是说，对于修改链 stem:[[r \mapsto x_1\][r \mapsto x_2\][r \mapsto x_3\]]，若要恢复到 stem:[x_2] 状态，我们会生成一个新的树，包含有两条链，分别为 stem:[[r \mapsto x_1\][r \mapsto x_2\]] 和 stem:[[r \mapsto x_3\][r \mapsto x_2\]]。
 
 以上内容大致概括了 Baker 的工作，而这篇 ICFP 24 的新贡献包括一个被称作 Record Elision 的重要优化。
 
@@ -727,24 +727,27 @@ let borrow x f =
 
 关键词：SIMD, SWAR, Parsing
 
-问：给定二进制串 \(00010010\)，如何获取两个 1 之间的位全置为 1 的二进制串？
+问：给定二进制串 stem:[00010010]，如何获取两个 1 之间的位全置为 1 的二进制串？
 
-答：使用 \(\oplus\) 操作计算前缀和：
+答：使用 stem:[\oplus] 操作计算前缀和：
 
-\[
-        00010010 
-\oplus 00100100
-\oplus 01001000
-\oplus 10010000
-\oplus 00100000
-\oplus 01000000
-\oplus 10000000 =
-        00001110
-\]
+[stem]
+++++
+\begin{aligned}
+      & 00010010 \\
+\oplus\; & 00100100 \\
+\oplus\; & 01001000 \\
+\oplus\; & 10010000 \\
+\oplus\; & 00100000 \\
+\oplus\; & 01000000 \\
+\oplus\; & 10000000 \\
+=\;     & 00001110
+\end{aligned}
+++++
 
 这一操作也等价于 Carry-less Multiplication 或 Xor Multiplication。
 
-问：给定二进制串 \(00110100\), 如何判断一或多个 1 的起点（终点）？
+问：给定二进制串 stem:[00110100], 如何判断一或多个 1 的起点（终点）？
 
 答：左（右）移取反后按位与即可。
 
