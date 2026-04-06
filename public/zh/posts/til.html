@@ -79,14 +79,14 @@
         <div class="ulist">
           <ul>
             <li>
-              <p>muted variables 集合 M 用来暂时容忍某些已经越界、但未来可能被 continuation 重新绑定的变量。</p>
+              <p>muted variables 集合 \(M\) 用来暂时容忍某些已经越界、但未来可能被 continuation 重新绑定的变量。</p>
             </li>
             <li>
-              <p>stack mark I 用来记录“哪些栈帧从未被 effect capture 过”，从而判断何时可以安全地把 muted variables 重新 unmute。</p>
+              <p>stack mark \(I\) 用来记录”哪些栈帧从未被 effect capture 过”，从而判断何时可以安全地把 muted variables 重新 unmute。</p>
             </li>
           </ul>
         </div>
-        <p>I 记录栈至少要退回到哪里，才能确定已经没有 continuation 能把 muted 变量重新变为安全的。论文中定义成“从未被 effect handler capture 过的那段栈的最大长度”的标记。初始时 \(I = \top\)，每次 effect 被处理时，\(I\) 会更新成 \(\min(\mathrm{len}(E_1), I)\)。所以 \(I\) 只会被 raised effects 变小，不会变大。</p>
+        <p>\(I\) 记录栈至少要退回到哪里，才能确定已经没有 continuation 能把 muted 变量重新变为安全的。论文中定义成“从未被 effect handler capture 过的那段栈的最大长度”的标记。初始时 \(I = \top\)，每次 effect 被处理时，\(I\) 会更新成 \(\min(\mathrm{len}(E_1), I)\)。所以 \(I\) 只会被 raised effects 变小，不会变大。</p>
         <p>\(I\) 什么时候触发 unmute：当执行退回到某个点，满足当前栈深度 \(\mathrm{len}(E) \leq I\)，这时无法让 muted variables 恢复，因此：</p>
         <div class="ulist">
           <ul>
@@ -331,7 +331,7 @@ end;</code></pre>
 M[(reset C[(shift f E)])] = M[(reset (let f = \x. (reset C[x]) in E))]</code></pre>
           </div>
         </div>
-        <p>这里的 <code>V</code> 是一个值，<code>E</code> 是一个表达式，, <code>C</code> 是一个没有横跨 <code>reset</code> 边界的 evaluation context, M 是一个可能横跨 <code>reset</code> 边界的 evaluation context.</p>
+        <p>这里的 <code>V</code> 是一个值，<code>E</code> 是一个表达式，<code>C</code> 是一个没有横跨 <code>reset</code> 边界的 evaluation context，<code>M</code> 是一个可能横跨 <code>reset</code> 边界的 evaluation context。</p>
         <p>与之对应的 CPS 转换如下：</p>
         <div class="listing">
           <div class="content">

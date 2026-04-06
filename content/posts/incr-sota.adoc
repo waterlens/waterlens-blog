@@ -175,12 +175,12 @@ The 2 papers both introduce approaches to incrementally construct the automata.
 1. For Meyer's work, to incrementally build the automata, the incremental version of the algorithm needs to maintain extra data structures.
 During the automata construction, AC algorithm keeps the longest proper suffix (lps) for every state in the trie.
 With the incremental requirement, to update the lps of existing states, there should be a reverse map from the lps to the states.
-The extra time complexity mainly originates from constructing this structure. It's O(K * the length of the longest needle * the total length of all needles).
-K is the size of the character set.
+The extra time complexity mainly originates from constructing this structure. It's stem:[O(K \cdot \text{the length of the longest needle} \cdot \text{the total length of all needles})].
+stem:[K] is the size of the character set.
 
 2. For the later work, the authors think maintaining the extra data structure is a main drawback as the time cost and space cost can be large.
-It's not clear what the authors exactly do. They can have a worst case time complexity of O(m + the length of the longest needle + the total length of all needles)
-where m is the number of states in the automata. The worst case happens in some cases like inserting a common prefix of all existing needles.
+It's not clear what the authors exactly do. They can have a worst case time complexity of stem:[O(m + \text{the length of the longest needle} + \text{the total length of all needles})]
+where stem:[m] is the number of states in the automata. The worst case happens in some cases like inserting a common prefix of all existing needles.
 
 == Incremental String Comparison
 
