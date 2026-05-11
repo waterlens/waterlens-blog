@@ -12,6 +12,17 @@
 
 使用倒序方式记录。
 
+[#date-20260508]
+== <<#date-20260508, 2026 年 5 月 8 日>>
+
+https://dl.acm.org/doi/epdf/10.1145/3729292[Lightweight and Locality-Aware Composition of Black-Box Subroutines]
+
+主要是做 ML 场景下的 operator fusion 的。
+方法是在 subroutine 签名上标注 produce 和 consume。可以在循环语法中标注。
+不要求理解算子本身的语义，这点很重要。
+和 FP 社区的 fusion 在方法论上似有相似。引用了 FP 社区的 fusion 文献，但表示此类方法可能不适用如
+overlapping inputs in stencil computations 这种场景。
+
 [#date-20260413]
 == <<date-20260413, 2026 年 4 月 13 日>>
 
