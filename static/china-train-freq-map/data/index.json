@@ -1,0 +1,289 @@
+{
+  "schema": "railmap-data-index",
+  "generated_at": "2026-05-21T15:49:31.912160+00:00",
+  "base": "railmap-base.json",
+  "review": "railmap-review.json",
+  "default_date": "2026-05-22",
+  "latest": "2026-06-21",
+  "dates": [
+    {
+      "date": "2026-06-21",
+      "frequency": "dates/2026-06-21/frequency.json",
+      "generated_at": "2026-05-21T15:49:31.732679+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-06-20",
+      "frequency": "dates/2026-06-20/frequency.json",
+      "generated_at": "2026-05-21T15:49:30.643262+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-06-19",
+      "frequency": "dates/2026-06-19/frequency.json",
+      "generated_at": "2026-05-21T15:49:29.561768+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-06-18",
+      "frequency": "dates/2026-06-18/frequency.json",
+      "generated_at": "2026-05-21T15:49:28.483259+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-06-17",
+      "frequency": "dates/2026-06-17/frequency.json",
+      "generated_at": "2026-05-21T15:49:27.406563+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-06-16",
+      "frequency": "dates/2026-06-16/frequency.json",
+      "generated_at": "2026-05-21T15:49:26.325635+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-06-15",
+      "frequency": "dates/2026-06-15/frequency.json",
+      "generated_at": "2026-05-21T15:49:25.219927+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-06-14",
+      "frequency": "dates/2026-06-14/frequency.json",
+      "generated_at": "2026-05-21T15:49:24.141856+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-06-13",
+      "frequency": "dates/2026-06-13/frequency.json",
+      "generated_at": "2026-05-21T15:49:23.055122+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-06-12",
+      "frequency": "dates/2026-06-12/frequency.json",
+      "generated_at": "2026-05-21T15:49:21.962125+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-06-11",
+      "frequency": "dates/2026-06-11/frequency.json",
+      "generated_at": "2026-05-21T15:49:20.887073+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-06-10",
+      "frequency": "dates/2026-06-10/frequency.json",
+      "generated_at": "2026-05-21T15:49:19.800115+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-06-09",
+      "frequency": "dates/2026-06-09/frequency.json",
+      "generated_at": "2026-05-21T15:49:18.737299+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-06-08",
+      "frequency": "dates/2026-06-08/frequency.json",
+      "generated_at": "2026-05-21T15:49:17.676183+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-06-07",
+      "frequency": "dates/2026-06-07/frequency.json",
+      "generated_at": "2026-05-21T15:49:16.604085+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-06-06",
+      "frequency": "dates/2026-06-06/frequency.json",
+      "generated_at": "2026-05-21T15:49:15.509944+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-06-05",
+      "frequency": "dates/2026-06-05/frequency.json",
+      "generated_at": "2026-05-21T15:49:14.424232+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-06-04",
+      "frequency": "dates/2026-06-04/frequency.json",
+      "generated_at": "2026-05-21T15:49:13.324112+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-06-03",
+      "frequency": "dates/2026-06-03/frequency.json",
+      "generated_at": "2026-05-21T15:49:12.224606+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-06-02",
+      "frequency": "dates/2026-06-02/frequency.json",
+      "generated_at": "2026-05-21T15:49:11.101723+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-06-01",
+      "frequency": "dates/2026-06-01/frequency.json",
+      "generated_at": "2026-05-21T15:49:09.987536+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-05-31",
+      "frequency": "dates/2026-05-31/frequency.json",
+      "generated_at": "2026-05-21T15:49:08.857629+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-05-30",
+      "frequency": "dates/2026-05-30/frequency.json",
+      "generated_at": "2026-05-21T15:49:07.765608+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-05-29",
+      "frequency": "dates/2026-05-29/frequency.json",
+      "generated_at": "2026-05-21T15:49:06.657140+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-05-28",
+      "frequency": "dates/2026-05-28/frequency.json",
+      "generated_at": "2026-05-21T15:49:05.554966+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-05-27",
+      "frequency": "dates/2026-05-27/frequency.json",
+      "generated_at": "2026-05-21T15:49:04.474285+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-05-26",
+      "frequency": "dates/2026-05-26/frequency.json",
+      "generated_at": "2026-05-21T15:49:03.396356+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-05-25",
+      "frequency": "dates/2026-05-25/frequency.json",
+      "generated_at": "2026-05-21T15:49:02.305153+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-05-24",
+      "frequency": "dates/2026-05-24/frequency.json",
+      "generated_at": "2026-05-21T15:49:01.208251+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-05-23",
+      "frequency": "dates/2026-05-23/frequency.json",
+      "generated_at": "2026-05-21T15:18:28.218411+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    },
+    {
+      "date": "2026-05-22",
+      "frequency": "dates/2026-05-22/frequency.json",
+      "generated_at": "2026-05-21T15:18:26.964671+00:00",
+      "source_database_date": "2026-05-22",
+      "osm_version": "2026-05-19T20:21:30Z",
+      "feature_count": 6330,
+      "needs_review_count": 614
+    }
+  ]
+}

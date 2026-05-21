@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>铁路车次频次地图</title>
+    <script type="module" crossorigin src="./assets/index-z5COEBNK.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-C32OeG0h.css">
+  </head>
+  <body>
+    <div id="app">
+      <div id="map"></div>
+      <section class="panel" id="filterPanel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <h1 id="appTitle"></h1>
+            <div class="meta" id="statDate">--</div>
+          </div>
+          <label class="language-control">
+            <span id="languageLabel"></span>
+            <select id="languageSelect"></select>
+          </label>
+        </div>
+        <div class="controls">
+          <label>
+            <span id="searchLabel"></span>
+            <input id="searchInput" type="search">
+          </label>
+          <label>
+            <span id="dateLabel"></span>
+            <input id="dateSelect" type="date">
+          </label>
+          <div class="filter-field">
+            <span id="lineLabel"></span>
+            <div class="multi-select" id="lineFilter">
+              <div class="multi-select-shell">
+                <button id="lineFilterButton" class="multi-select-button" type="button" aria-haspopup="true" aria-expanded="false">
+                  <span id="lineFilterSummary"></span>
+                  <span class="multi-select-arrow" aria-hidden="true">v</span>
+                </button>
+                <button id="lineFilterClear" class="multi-select-clear" type="button"></button>
+              </div>
+              <div id="lineFilterMenu" class="multi-select-menu" hidden>
+                <input id="lineFilterSearch" type="search">
+                <div id="lineFilterList" class="multi-select-list"></div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <label>
+              <span id="minPairsLabel"></span>
+              <input id="minPairs" type="number" min="0" step="0.5" value="0.5" aria-describedby="notice">
+            </label>
+            <label>
+              <span id="maxPairsLabel"></span>
+              <input id="maxPairs" type="number" min="0" step="0.5">
+            </label>
+          </div>
+          <div class="filter-field">
+            <span id="typeLabel"></span>
+            <div class="multi-select" id="typeFilter">
+              <div class="multi-select-shell">
+                <button id="typeFilterButton" class="multi-select-button" type="button" aria-haspopup="true" aria-expanded="false">
+                  <span id="typeFilterSummary"></span>
+                  <span class="multi-select-arrow" aria-hidden="true">v</span>
+                </button>
+                <button id="typeFilterClear" class="multi-select-clear" type="button"></button>
+              </div>
+              <div id="typeFilterMenu" class="multi-select-menu" hidden>
+                <input id="typeFilterSearch" type="search">
+                <div id="typeFilterList" class="multi-select-list"></div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <label class="range-control">
+              <span><span id="basemapGrayLabel"></span> <span id="basemapGrayValue">30%</span></span>
+              <input id="basemapGray" type="range" min="0" max="100" step="5" value="30">
+            </label>
+            <label class="range-control">
+              <span><span id="basemapOpacityLabel"></span> <span id="basemapOpacityValue">60%</span></span>
+              <input id="basemapOpacity" type="range" min="20" max="100" step="5" value="60">
+            </label>
+          </div>
+          <label id="qaControl" class="checkbox-label" hidden>
+            <input id="qaToggle" type="checkbox">
+            <span id="qaLabel"></span>
+          </label>
+          <div class="action-row">
+            <button id="fitResults" class="fit-button" type="button"></button>
+            <button id="screenshotMap" class="screenshot-button" type="button"></button>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat"><strong id="visibleCount">0 / 0</strong><span id="visibleCountLabel"></span></div>
+          <div class="stat"><strong id="reviewCount">0</strong><span id="reviewCountLabel"></span></div>
+        </div>
+        <div class="notice" id="notice"></div>
+      </section>
+      <aside class="legend" id="legendPanel">
+        <h2 id="legendTitle"></h2>
+        <div class="legend-ramp" aria-hidden="true"></div>
+        <div class="legend-scale" id="legendScale"></div>
+        <label class="legend-control">
+          <span><span id="legendMidLabel"></span> <span id="legendMidValue"></span></span>
+          <input id="legendMid" type="range" min="1" max="159" step="1" value="80">
+        </label>
+        <div class="notice" id="legendMeta"></div>
+      </aside>
+    </div>
+  </body>
+</html>
