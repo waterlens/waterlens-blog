@@ -11,6 +11,7 @@
 == 所有项目
 
 [.centered]
+* xref:/kml-viewer/index.html[KML 查看器]
 * xref:/china-train-freq-map/index.html[铁路车次频次地图]
 * xref:/tomasulo/index.html[Tomasulo 算法模拟器]
 * xref:/sensor-size/index.html[相机传感器尺寸比较器]

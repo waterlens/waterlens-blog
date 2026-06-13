@@ -11,6 +11,7 @@
 == All Projects
 
 [.centered]
+* xref:/kml-viewer/index.html[KML Viewer]
 * xref:/china-train-freq-map/index.html[China Train Frequency Map]
 * xref:/tomasulo/index.html[Tomasulo's Algorithm Simulator]
 * xref:/sensor-size/index.html[Camera Sensor Size Comparator]

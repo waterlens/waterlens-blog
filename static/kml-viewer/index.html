@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>KML Viewer</title>
+    <script type="module" crossorigin src="./assets/index-DobFDEWO.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-D2x6kpnt.css">
+  </head>
+  <body>
+    <div id="app">
+      <div id="map" class="map"></div>
+      <section class="panel" id="controlPanel" aria-labelledby="appTitle">
+        <div class="panel-titlebar">
+          <button id="panelToggle" class="panel-toggle" type="button" aria-expanded="true"></button>
+          <div class="panel-title">
+            <h1 id="appTitle"></h1>
+            <div class="meta" id="fileMeta">--</div>
+          </div>
+          <div class="language-control" id="languageMenu">
+            <span id="languageLabel"></span>
+            <button id="languageButton" class="language-button" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span id="languageCurrent"></span>
+              <span aria-hidden="true">v</span>
+            </button>
+            <div id="languageOptions" class="language-options" role="listbox" hidden></div>
+          </div>
+        </div>
+
+        <div id="panelBody" class="panel-body">
+          <nav class="tabs" aria-label="Controls">
+            <button id="tabFile" class="tab-button" type="button" data-tab="file"></button>
+            <button id="tabLayers" class="tab-button" type="button" data-tab="layers"></button>
+            <button id="tabStyle" class="tab-button" type="button" data-tab="style"></button>
+            <button id="tabAbout" class="tab-button" type="button" data-tab="about"></button>
+          </nav>
+
+          <div id="panelFile" class="tab-panel" data-panel="file">
+            <div id="dropZone" class="drop-zone" tabindex="0">
+              <input id="fileInput" type="file" accept=".kml,.kmz,application/vnd.google-earth.kml+xml,application/vnd.google-earth.kmz">
+              <div class="drop-title" id="dropTitle"></div>
+              <div class="drop-meta" id="dropMeta"></div>
+              <div class="single-action-row">
+                <button id="chooseFile" class="primary-button" type="button"></button>
+              </div>
+              <div id="loadProgress" class="load-progress" hidden>
+                <div class="progress-track">
+                  <div id="progressBar" class="progress-bar"></div>
+                </div>
+                <div id="progressText" class="progress-text"></div>
+              </div>
+            </div>
+            <div class="stats-grid">
+              <div class="stat"><strong id="visibleCount">0 / 0</strong><span id="visibleCountLabel"></span></div>
+              <div class="stat"><strong id="colorCount">0</strong><span id="colorCountLabel"></span></div>
+            </div>
+            <div class="action-row">
+              <button id="fitVisible" type="button"></button>
+              <button id="screenshotMap" class="screenshot-button" type="button"></button>
+              <button id="clearKml" type="button"></button>
+            </div>
+            <div class="notice" id="notice"></div>
+          </div>
+
+          <div id="panelLayers" class="tab-panel" data-panel="layers" hidden>
+            <fieldset class="segmented-field">
+              <legend id="basemapLabel"></legend>
+              <div class="segmented-control">
+                <label>
+                  <input id="basemapStandard" type="radio" name="basemap" value="standard" checked>
+                  <span id="basemapStandardLabel"></span>
+                </label>
+                <label>
+                  <input id="basemapSatellite" type="radio" name="basemap" value="satellite">
+                  <span id="basemapSatelliteLabel"></span>
+                </label>
+              </div>
+            </fieldset>
+            <label>
+              <span id="searchLabel"></span>
+              <input id="searchInput" type="search">
+            </label>
+            <div class="filter-field tree-search-field">
+              <span id="entityLabel"></span>
+              <div class="tree-toolbar">
+                <input id="entityTreeSearch" type="text">
+                <button id="entityTreeClear" class="search-clear-button" type="button"></button>
+              </div>
+            </div>
+            <div class="action-row tree-actions">
+              <button id="treeSelectAll" type="button"></button>
+              <button id="treeInvert" type="button"></button>
+              <button id="treeClearSelection" type="button"></button>
+            </div>
+            <div id="entityTree" class="entity-tree"></div>
+          </div>
+
+          <div id="panelStyle" class="tab-panel" data-panel="style" hidden>
+            <div class="row">
+              <label class="range-control">
+                <span><span id="grayLabel"></span> <span id="grayValue">20%</span></span>
+                <input id="grayInput" type="range" min="0" max="100" step="5" value="20">
+              </label>
+              <label class="range-control">
+                <span><span id="opacityLabel"></span> <span id="opacityValue">50%</span></span>
+                <input id="opacityInput" type="range" min="20" max="100" step="5" value="50">
+              </label>
+            </div>
+            <div class="section-heading">
+              <h2 id="paletteTitle"></h2>
+              <button id="resetColors" type="button"></button>
+            </div>
+            <div id="colorList" class="color-list"></div>
+            <div id="colorEmpty" class="empty-state"></div>
+          </div>
+
+          <div id="panelAbout" class="tab-panel about-panel" data-panel="about" hidden>
+            <section class="about-block">
+              <h2 id="aboutTitle"></h2>
+              <p class="about-credit">
+                <span id="aboutCreditPrefix"></span>
+                <a id="aboutCreator" target="_blank" rel="noopener noreferrer"></a>
+              </p>
+            </section>
+            <section class="about-block about-disclaimer-block">
+              <h3 id="aboutDisclaimerTitle"></h3>
+              <p id="aboutDisclaimer"></p>
+            </section>
+            <section class="about-block">
+              <h3 id="aboutBasemapTitle"></h3>
+              <dl class="about-attribution-list">
+                <div>
+                  <dt id="aboutStandardLabel"></dt>
+                  <dd id="aboutStandardAttribution"></dd>
+                </div>
+                <div>
+                  <dt id="aboutSatelliteLabel"></dt>
+                  <dd id="aboutSatelliteAttribution"></dd>
+                </div>
+              </dl>
+            </section>
+          </div>
+        </div>
+      </section>
+      <div id="featurePopup" class="feature-popup" hidden>
+        <button id="popupClose" class="popup-close" type="button" aria-label="Close">x</button>
+        <div class="detail-kicker" id="detailType"></div>
+        <h2 id="detailName"></h2>
+        <div class="detail-path" id="detailPath"></div>
+        <div id="detailDescription" class="detail-description"></div>
+      </div>
+    </div>
+  </body>
+</html>
