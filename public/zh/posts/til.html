@@ -26,6 +26,164 @@
       <p>不定时更新，记录我在浏览网页、阅读论文、逛社媒时看到的细碎知识和技巧。</p>
       <p>使用倒序方式记录。</p>
       <section class="sect1">
+        <h2 id="date-20260628"><a href="#date-20260628">2026 年 6 月 28 日</a></h2>
+        <p><a href="https://doi.org/10.1145/3808336">Syntactic Implicit Parameters with Static Overloading</a></p>
+        <p>主要在 Koka 中作为一种比 Haskell typeclass 和 Scala implicits 更轻量级的 ad hoc 多态。</p>
+        <p>以下两种机制的组合：</p>
+        <div class="olist arabic">
+          <ol class="arabic">
+            <li>
+              <p>语法式隐式参数：函数声明中的 <code>?x</code> 并不是通过复杂实例搜索解决，而是在调用点直接把同名变量 <code>x</code> 当作实参传入。也就是说，它更像一种静态声明的、词法作用域中的“按名字补参”。</p>
+            </li>
+            <li>
+              <p>静态重载：未限定名称会根据局部类型上下文解析成某个完全限定名。例如 <code>show(1)</code> 可解析为 <code>int/show(1)</code>，<code>show([1])</code> 则可先解析为 <code>list/show</code>，再递归地为其隐式参数 <code>show</code> 解析出 <code>int/show</code>。（这是另一篇论文）</p>
+            </li>
+          </ol>
+        </div>
+        <h3 id="_不可判定性" class="discrete">不可判定性</h3>
+        <p>组合后会导致不可判定。以 <code>foo : ?foo:(int → int) → int → int</code> 为例，在检查 <code>foo(1)</code> 时，类型检查器想解析 <code>foo</code>，发现它需要隐式参数 <code>?foo : int → int</code>，于是又在当前作用域解析名字 <code>foo</code>。结果得到同一个候选，又需要 <code>?foo</code>，递归不终止。</p>
+        <h3 id="_图灵机编码" class="discrete">图灵机编码</h3>
+        <p>一个可以编码图灵机的例子的大致结构如下：</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlightjs highlight"><code class="language-koka hljs" data-noescape="true" data-lang="koka">type sym0
+type sym1
+type cons&lt;a,b&gt;
+type inf
+
+type state-a
+type state-b
+type state-c
+
+type config&lt;s,l,r&gt;
+val start : config&lt;state-a,inf,inf&gt;</code></pre>
+          </div>
+        </div>
+        <p>然后每个图灵机转移规则都写成一个重载的 <code>transition</code>：</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlightjs highlight"><code class="language-koka hljs" data-noescape="true" data-lang="koka">fun ab/transition(
+  st : config&lt;state-a, cons&lt;x,l&gt;, cons&lt;sym0,r&gt;&gt;,
+  ?transition : config&lt;state-b, l, cons&lt;x, cons&lt;sym1,r&gt;&gt;&gt; -&gt; ()
+) : () = ()</code></pre>
+          </div>
+        </div>
+        <p>含义为如果当前配置是 state A，读到 0，就写 1、向右移动、进入 state B。注意它还有一个隐式参数 <code>?transition</code>，类型正好是“下一步配置”的 <code>transition</code>。</p>
+        <p>终止状态则没有继续的隐式参数：</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlightjs highlight"><code class="language-koka hljs" data-noescape="true" data-lang="koka">fun cend/transition(
+  st : config&lt;state-c,l,cons&lt;sym1,r&gt;&gt;
+) : () = ()</code></pre>
+          </div>
+        </div>
+        <p>现在检查 <code>transition(start)</code>，类型检查器会：</p>
+        <div class="olist arabic">
+          <ol class="arabic">
+            <li>
+              <p>根据 <code>start</code> 的类型选择匹配的 <code>*/transition</code>。</p>
+            </li>
+            <li>
+              <p>这个 <code>transition</code> 需要隐式参数 <code>?transition</code>。</p>
+            </li>
+            <li>
+              <p>为了补这个参数，类型检查器再次解析名字 <code>transition</code>，但期望类型已经变成“下一步配置”。</p>
+            </li>
+            <li>
+              <p>重复这个过程。</p>
+            </li>
+          </ol>
+        </div>
+        <p>于是，类型检查过程就在模拟图灵机执行。如果机器停机，解析最终落到无隐式参数的 halting transition；如果机器不停机，解析也不停机。因为图灵机停机问题不可判定，所以这个类型系统的一般类型检查也不可判定。</p>
+        <h3 id="_恢复可判定性" class="discrete">恢复可判定性</h3>
+        <p>论文的做法是给解析搜索加一个必然下降的度量，保证搜索树有限。最直接的版本是限制变量解析深度 <code>K</code>。</p>
+        <p>原本变量解析可以无限递归，有限版本给解析 judgment 加一个计数器 <code>Γ ⊩n z : τ ⇝ e</code>，表示最多还能展开 <code>n</code> 层变量解析。</p>
+        <p>规则会变为这样：</p>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p><code>n = 0</code> 时，不再继续搜索，而是产生一个特殊的“无限/截断”标记 <code>⊥</code>。</p>
+            </li>
+            <li>
+              <p><code>n &gt; 0</code> 时，解析直接名字或 qualified 名字，每解析一层就把 <code>n</code> 减一。</p>
+            </li>
+            <li>
+              <p>最终接受变量解析时，要求做到：</p>
+              <div class="ulist">
+                <ul>
+                  <li>
+                    <p>只有唯一一个 elaboration；</p>
+                  </li>
+                  <li>
+                    <p>elaboration 里面不能包含 <code>⊥</code>。</p>
+                  </li>
+                </ul>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <p>所以如果某个候选只有靠无限递归才能成立，它会被标记为 <code>⊥</code> 并导致拒绝，而不是让类型检查器跑死。</p>
+        <p>论文强调必须在 <code>n = 0</code> 时保留 <code>⊥</code> 这个结果。因为无限分支仍然可能和有限分支竞争，导致歧义。若直接丢弃无限分支，某个有限结果可能错误地变成唯一结果，从而接受一个原系统本应拒绝的程序。<code>⊥</code> 的作用就是把“这里还有潜在无限候选”保留下来，保证有限规则相对原规则是 sound 的。</p>
+        <p>这会导致这个系统是可判定但不完全的。有些原规则下合法、但需要超过 <code>K</code> 层解析的程序会被拒绝。</p>
+        <h3 id="_更实用的恢复方式" class="discrete">更实用的恢复方式</h3>
+        <p>固定深度 <code>K</code> 太粗。Koka 实现采用历史记录，而不是单纯计数。思想是记录解析历史 <code>z : τ</code>。如果再次解析同一个名字 <code>z</code>，就检查新的类型 <code>τ</code> 是否比之前小。</p>
+        <p>比如 <code>show([[1]])</code> 会递归解析 <code>list/show</code>，但类型从 <code>list&lt;list&lt;int&gt;&gt;</code> 变成 <code>list&lt;int&gt;</code>，再变成 <code>int</code>。类型结构在变小，所以允许。</p>
+        <p>Koka 同名解析允许若干次不下降，实现里使用最近 4 次历史作为窗口，超过之后必须出现类型规模下降。</p>
+        <h3 id="_类型推导实现思路" class="discrete">类型推导实现思路</h3>
+        <p>首先是实例化类型方案 <code>inst(Γ, n, σ, τ) → (Q, e)</code>。</p>
+        <p>它做三件事：</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlightjs highlight"><code class="language-text hljs" data-noescape="true" data-lang="text">inst(τ1, τ2)
+  = unify(τ1, τ2)
+
+inst(∀α.σ, τ)
+  = inst(σ[α := fresh()], τ)
+
+inst(?x:τ1 -&gt; ρ, τ2)
+  = 先 inst(ρ, τ2) 得到 Q1
+  = 再 resolve(x, Q1[τ1]) 解析隐式参数 x
+  = 合并两个 prefix</code></pre>
+          </div>
+        </div>
+        <p>核心就是第三条，遇到隐式参数 <code>?x</code>，递归调用 <code>resolve</code> 去解析名字 <code>x</code>。</p>
+        <p>变量解析函数是 <code>resolve(Γ, n, z, τ) → (Q, e)</code>。</p>
+        <p>大概是：</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlightjs highlight"><code class="language-text hljs" data-noescape="true" data-lang="text">resolve(Γ, 0, z, τ)
+  = infinite()
+
+resolve(Γ, n, z, τ)
+  = 如果 z 直接在 Γ 中，实例化它
+
+resolve(Γ, n, z, τ)
+  = 否则枚举所有 m/z 形式的 qualified 候选，逐个实例化</code></pre>
+          </div>
+        </div>
+        <p>在第三步中，可能有多个 qualified 候选，所以需要搜索。论文用 effect handler 表达搜索，概念上等价于 <code>explore(Γ, z, τ) → [(Q, e)]</code>，也就是返回“所有成功结果”。</p>
+        <p>然后变量检查只接受唯一结果：</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlightjs highlight"><code class="language-text hljs" data-noescape="true" data-lang="text">check(Γ, z, τ) =
+  match explore(Γ, z, τ)
+    [(Q,e)] 且 e 不含 ⊥ -&gt; 成功
+    []                   -&gt; 未解析
+    多个结果              -&gt; 歧义
+    含 ⊥                 -&gt; 无限/不安全，拒绝</code></pre>
+          </div>
+        </div>
+        <p>工程上不真的保存完整列表，而是用三态结果：</p>
+        <div class="listing">
+          <div class="content">
+            <pre class="highlightjs highlight"><code class="language-text hljs" data-noescape="true" data-lang="text">None        // 没有候选
+One(x)      // 唯一候选
+Amb         // 多个候选，或发现无限分支</code></pre>
+          </div>
+        </div>
+        <p>这样一旦发现第二个候选，或者发现 <code>infinite()</code>，就可以立刻返回 <code>Amb</code>，不用继续搜索完整空间。对性能很重要。</p>
+      </section>
+      <section class="sect1">
         <h2 id="date-20260508"><a href="#date-20260508">2026 年 5 月 8 日</a></h2>
         <p><a href="https://dl.acm.org/doi/epdf/10.1145/3729292">Lightweight and Locality-Aware Composition of Black-Box Subroutines</a></p>
         <p>主要是做 ML 场景下的 operator fusion 的。方法是在 subroutine 签名上标注 produce 和 consume。可以在循环语法中标注。不要求理解算子本身的语义，这点很重要。和 FP 社区的 fusion 在方法论上似有相似。引用了 FP 社区的 fusion 文献，但表示此类方法可能不适用如 overlapping inputs in stencil computations 这种场景。</p>
