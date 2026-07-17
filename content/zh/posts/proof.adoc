@@ -1,0 +1,29 @@
+= xref:.[证明]
+:showtitle:
+:lang: zh-hans
+:stem: latexmath
+
+R = {r_0, r_1, r_2, ...}
+
+e = n | e_1 + e_2
+
+instruction set:
+
+LOAD r, imm
+ADD  r_1, r_2, r_3
+
+operational semantics of instructions:
+
+LOAD r_i, imm: <R> -> <R[i |-> imm]>
+ADD  r_1, r_2, r_3: <R> -> <R[r_1 |-> r_2 + r_3]>
+
+compilation algorithm:
+
+with available registers starting from r_k,
+C(e, k) returns a seq of insts and next available register index,
+i.e. C(e, k) = (insts, k')
+
+C(n, k) = ([LOAD r_k, n], k + 1)
+C(e_1 + e_2, k) = C(e_1, k) @ C(e_2, k + 1) + [ADD r_k, r_k, r_k+1] 
+
+
