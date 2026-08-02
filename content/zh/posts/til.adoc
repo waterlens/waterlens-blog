@@ -12,6 +12,98 @@
 
 使用倒序方式记录。
 
+[#date-20260802]
+== <<#date-20260802, 2026 年 8 月 2 日>>
+
+https://dl.acm.org/doi/10.1145/3798227[Class-Dictionary Specialization with Rank-2 Polymorphic Functions]
+
+动机：GHC 的基于启发式算法的 inliner 对于含有递归的 rank-2 polymorphic 函数的 inlining 或者 specialization 无能为力。这是由于担心 inlining 过程造成不终止。而 rank-2 polymorphic 的函数其参数或者返回值本身带有 ad-hoc polymorphic 的 forall 量化的场景非常常见，因此无法优化会导致性能损失。
+
+本文提出了一种对递归 rank-2 polymorphic 函数进行 dictionary specialization 的方法，基于部分求值和记忆化。
+提升了在 SYB，SYB3 和 Lens 库上的性能。
+
+SYB 库的介绍：使用 rank-2 polymorphic 的组合子编写通用的数据结构遍历函数。
+
+=== GHC 的困难
+. 为了 specialize rank-2 函数里的 ad-hoc polymorphic 的参数，编译器需要暴露给 x 它的类型和词典参数，如内联 f 到调用点。
+. 但编译器会由于担心内联 f 不终止而拒绝内联。
+
+=== SYB 的术语介绍
+==== Aliases
+
+`mkT`: 将只针对特定类型生效的函数 `lift` 到可应用到任何类型的函数
+
+[,haskell]
+----
+mkT :: (Typeable α, Typeable β) ⇒ (β → β) → α → α
+mkT f = case cast f of
+  Nothing → id   -- 类型不匹配 → 什么都不做
+  Just g  → g    -- 类型匹配 → 执行 f
+----
+
+==== 指导如何将变换应用到类型的子项的 Data Type Class
+
+[,haskell]
+----
+class Typeable α ⇒ Data α where
+  gmapT :: (∀β. Data β ⇒ β → β) → α → α   -- 把变换应用到直接子项
+----
+
+每个类型的实例告知它的子项结构。比如 `Data [α]` 的实例：`gmapT f (x:xs) = f x : f xs`。注意 gmapT 是 rank-2 多态——参数 f 必须能应用到不同类型的子项上（`x pass:[::] α` 和 `xs pass:[::] [α]` 类型不同）。gmapT 本身不递归，只处理直接子项。
+
+....
+        Node            gmapT f 之后：
+     /    \              Node
+   Leaf 1  Leaf 2       /    \
+                     f(Leaf 1)  f(Leaf 2)
+....
+
+
+==== 指导如何遍历一棵树 Traversal Schemes
+
+`everywhere` 将单节点变换变成整树变换。
+
+[,haskell]
+----
+everywhere :: (∀β. Data β ⇒ β → β) → (∀α. Data α ⇒ α → α)
+everywhere f = let go = f ◦ gmapT go in go -- 自顶向下：先变换自己，再递归进子项
+----
+
+....
+      Node            everywhere f 之后：
+     /    \                f(Node)
+   Leaf 1  Leaf 2         /    \
+                      f(Leaf 1)  f(Leaf 2)
+                       /            \
+                     f(1)           f(2)
+....
+
+=== 贡献
+
+. 强制 unfold rank-2 polymorphic 函数，但只针对部分静态（partially static）的应用：参数有部分编译期已知信息（如 λ 抽象、常量）。
+. 传递分析（transitive analysis）：目标不限于 rank-2 函数本身，还包括最终导致 rank-2 应用的 rank-1 函数（如 go、f1）。
+. Memoization 处理递归：把简化结果放进 let 绑定并 let-float 到最广作用域（等效静态参数变换 SAT），后续遇到相同表达式直接用 memoization 替换。
+
+==== 如何找到优化目标
+
+*Rank-2-Fn*
+• 普通 rank-2 函数
+• 需要部分静态的参数：多态参数
+
+
+*Rank-2-Class-Op*
+• 类型类方法
+• 需要部分静态的参数：字典参数 + 多态参数
+
+*Indirect*
+• 任何函数
+• 需要部分静态的参数：暴露隐藏目标的参数
+
+==== 记忆化
+
+利用函数 + 类型参数 + 字典参数 + 多态参数为键记忆特化版本。
+
+
 [#date-20260628]
 == <<#date-20260628, 2026 年 6 月 28 日>>
 
@@ -213,7 +305,7 @@ https://dl.acm.org/doi/10.1145/3632921[Explicit Effects and Effect Constraints i
 Motivation example 是一个并行程序的例子，其中两个 thread 都需要进行分配，
 需要一种机制静态保证不在同一个 region 中进行分配。
 
-实际贡献:
+实际贡献：
 
 - 渐进标注。程序员可以选择性地标注程序的部分区域和效果，其余部分仍由推断完成。
   不好的方面在于并没有写出类型推导（约束求解）算法是怎样的。
@@ -243,7 +335,7 @@ DRFCaml 在之前的 modal types 进一步拓展了两个 axis: contention 和 p
 [discrete]
 === portability
 
-分为:
+分为：
 
 - portable: 可以在线程间被传递
 - nonportable: 不能被传递到其他线程
@@ -270,8 +362,8 @@ Rw Lock 允许在线程间传递对 ghost key 的 unique (可读或写) 或者 s
 
 http://arxiv.org/abs/2601.18793[Handling Scope Checks]
 
-多阶段编程里 Scope Extrusion （**生成的**代码里的变量逃离作用域）问题的现有方案，静态的表达能力太弱类型系统复杂；
-动态检查中的 lazy check 太晚，eager check 误报多。这篇在有 effect handler 出现的背景下提出了一个 C4C 方案:
+多阶段编程里 Scope Extrusion（**生成的**代码里的变量逃离作用域）问题的现有方案，静态的表达能力太弱类型系统复杂；
+动态检查中的 lazy check 太晚，eager check 误报多。这篇在有 effect handler 出现的背景下提出了一个 C4C 方案：
 
 - muted variables 集合 stem:[M] 用来暂时容忍某些已经越界、但未来可能被 continuation 重新绑定的变量。
 - stack mark stem:[I] 用来记录”哪些栈帧从未被 effect capture 过”，从而判断何时可以安全地把 muted variables 重新 unmute。
@@ -321,6 +413,7 @@ Logical Relations 的核心思想是 **基于类型的结构归纳** 来定义�
 ++++
 \mathcal{V}\llbracket \text{Bool} \rrbracket = \{ \text{true}, \text{false} \}
 ++++
++
 （这很简单，布尔值就是这两个常量）
 
 * **函数类型 (Function Types) **
@@ -415,7 +508,7 @@ end;
 ----
 
 [#date-20251123]
-== <<data-20251123, 2025 年 11 月 23 日>>
+== <<date-20251123, 2025 年 11 月 23 日>>
 
 关于 LuaJIT 编译器中代码生成技巧的临时总结：
 LuaJIT 里使用单个 ExpDesc 去表示在代码生成过程中出现的常量、已被 GC 管理的装箱值、pending 状态的表达式描述、已经生成的指令、和跳转目标等信息。

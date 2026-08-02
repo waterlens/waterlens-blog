@@ -575,9 +575,14 @@ impl Renderer {
             .unwrap_or_default();
 
         self.line(&format!(
+            // The blank line before the loader `<script>` is the newline that
+            // follows the language-scripts interpolation in the `hljs`
+            // adapter's docinfo template; each language script already ends in
+            // one of its own, so the pair renders as a blank line whether or
+            // not any languages are declared.
             "<link rel=\"stylesheet\" href=\"{base_url}/styles/{theme}.min.css\">\n\
              <script src=\"{base_url}/highlight.min.js\"></script>\n\
-             {languages}\
+             {languages}\n\
              <script>\n\
              hljs.configure({{ignoreUnescapedHTML: true}});\n\
              hljs.highlightAll();\n\

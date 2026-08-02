@@ -247,15 +247,35 @@ mod verbatim {
         );
     }
 
+    // The footer docinfo is asserted as one exact block: its interior blank
+    // line comes from the adapter's template and is easy to lose, and a
+    // `contains`-only check cannot see it.
     #[test]
     fn highlight_js_links_its_assets_after_the_footer() {
+        let cdn = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1";
         let html = super::page(
             "= Doc\n:source-highlighter: highlightjs\n:highlightjs-languages: ocaml, scheme\n\nBody.",
         );
-        assert!(html.contains("highlight.js/11.11.1/styles/atom-one-light.min.css"));
-        assert!(html.contains("highlight.js/11.11.1/languages/ocaml.min.js"));
-        assert!(html.contains("highlight.js/11.11.1/languages/scheme.min.js"));
-        assert!(html.contains("hljs.highlightAll();"));
+
+        assert!(html.contains(&format!(
+            "<link rel=\"stylesheet\" href=\"{cdn}/styles/atom-one-light.min.css\">\n\
+             <script src=\"{cdn}/highlight.min.js\"></script>\n\
+             <script src=\"{cdn}/languages/ocaml.min.js\"></script>\n\
+             <script src=\"{cdn}/languages/scheme.min.js\"></script>\n\
+             \n\
+             <script>\n\
+             hljs.configure({{ignoreUnescapedHTML: true}});\n\
+             hljs.highlightAll();\n\
+             </script>"
+        )));
+    }
+
+    // A document with no `highlightjs-languages` still gets the blank line,
+    // because the template's newline stands alone there.
+    #[test]
+    fn highlight_js_footer_keeps_its_blank_line_without_languages() {
+        let html = super::page("= Doc\n:source-highlighter: highlightjs\n\nBody.");
+        assert!(html.contains("/highlight.min.js\"></script>\n\n<script>\n"));
     }
 
     #[test]

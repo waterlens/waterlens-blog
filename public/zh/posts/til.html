@@ -12,7 +12,7 @@
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="generator" content="Asciidoctor 2.0.26 with Waterlens HTML Backend 0.1.0">
+  <meta name="generator" content="Waterlens HTML Backend 0.1.0">
   <title>今天我学到了: 记录零散知识的页面</title>
 </head>
 <body>
@@ -25,6 +25,105 @@
     <div id="content">
       <p>不定时更新，记录我在浏览网页、阅读论文、逛社媒时看到的细碎知识和技巧。</p>
       <p>使用倒序方式记录。</p>
+      <section class="sect1">
+        <h2 id="date-20260802"><a href="#date-20260802">2026 年 8 月 2 日</a></h2>
+        <p><a href="https://dl.acm.org/doi/10.1145/3798227">Class-Dictionary Specialization with Rank-2 Polymorphic Functions</a></p>
+        <p>动机：GHC 的基于启发式算法的 inliner 对于含有递归的 rank-2 polymorphic 函数的 inlining 或者 specialization 无能为力。这是由于担心 inlining 过程造成不终止。而 rank-2 polymorphic 的函数其参数或者返回值本身带有 ad-hoc polymorphic 的 forall 量化的场景非常常见，因此无法优化会导致性能损失。</p>
+        <p>本文提出了一种对递归 rank-2 polymorphic 函数进行 dictionary specialization 的方法，基于部分求值和记忆化。提升了在 SYB，SYB3 和 Lens 库上的性能。</p>
+        <p>SYB 库的介绍：使用 rank-2 polymorphic 的组合子编写通用的数据结构遍历函数。</p>
+        <section class="sect2">
+          <h3 id="_ghc_的困难">GHC 的困难</h3>
+          <div class="olist arabic">
+            <ol class="arabic">
+              <li>
+                <p>为了 specialize rank-2 函数里的 ad-hoc polymorphic 的参数，编译器需要暴露给 x 它的类型和词典参数，如内联 f 到调用点。</p>
+              </li>
+              <li>
+                <p>但编译器会由于担心内联 f 不终止而拒绝内联。</p>
+              </li>
+            </ol>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_syb_的术语介绍">SYB 的术语介绍</h3>
+          <section class="sect3">
+            <h4 id="_aliases">Aliases</h4>
+            <p><code>mkT</code>: 将只针对特定类型生效的函数 <code>lift</code> 到可应用到任何类型的函数</p>
+            <div class="listing">
+              <div class="content">
+                <pre class="highlightjs highlight"><code class="language-haskell hljs" data-noescape="true" data-lang="haskell">mkT :: (Typeable α, Typeable β) ⇒ (β → β) → α → α
+mkT f = case cast f of
+  Nothing → id   -- 类型不匹配 → 什么都不做
+  Just g  → g    -- 类型匹配 → 执行 f</code></pre>
+              </div>
+            </div>
+          </section>
+          <section class="sect3">
+            <h4 id="_指导如何将变换应用到类型的子项的_data_type_class">指导如何将变换应用到类型的子项的 Data Type Class</h4>
+            <div class="listing">
+              <div class="content">
+                <pre class="highlightjs highlight"><code class="language-haskell hljs" data-noescape="true" data-lang="haskell">class Typeable α ⇒ Data α where
+  gmapT :: (∀β. Data β ⇒ β → β) → α → α   -- 把变换应用到直接子项</code></pre>
+              </div>
+            </div>
+            <p>每个类型的实例告知它的子项结构。比如 <code>Data [α]</code> 的实例：<code>gmapT f (x:xs) = f x : f xs</code>。注意 gmapT 是 rank-2 多态——参数 f 必须能应用到不同类型的子项上（<code>x :: α</code> 和 <code>xs :: [α]</code> 类型不同）。gmapT 本身不递归，只处理直接子项。</p>
+            <div class="literal">
+              <div class="content">
+                <pre>        Node            gmapT f 之后：
+     /    \              Node
+   Leaf 1  Leaf 2       /    \
+                     f(Leaf 1)  f(Leaf 2)</pre>
+              </div>
+            </div>
+          </section>
+          <section class="sect3">
+            <h4 id="_指导如何遍历一棵树_traversal_schemes">指导如何遍历一棵树 Traversal Schemes</h4>
+            <p><code>everywhere</code> 将单节点变换变成整树变换。</p>
+            <div class="listing">
+              <div class="content">
+                <pre class="highlightjs highlight"><code class="language-haskell hljs" data-noescape="true" data-lang="haskell">everywhere :: (∀β. Data β ⇒ β → β) → (∀α. Data α ⇒ α → α)
+everywhere f = let go = f ◦ gmapT go in go -- 自顶向下：先变换自己，再递归进子项</code></pre>
+              </div>
+            </div>
+            <div class="literal">
+              <div class="content">
+                <pre>      Node            everywhere f 之后：
+     /    \                f(Node)
+   Leaf 1  Leaf 2         /    \
+                      f(Leaf 1)  f(Leaf 2)
+                       /            \
+                     f(1)           f(2)</pre>
+              </div>
+            </div>
+          </section>
+        </section>
+        <section class="sect2">
+          <h3 id="_贡献">贡献</h3>
+          <div class="olist arabic">
+            <ol class="arabic">
+              <li>
+                <p>强制 unfold rank-2 polymorphic 函数，但只针对部分静态（partially static）的应用：参数有部分编译期已知信息（如 λ 抽象、常量）。</p>
+              </li>
+              <li>
+                <p>传递分析（transitive analysis）：目标不限于 rank-2 函数本身，还包括最终导致 rank-2 应用的 rank-1 函数（如 go、f1）。</p>
+              </li>
+              <li>
+                <p>Memoization 处理递归：把简化结果放进 let 绑定并 let-float 到最广作用域（等效静态参数变换 SAT），后续遇到相同表达式直接用 memoization 替换。</p>
+              </li>
+            </ol>
+          </div>
+          <section class="sect3">
+            <h4 id="_如何找到优化目标">如何找到优化目标</h4>
+            <p><strong>Rank-2-Fn</strong> • 普通 rank-2 函数 • 需要部分静态的参数：多态参数</p>
+            <p><strong>Rank-2-Class-Op</strong> • 类型类方法 • 需要部分静态的参数：字典参数 + 多态参数</p>
+            <p><strong>Indirect</strong> • 任何函数 • 需要部分静态的参数：暴露隐藏目标的参数</p>
+          </section>
+          <section class="sect3">
+            <h4 id="_记忆化">记忆化</h4>
+            <p>利用函数 + 类型参数 + 字典参数 + 多态参数为键记忆特化版本。</p>
+          </section>
+        </section>
+      </section>
       <section class="sect1">
         <h2 id="date-20260628"><a href="#date-20260628">2026 年 6 月 28 日</a></h2>
         <p><a href="https://doi.org/10.1145/3808336">Syntactic Implicit Parameters with Static Overloading</a></p>
@@ -193,7 +292,7 @@ Amb         // 多个候选，或发现无限分支</code></pre>
         <p><a href="https://dl.acm.org/doi/10.1145/3632921">Explicit Effects and Effect Constraints in ReML</a></p>
         <p>这篇论文主要是 region, effects, inference 等几个问题合并到一起包了个全家福饺子。</p>
         <p>Motivation example 是一个并行程序的例子，其中两个 thread 都需要进行分配，需要一种机制静态保证不在同一个 region 中进行分配。</p>
-        <p>实际贡献:</p>
+        <p>实际贡献：</p>
         <div class="ulist">
           <ul>
             <li>
@@ -228,7 +327,7 @@ Amb         // 多个候选，或发现无限分支</code></pre>
           </ul>
         </div>
         <h3 id="_portability" class="discrete">portability</h3>
-        <p>分为:</p>
+        <p>分为：</p>
         <div class="ulist">
           <ul>
             <li>
@@ -258,7 +357,7 @@ Amb         // 多个候选，或发现无限分支</code></pre>
       <section class="sect1">
         <h2 id="date-20260322"><a href="#date-20260322">2026 年 3 月 22 日</a></h2>
         <p><a href="http://arxiv.org/abs/2601.18793">Handling Scope Checks</a></p>
-        <p>多阶段编程里 Scope Extrusion （<strong>生成的</strong>代码里的变量逃离作用域）问题的现有方案，静态的表达能力太弱类型系统复杂；动态检查中的 lazy check 太晚，eager check 误报多。这篇在有 effect handler 出现的背景下提出了一个 C4C 方案:</p>
+        <p>多阶段编程里 Scope Extrusion（<strong>生成的</strong>代码里的变量逃离作用域）问题的现有方案，静态的表达能力太弱类型系统复杂；动态检查中的 lazy check 太晚，eager check 误报多。这篇在有 effect handler 出现的背景下提出了一个 C4C 方案：</p>
         <div class="ulist">
           <ul>
             <li>
@@ -434,7 +533,7 @@ end;</code></pre>
         </div>
       </section>
       <section class="sect1">
-        <h2 id="date-20251123"><a href="#data-20251123">2025 年 11 月 23 日</a></h2>
+        <h2 id="date-20251123"><a href="#date-20251123">2025 年 11 月 23 日</a></h2>
         <p>关于 LuaJIT 编译器中代码生成技巧的临时总结： LuaJIT 里使用单个 ExpDesc 去表示在代码生成过程中出现的常量、已被 GC 管理的装箱值、pending 状态的表达式描述、已经生成的指令、和跳转目标等信息。它基于表达式树分配寄存器/堆栈槽，但针对特定逻辑有一些特殊处理（如 index）部分。有大量辅助函数用于减少临时堆栈槽的分配和操作数内联进指令的优化。具体使用方式的关系图如下</p>
         <div class="imageblock centered">
           <div class="content"><img src="/resource/luajit-expr-gen.svg" alt="LuaJIT ExpDesc" style="width: 40rem;"></div>
