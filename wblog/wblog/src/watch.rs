@@ -205,11 +205,6 @@ fn watch_targets(
                 );
                 push_watch(
                     &mut targets,
-                    context.paths.w_asciidoc_dir.clone(),
-                    RecursiveMode::Recursive,
-                );
-                push_watch(
-                    &mut targets,
                     context.paths.tidy_config.clone(),
                     RecursiveMode::NonRecursive,
                 );
@@ -247,11 +242,6 @@ fn watch_targets(
                 push_watch(
                     &mut targets,
                     context.paths.static_dir.clone(),
-                    RecursiveMode::Recursive,
-                );
-                push_watch(
-                    &mut targets,
-                    context.paths.w_asciidoc_dir.clone(),
                     RecursiveMode::Recursive,
                 );
                 push_watch(
@@ -314,7 +304,6 @@ mod tests {
                 resource_svg_dir: repo.join("resource/svg"),
                 sass_style: repo.join("styles/style.scss"),
                 tidy_config: repo.join("tidy.cfg"),
-                w_asciidoc_dir: repo.join("tools/asciidoc"),
             },
             ToolResolver::from_env(),
         )
@@ -344,8 +333,9 @@ mod tests {
             .into_iter()
             .map(|(path, _)| path)
             .collect::<Vec<_>>();
+        // The AsciiDoc renderer is compiled in, so the only inputs left to
+        // watch are the content tree and the tidy config.
         assert!(paths.contains(&context.paths.content_dir));
-        assert!(paths.contains(&context.paths.w_asciidoc_dir));
         assert!(paths.contains(&context.paths.tidy_config));
         assert!(!paths.contains(&context.paths.resource_typst_dir));
         assert!(!paths.contains(&context.paths.resource_svg_dir));

@@ -46,7 +46,6 @@ pub struct BuildRequest {
 pub struct ChangeScope {
     sources: BTreeSet<PathBuf>,
     sass_tree_changed: bool,
-    adoc_tooling_changed: bool,
     tidy_config_changed: bool,
 }
 
@@ -61,11 +60,6 @@ impl ChangeScope {
                 || path.starts_with(&paths.static_dir)
             {
                 scope.sources.insert(path);
-                continue;
-            }
-
-            if path.starts_with(&paths.w_asciidoc_dir) {
-                scope.adoc_tooling_changed = true;
                 continue;
             }
 
@@ -85,15 +79,11 @@ impl ChangeScope {
     pub fn merge(&mut self, other: Self) {
         self.sources.extend(other.sources);
         self.sass_tree_changed |= other.sass_tree_changed;
-        self.adoc_tooling_changed |= other.adoc_tooling_changed;
         self.tidy_config_changed |= other.tidy_config_changed;
     }
 
     pub fn is_empty(&self) -> bool {
-        self.sources.is_empty()
-            && !self.sass_tree_changed
-            && !self.adoc_tooling_changed
-            && !self.tidy_config_changed
+        self.sources.is_empty() && !self.sass_tree_changed && !self.tidy_config_changed
     }
 
     #[cfg(test)]
@@ -237,13 +227,12 @@ fn is_dirty(paths: &RepoPaths, target: &BuildTarget) -> bool {
             .walk_files(paths.sass_dir())
             .into_iter()
             .any(|path| modified(&path) > output_mtime),
+        // The AsciiDoc renderer is compiled into this binary rather than read
+        // from disk, so a page is stale only against its own source and the
+        // tidy config. A renderer change is caught by the build signature (see
+        // `render_adoc_callback`), not by an mtime comparison.
         TargetFamily::AdocHtml => {
-            modified(&target.source) > output_mtime
-                || modified(&paths.tidy_config) > output_mtime
-                || paths
-                    .walk_files(&paths.w_asciidoc_dir)
-                    .into_iter()
-                    .any(|path| modified(&path) > output_mtime)
+            modified(&target.source) > output_mtime || modified(&paths.tidy_config) > output_mtime
         }
         TargetFamily::StaticHtml => {
             modified(&target.source) > output_mtime || modified(&paths.tidy_config) > output_mtime
@@ -268,7 +257,7 @@ fn matches_target(scope: &ChangeScope, target: &BuildTarget) -> bool {
 
     match target.family {
         TargetFamily::Css => scope.sass_tree_changed,
-        TargetFamily::AdocHtml => scope.adoc_tooling_changed || scope.tidy_config_changed,
+        TargetFamily::AdocHtml => scope.tidy_config_changed,
         TargetFamily::StaticHtml => scope.tidy_config_changed,
         TargetFamily::Typst | TargetFamily::Svg | TargetFamily::Static => false,
     }
@@ -384,11 +373,6 @@ fn build_graph(paths: &RepoPaths, tools: &ToolResolver) -> Result<PlannedGraph> 
     if !adoc_inputs.is_empty() {
         let tidy_cfg_id = tidy_cfg_id
             .ok_or_else(|| anyhow!("expected file {} to exist", paths.tidy_config.display()))?;
-        let adoc_support_files = adoc_support_files(paths)?;
-        let adoc_support_inputs = adoc_support_files
-            .iter()
-            .map(|path| builder.add_file(path))
-            .collect::<Vec<_>>();
 
         for input in adoc_inputs {
             let stage_output = paths.adoc_stage_output(&input)?;
@@ -397,8 +381,7 @@ fn build_graph(paths: &RepoPaths, tools: &ToolResolver) -> Result<PlannedGraph> 
             let stage_output_id = builder.add_file(&stage_output);
             let final_output_id = builder.add_file(&final_output);
 
-            let mut ins = vec![input_id];
-            ins.extend(adoc_support_inputs.iter().copied());
+            let ins = vec![input_id];
 
             let render_description = format!(
                 "Render {} -> {}",
@@ -406,22 +389,10 @@ fn build_graph(paths: &RepoPaths, tools: &ToolResolver) -> Result<PlannedGraph> 
                 paths.display_path(&stage_output)?
             );
             let render_node = builder.add_build(BuildNode {
-                command: command_callback(
+                command: render_adoc_callback(
                     render_description.clone(),
-                    paths.root.clone(),
-                    tools.asciidoctor().to_owned(),
-                    vec![
-                        "-b".to_owned(),
-                        "w-html".to_owned(),
-                        "-r".to_owned(),
-                        "./tools/asciidoc/convert.rb".to_owned(),
-                        "-r".to_owned(),
-                        "./tools/asciidoc/hljs.rb".to_owned(),
-                        paths.display_path(&input)?,
-                        "-o".to_owned(),
-                        paths.display_path(&stage_output)?,
-                    ],
-                    vec![stage_output.clone()],
+                    input.clone(),
+                    stage_output.clone(),
                 ),
                 ins,
                 outs: vec![stage_output_id],
@@ -669,27 +640,6 @@ fn selected_groups(selection: &BuildSelection) -> BTreeSet<ManagedGroup> {
     groups
 }
 
-fn adoc_support_files(paths: &RepoPaths) -> Result<Vec<PathBuf>> {
-    let files = paths.walk_files(&paths.w_asciidoc_dir);
-    if files.is_empty() {
-        bail!(
-            "expected AsciiDoc support files under {}",
-            paths.w_asciidoc_dir.display()
-        );
-    }
-
-    for file in [
-        paths.w_asciidoc_dir.join("convert.rb"),
-        paths.w_asciidoc_dir.join("hljs.rb"),
-    ] {
-        if !file.exists() {
-            bail!("expected file {} to exist", file.display());
-        }
-    }
-
-    Ok(files)
-}
-
 fn read_manifest(paths: &RepoPaths) -> Result<BTreeSet<ManagedOutput>> {
     let manifest_path = paths.manifest_path();
     if !manifest_path.exists() {
@@ -800,6 +750,45 @@ fn remove_empty_parents(mut current: Option<&Path>) {
             Err(_) => break,
         }
     }
+}
+
+/// Renders one AsciiDoc file to staged HTML, in process.
+///
+/// This replaced a subprocess call to `asciidoctor` with a Ruby converter
+/// loaded from `tools/asciidoc/`, so the rendering rule no longer depends on
+/// files on disk. The build signature therefore names the backend's version
+/// instead: bumping [`wblog_asciidoc`]'s version is what invalidates every
+/// staged page after a backend change, the way touching `convert.rb` used to.
+fn render_adoc_callback(name: String, input: PathBuf, output: PathBuf) -> BuildMethod {
+    let signature = format!(
+        "wblog-asciidoc {} render {}",
+        env!("CARGO_PKG_VERSION"),
+        output.display()
+    );
+
+    BuildMethod::Callback(
+        signature.into(),
+        Box::new(move |_| {
+            ensure_outputs(std::slice::from_ref(&output))?;
+
+            let warnings = wblog_asciidoc::Renderer::new()
+                .render_to_file(&input, &output)
+                .map_err(|error| string_to_dyn(format!("{name}: {error:#}")))?;
+
+            // Warnings are advisory — the page still rendered — so they are
+            // reported without failing the build, matching how `asciidoctor`
+            // wrote them to stderr and exited zero.
+            for warning in warnings {
+                eprintln!(
+                    "{} {}: {warning}",
+                    output::tag_stderr("adoc", output::YELLOW),
+                    input.display()
+                );
+            }
+
+            Ok(())
+        }),
+    )
 }
 
 fn command_callback(
@@ -964,7 +953,6 @@ mod tests {
             resource_svg_dir: root.join("resource/svg"),
             sass_style: root.join("styles/style.scss"),
             tidy_config: root.join("tidy.cfg"),
-            w_asciidoc_dir: root.join("tools/asciidoc"),
         }
     }
 

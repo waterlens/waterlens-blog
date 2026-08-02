@@ -86,6 +86,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
 
 [[package]]
+name = "asciidoc-parser"
+version = "0.29.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e5a908f3906307b4d1ea2fd9e619034eb003ac6cb3bf3c9aaf296d5441e89ebe"
+dependencies = [
+ "bytecount",
+ "memchr",
+ "percent-encoding",
+ "regex",
+ "self_cell",
+ "thiserror",
+]
+
+[[package]]
+name = "asciidoc-waterlens-html5"
+version = "0.1.0"
+dependencies = [
+ "asciidoc-parser",
+]
+
+[[package]]
 name = "atomic-waker"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -218,6 +239,12 @@ name = "bumpalo"
 version = "3.20.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d20789868f4b01b2f2caec9f5c4e0213b41e3e5702a50157d699ae31ced2fcb"
+
+[[package]]
+name = "bytecount"
+version = "0.6.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "175812e0be2bccb6abe50bb8d566126198344f707e304f45c648fd8f2cc0365e"
 
 [[package]]
 name = "byteorder"
@@ -1621,6 +1648,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
+name = "self_cell"
+version = "1.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2ab42ca02749e120097e328d91d415325bdf43b1c72c4c8badf37375fe40a813"
+
+[[package]]
 name = "semver"
 version = "1.0.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2142,6 +2175,17 @@ dependencies = [
  "tempfile",
  "tokio",
  "walkdir",
+ "wblog-asciidoc",
+]
+
+[[package]]
+name = "wblog-asciidoc"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "asciidoc-parser",
+ "asciidoc-waterlens-html5",
+ "tempfile",
 ]
 
 [[package]]

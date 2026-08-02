@@ -101,7 +101,7 @@ https://doc.pypy.org/en/latest/contributing.html[贡献指南]
 
 1. 为后端添加或完善指令降低 (Instruction Lowering)
     * 描述：将 Cranelift IR 指令转换为特定机器指令的过程。虽然 x64 的 ISLE 迁移已完成，但其他架构（aarch64, s390x,
-        riscv64）仍有许多工作可做，特别是 SIMD 和不常用的指令。
+    riscv64）仍有许多工作可做，特别是 SIMD 和不常用的指令。
     * 切入点：
         - 为 riscv64 后端贡献 SIMD（Vector 扩展）指令的 ISLE 实现。
         - 为 s390x 后端实现对 z17 新指令（如 128 位整数运算）的支持。

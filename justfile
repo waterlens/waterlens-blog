@@ -1,6 +1,6 @@
 # Install the `wblog` binary into PATH for use from `just`.
 bootstrap:
-  cargo install --path wblog
+  cargo install --path wblog/wblog
 
 # Build the whole site incrementally.
 build:

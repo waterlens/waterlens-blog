@@ -18,12 +18,10 @@ FROM rust:alpine3.21 as build
 
 COPY --from=setup /usr/local/bin/typst /usr/local/bin/tidy /usr/local/bin/
 
-RUN apk add --no-cache asciidoctor
-
 COPY . /blog
 WORKDIR /blog
 
-RUN cargo install --path wblog && \
+RUN cargo install --path wblog/wblog && \
     wblog clean && \
     wblog build --full && \
     cp -r public/ /public/

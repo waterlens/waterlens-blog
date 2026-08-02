@@ -1,7 +1,11 @@
+/// The external programs the build shells out to.
+///
+/// AsciiDoc rendering used to live here too, as a path to `asciidoctor`. It is
+/// now compiled in (see [`wblog_asciidoc`]), so the build's only remaining
+/// external dependencies are Typst and tidy.
 #[derive(Clone, Debug)]
 pub struct ToolResolver {
     typst: String,
-    asciidoctor: String,
     tidy: String,
 }
 
@@ -9,17 +13,12 @@ impl ToolResolver {
     pub fn from_env() -> Self {
         Self {
             typst: resolve("WBLOG_TYPST", "typst"),
-            asciidoctor: resolve("WBLOG_ASCIIDOCTOR", "asciidoctor"),
             tidy: resolve("WBLOG_TIDY", "tidy"),
         }
     }
 
     pub fn typst(&self) -> &str {
         &self.typst
-    }
-
-    pub fn asciidoctor(&self) -> &str {
-        &self.asciidoctor
     }
 
     pub fn tidy(&self) -> &str {

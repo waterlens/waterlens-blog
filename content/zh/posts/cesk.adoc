@@ -21,7 +21,7 @@
 - stem:[c]: stem:[\ddag] 或 stem:[\lambda_\sigma] 表达式
 - stem:[e]: 从变量到位置的有限映射
 - stem:[s]: 从位置到闭包的有限映射
-- stem:[k]: 延续 +
+- stem:[k]: 延续
     * p-continuation: stem:[(stop), (k~arg~N~e), (k~fun~V)] 中的一种形式，其中 k 是 p-continuation, V 是语义值。
     * ret-continuation: stem:[(k~ret~V)], 其中 k 是 p-continuation。
 

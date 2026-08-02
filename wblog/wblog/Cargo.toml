@@ -1,0 +1,23 @@
+[package]
+name = "wblog"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+clap = { version = "4.6.0", features = ["derive"] }
+grass = "0.13.4"
+live-server = "0.11.1"
+n2o5 = { git = "https://github.com/lynzrand/n2o5.git", rev = "551c0254b8218347b4f4acf9f5d9fca7fbfb7f74" }
+notify-debouncer-mini = "0.7.0"
+owo-colors = { version = "4.3.0", features = ["supports-colors"] }
+tokio = { version = "1.50.0", features = ["macros", "rt-multi-thread", "process", "sync", "net", "time", "signal"] }
+walkdir = "2.5.0"
+wblog-asciidoc.workspace = true
+
+[dev-dependencies]
+tempfile = "3.23.0"
+
+[lints]
+workspace = true

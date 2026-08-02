@@ -14,7 +14,6 @@ pub struct RepoPaths {
     pub resource_svg_dir: PathBuf,
     pub sass_style: PathBuf,
     pub tidy_config: PathBuf,
-    pub w_asciidoc_dir: PathBuf,
 }
 
 impl RepoPaths {
@@ -30,7 +29,6 @@ impl RepoPaths {
             resource_svg_dir: root.join("resource/svg"),
             sass_style: root.join("styles/style.scss"),
             tidy_config: root.join("tidy.cfg"),
-            w_asciidoc_dir: root.join("tools/asciidoc"),
             root,
         })
     }
@@ -213,7 +211,6 @@ mod tests {
                 resource_svg_dir: root.join("resource/svg"),
                 sass_style: root.join("styles/style.scss"),
                 tidy_config: root.join("tidy.cfg"),
-                w_asciidoc_dir: root.join("tools/asciidoc"),
             },
         }
     }

@@ -1,0 +1,12 @@
+[package]
+name = "asciidoc-waterlens-html5"
+description = "Waterlens' HTML5 backend for AsciiDoc, a Rust port of the `w-html` Asciidoctor converter"
+edition.workspace = true
+license.workspace = true
+version.workspace = true
+
+[dependencies]
+asciidoc-parser.workspace = true
+
+[lints]
+workspace = true
