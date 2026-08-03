@@ -8,5 +8,8 @@ version.workspace = true
 [dependencies]
 asciidoc-parser.workspace = true
 
+[dev-dependencies]
+tempfile = "3.23.0"
+
 [lints]
 workspace = true

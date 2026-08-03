@@ -104,6 +104,7 @@ name = "asciidoc-waterlens-html5"
 version = "0.1.0"
 dependencies = [
  "asciidoc-parser",
+ "tempfile",
 ]
 
 [[package]]

@@ -26,9 +26,10 @@ use std::{
 };
 
 use anyhow::{Context, Result};
+use asciidoc_parser::document::InterpretedValue;
 use asciidoc_waterlens_html5::{Options, ReferenceTime, SafeMode};
 
-/// A warning the parser raised while reading a document.
+/// A warning raised while parsing or preparing a document for rendering.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Warning {
     /// The one-based line the warning points at, when the parser located it.
@@ -53,7 +54,7 @@ pub struct Rendered {
     /// The rendered HTML.
     pub html: String,
 
-    /// Warnings the parser raised, in source order. These are advisory: a
+    /// Parser and renderer warnings, in emission order. These are advisory: a
     /// document that produces warnings still renders.
     pub warnings: Vec<Warning>,
 }
@@ -143,13 +144,29 @@ impl Renderer {
         let options = self.options(input);
         let document = asciidoc_waterlens_html5::load_with(source, &options);
 
-        let warnings = document
+        let mut warnings: Vec<Warning> = document
             .warnings()
             .map(|warning| Warning {
                 line: Some(warning.source.line()),
                 message: warning.warning.to_string(),
             })
             .collect();
+
+        // Only highlight.js is supported by the `hljs` adapter this backend
+        // links. Asciidoctor warns and renders without highlighting when a
+        // highlighter is unavailable; surface the same degradation here
+        // instead of silently dropping the highlighting.
+        if let InterpretedValue::Value(highlighter) = document.attribute_value("source-highlighter")
+            && !matches!(highlighter.as_str(), "highlightjs" | "highlight.js")
+        {
+            warnings.push(Warning {
+                line: None,
+                message: format!(
+                    "source highlighter '{highlighter}' is not supported by the Rust backend; \
+                     rendering source blocks without highlighting"
+                ),
+            });
+        }
 
         Rendered {
             html: asciidoc_waterlens_html5::convert_document_with(&document, &options),
@@ -255,6 +272,36 @@ mod tests {
         let renderer = Renderer::new().with_reference_time(ReferenceTime::from_unix_timestamp(0));
         let rendered = renderer.render_str("= Title\n\nBody.", None);
         assert!(rendered.html.contains("2021 - 1970"));
+    }
+
+    #[test]
+    fn an_unsupported_source_highlighter_warns_and_renders_plain() {
+        let rendered = Renderer::new().render_str(
+            "= Title\n:source-highlighter: coderay\n\n[source,ruby]\n----\nputs \"hi\"\n----",
+            None,
+        );
+        assert_eq!(rendered.warnings.len(), 1);
+        assert!(rendered.warnings[0].message.contains("coderay"));
+        assert!(
+            rendered.warnings[0]
+                .message
+                .contains("without highlighting")
+        );
+        assert!(rendered.html.contains("<pre class=\"highlight\">"));
+        assert!(!rendered.html.contains("CodeRay"));
+    }
+
+    #[test]
+    fn highlightjs_is_not_reported_as_unsupported() {
+        let rendered = Renderer::new().render_str(
+            "= Title\n:source-highlighter: highlight.js\n\n[source,ruby]\n----\nx\n----",
+            None,
+        );
+        assert!(
+            rendered.warnings.is_empty(),
+            "unexpected warnings: {0:?}",
+            rendered.warnings
+        );
     }
 
     #[test]

@@ -156,7 +156,7 @@ pub fn execute_plan(paths: &RepoPaths, tools: &ToolResolver, request: BuildReque
         return Ok(());
     }
 
-    let db = DumbDb::new(&paths.cache_db_path())
+    let db = DumbDb::new(paths.cache_db_path())
         .with_context(|| format!("failed to open {}", paths.cache_db_path().display()))?;
     if request.full {
         invalidate_targets(&db, &planned.graph, &wanted)?;
@@ -929,13 +929,12 @@ mod tests {
 
     fn dummy_build_id() -> n2o5::BuildId {
         let mut builder = GraphBuilder::new();
-        let id = builder.add_build(BuildNode {
+        builder.add_build(BuildNode {
             command: BuildMethod::Phony,
             ins: vec![],
             outs: vec![],
             description: None,
-        });
-        id
+        })
     }
 
     fn temp_root() -> TempDir {

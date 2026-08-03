@@ -58,7 +58,9 @@ use asciidoc_parser::Parser;
 
 mod cjk;
 mod html;
+mod include;
 mod options;
+mod path;
 mod renderer;
 mod title;
 

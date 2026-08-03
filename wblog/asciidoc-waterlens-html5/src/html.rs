@@ -12,13 +12,24 @@
 /// defensively so a stray `"`, `&`, `<`, or `>` cannot break out of the
 /// attribute.
 pub(crate) fn escape_attribute(value: &str) -> String {
+    escape(value, true)
+}
+
+/// Escapes raw text for inclusion in an HTML element body.
+///
+/// Unlike an attribute value, element text does not need quotes escaped.
+pub(crate) fn escape_text(value: &str) -> String {
+    escape(value, false)
+}
+
+fn escape(value: &str, escape_quotes: bool) -> String {
     let mut out = String::with_capacity(value.len());
     for ch in value.chars() {
         match ch {
             '&' => out.push_str("&amp;"),
             '<' => out.push_str("&lt;"),
             '>' => out.push_str("&gt;"),
-            '"' => out.push_str("&quot;"),
+            '"' if escape_quotes => out.push_str("&quot;"),
             _ => out.push(ch),
         }
     }
@@ -100,7 +111,7 @@ pub(crate) fn sanitize(value: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{class_attribute, escape_attribute, id_attribute, sanitize};
+    use super::{class_attribute, escape_attribute, escape_text, id_attribute, sanitize};
 
     #[test]
     fn escape_attribute_escapes_markup_characters() {
@@ -109,6 +120,14 @@ mod tests {
             "a &amp; b &lt; c &gt; d &quot; e"
         );
         assert_eq!(escape_attribute("plain"), "plain");
+    }
+
+    #[test]
+    fn escape_text_leaves_quotes_alone() {
+        assert_eq!(
+            escape_text("a & b < c > d \" e"),
+            "a &amp; b &lt; c &gt; d \" e"
+        );
     }
 
     #[test]

@@ -496,3 +496,451 @@ mod source_normalization {
         assert_eq!(body("one +\ntwo"), "<p>one<br>\ntwo</p>");
     }
 }
+
+mod document_attributes {
+    use super::page;
+
+    // Document attribute values arrive from the parser with special
+    // characters already escaped; the meta tags must not escape them again.
+    #[test]
+    fn meta_tags_are_not_double_escaped() {
+        let html =
+            page("= T\n:description: Desc & More\n:keywords: a & b <c>\n:author: AT&T\n\nBody.");
+        assert!(html.contains("<meta name=\"description\" content=\"Desc &amp; More\">"));
+        assert!(html.contains("<meta name=\"keywords\" content=\"a &amp; b &lt;c&gt;\">"));
+        assert!(html.contains("<meta name=\"author\" content=\"AT&amp;T\">"));
+        assert!(!html.contains("&amp;amp;"));
+    }
+
+    #[test]
+    fn empty_and_quoted_document_attributes_keep_their_value_semantics() {
+        let html = page("= T\n:description:\n:max-width:\n:cellbgcolor:\n\n|===\n|cell\n|===");
+        assert!(html.contains("<meta name=\"description\" content=\"\">"));
+        assert!(html.contains("style=\"max-width: ;\""));
+        assert!(html.contains("style=\"background-color: ;\""));
+
+        let quoted = page("= T\n:description: A \"quote\" & more\n\nBody.");
+        assert!(
+            quoted
+                .contains("<meta name=\"description\" content=\"A &quot;quote&quot; &amp; more\">")
+        );
+    }
+
+    #[test]
+    fn image_src_escapes_the_target_but_not_the_imagesdir() {
+        let html = page("= T\n:imagesdir: /a&b\n\nimage::rel&c.png[Alt]");
+        assert!(html.contains("<img src=\"/a&amp;b/rel&amp;c.png\" alt=\"Alt\">"));
+        assert!(!html.contains("&amp;amp;"));
+    }
+
+    #[test]
+    fn image_src_escapes_quotes_from_imagesdir() {
+        let html = page("= T\n:imagesdir: /a\"b\n\nimage::image.png[Alt]");
+        assert!(html.contains("<img src=\"/a&quot;b/image.png\" alt=\"Alt\">"));
+    }
+
+    // `:icons: font` glyphs need Font Awesome's stylesheet; without it the
+    // `<i class="fa …">` elements render as nothing. Standalone output links
+    // the CDN, like the Ruby converter's CLI.
+    #[test]
+    fn icons_font_links_font_awesome() {
+        let html = page("= T\n:icons: font\n\nTIP: Careful.");
+        assert!(html.contains(
+            "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+        ));
+        assert!(html.contains("<i class=\"fa icon-tip\" title=\"Tip\"></i>"));
+    }
+
+    #[test]
+    fn icons_font_without_remote_links_a_local_stylesheet() {
+        let html =
+            page("= T\n:icons: font\n:iconfont-remote!:\n:iconfont-name: custom\n\nTIP: Careful.");
+        assert!(html.contains("<link rel=\"stylesheet\" href=\"./custom.css\">"));
+        assert!(!html.contains("cdnjs"));
+    }
+}
+
+mod stylesheet_attribute {
+    use super::{Options, convert_with, page};
+    use crate::SafeMode;
+
+    #[test]
+    fn a_missing_stylesheet_yields_an_empty_style_element() {
+        let html = page("= T\n:stylesheet: missing.css\n\nBody.");
+        assert!(html.contains("<style>\n\n</style>"));
+    }
+
+    #[test]
+    fn an_existing_stylesheet_is_inlined() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        std::fs::write(dir.path().join("site.css"), "body { color: red; }").expect("write");
+        let html = convert_with(
+            "= T\n:stylesheet: site.css\n\nBody.",
+            &Options::new()
+                .standalone(true)
+                .input_file(dir.path().join("doc.adoc")),
+        );
+        assert!(html.contains("<style>\nbody { color: red; }\n</style>"));
+    }
+
+    #[test]
+    fn linkcss_links_the_stylesheet() {
+        let html = page("= T\n:stylesheet: custom.css\n:linkcss:\n\nBody.");
+        assert!(html.contains("<link rel=\"stylesheet\" href=\"./custom.css\">"));
+    }
+
+    #[test]
+    fn the_default_stylesheet_key_selects_the_webfonts_link() {
+        let html = page("= T\n:stylesheet: DEFAULT\n:webfonts: Open+Sans\n\nBody.");
+        assert!(html.contains(
+            "<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css?family=Open+Sans\">"
+        ));
+    }
+
+    #[test]
+    fn an_empty_stylesheet_value_selects_the_webfonts_link() {
+        let html = page("= T\n:stylesheet:\n:webfonts: Open+Sans\n\nBody.");
+        assert!(html.contains(
+            "<link rel=\"stylesheet\" href=\"https://fonts.googleapis.com/css?family=Open+Sans\">"
+        ));
+    }
+
+    #[test]
+    fn a_uri_stylesdir_preserves_its_authority_separator() {
+        let html = page(
+            "= T\n:stylesheet: custom.css\n:stylesdir: https://cdn.example/css\n:linkcss:\n\nBody.",
+        );
+        assert!(
+            html.contains("<link rel=\"stylesheet\" href=\"https://cdn.example/css/custom.css\">")
+        );
+    }
+
+    #[test]
+    fn an_escaped_stylesheet_path_is_decoded_for_file_lookup() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        std::fs::write(dir.path().join("site&theme.css"), "body { color: red; }")
+            .expect("write stylesheet");
+        let html = convert_with(
+            "= T\n:stylesheet: site&theme.css\n\nBody.",
+            &Options::new()
+                .standalone(true)
+                .input_file(dir.path().join("doc.adoc")),
+        );
+        assert!(html.contains("<style>\nbody { color: red; }\n</style>"));
+    }
+
+    #[test]
+    fn safe_mode_does_not_read_an_absolute_stylesheet_outside_the_base() {
+        let base = tempfile::tempdir().expect("base dir");
+        let outside = tempfile::NamedTempFile::new().expect("outside stylesheet");
+        std::fs::write(outside.path(), "secret { display: block; }").expect("write stylesheet");
+        let source = format!("= T\n:stylesheet: {}\n\nBody.", outside.path().display());
+        let html = convert_with(
+            &source,
+            &Options::new()
+                .standalone(true)
+                .safe_mode(SafeMode::Safe)
+                .input_file(base.path().join("doc.adoc")),
+        );
+        assert!(html.contains("<style>\n\n</style>"));
+        assert!(!html.contains("secret { display: block; }"));
+    }
+}
+
+mod include_directives {
+    use super::{Options, convert_with};
+    use crate::{SafeMode, load_with};
+
+    #[test]
+    fn an_include_resolves_against_the_primary_file_directory() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        std::fs::write(dir.path().join("part.adoc"), "Included body.").expect("write");
+        let html = convert_with(
+            "= Doc\n\ninclude::part.adoc[]",
+            &Options::new()
+                .standalone(true)
+                .input_file(dir.path().join("doc.adoc")),
+        );
+        assert!(html.contains("<p>Included body.</p>"));
+        assert!(!html.contains("Unresolved directive"));
+    }
+
+    #[test]
+    fn a_nested_include_resolves_against_the_enclosing_file() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        std::fs::create_dir_all(dir.path().join("sub")).expect("mkdir");
+        std::fs::write(dir.path().join("sub/outer.adoc"), "include::inner.adoc[]").expect("write");
+        std::fs::write(dir.path().join("sub/inner.adoc"), "Inner body.").expect("write");
+        let html = convert_with(
+            "= Doc\n\ninclude::sub/outer.adoc[]",
+            &Options::new()
+                .standalone(true)
+                .input_file(dir.path().join("doc.adoc")),
+        );
+        assert!(html.contains("<p>Inner body.</p>"));
+    }
+
+    #[test]
+    fn a_missing_include_reports_unresolved_directive() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        let html = convert_with(
+            "= Doc\n\ninclude::nope.adoc[]",
+            &Options::new()
+                .standalone(true)
+                .input_file(dir.path().join("doc.adoc")),
+        );
+        assert!(html.contains("Unresolved directive"));
+    }
+
+    #[test]
+    fn safe_mode_confines_absolute_includes_to_the_primary_directory() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        let html = convert_with(
+            "= Doc\n\ninclude::/etc/hosts[]",
+            &Options::new()
+                .standalone(true)
+                .safe_mode(SafeMode::Safe)
+                .input_file(dir.path().join("doc.adoc")),
+        );
+        assert!(html.contains("Unresolved directive"));
+        assert!(!html.contains("localhost"));
+    }
+
+    #[test]
+    fn a_utf8_bom_is_removed_from_included_content() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        std::fs::write(dir.path().join("part.adoc"), "\u{feff}Included body.").expect("write");
+        let html = convert_with(
+            "= Doc\n\ninclude::part.adoc[]",
+            &Options::new().input_file(dir.path().join("doc.adoc")),
+        );
+        assert_eq!(html, "<p>Included body.</p>");
+    }
+
+    #[test]
+    fn a_non_utf8_include_reports_the_decoding_failure() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        std::fs::write(dir.path().join("part.adoc"), [0xff, 0xfe]).expect("write");
+        let options = Options::new().input_file(dir.path().join("doc.adoc"));
+        let document = load_with("= Doc\n\ninclude::part.adoc[]", &options);
+        let warnings: Vec<String> = document
+            .warnings()
+            .map(|warning| warning.warning.to_string())
+            .collect();
+        assert!(warnings.iter().any(|warning| warning.contains("UTF-8")));
+    }
+}
+
+mod verbatim_styles {
+    use super::body;
+
+    // Asciidoctor renders a delimited block per its delimiter: `----` is a
+    // listing even under `[sidebar]`, `[quote]`, `[stem]`, `[comment]`, …
+    #[test]
+    fn styled_listing_blocks_render_as_listings() {
+        for style in [
+            "sidebar", "quote", "example", "open", "verse", "comment", "stem",
+        ] {
+            let html = body(&format!("[{style}]\n----\ncontent\n----"));
+            assert!(
+                html.starts_with("<div class=\"listing\">"),
+                "{style} over ---- should render a listing, got: {html}"
+            );
+        }
+    }
+
+    #[test]
+    fn literal_style_demotes_a_listing_to_a_literal() {
+        let html = body("[literal]\n----\ncontent\n----");
+        assert!(html.starts_with("<div class=\"literal\">"));
+    }
+
+    #[test]
+    fn listing_style_upgrades_a_literal_to_a_listing() {
+        let html = body("[listing]\n....\ncontent\n....");
+        assert!(html.starts_with("<div class=\"listing\">"));
+    }
+
+    #[test]
+    fn source_style_upgrades_a_literal_and_ignores_a_passthrough() {
+        let html = body("[source,rust]\n....\nfn main() {}\n....");
+        assert!(html.contains("<pre class=\"highlight\"><code class=\"language-rust\""));
+        // On a passthrough the style is decoration: the content stays raw.
+        assert_eq!(
+            body("[source]\n++++\n<div>raw</div>\n++++"),
+            "<div>raw</div>"
+        );
+    }
+
+    // A `[comment]`-styled paragraph is a comment block; a `[comment]`-styled
+    // delimited block is not.
+    #[test]
+    fn comment_style_drops_paragraphs_but_not_listings() {
+        assert_eq!(body("[comment]\nA paragraph.\n"), "");
+        let html = body("[comment]\n----\ncontent\n----");
+        assert!(html.starts_with("<div class=\"listing\">"));
+    }
+}
+
+mod merged_lists {
+    use super::body;
+
+    // `asciidoc-parser` merges an attribute-decorated list after a nested
+    // list into the previous list and hangs the attributes on the merged
+    // segment's first item. The renderer splits it back out.
+    #[test]
+    fn an_attributed_list_after_a_nested_list_splits_with_its_attributes() {
+        let html = body("* a\n** nested\n\n[.foo]\n* c");
+        assert_eq!(
+            html,
+            "<div class=\"ulist\">\n<ul>\n<li>\n<p>a</p>\n<div class=\"ulist\">\n<ul>\n<li>\n<p>nested</p>\n</li>\n</ul>\n</div>\n</li>\n</ul>\n</div>\n<div class=\"ulist foo\">\n<ul>\n<li>\n<p>c</p>\n</li>\n</ul>\n</div>"
+        );
+    }
+
+    #[test]
+    fn an_attributed_ordered_segment_keeps_its_numbering() {
+        let html = body("* a\n** nested\n\n[loweralpha,start=3]\n. c");
+        assert!(html.contains("<div class=\"olist loweralpha\">"));
+        assert!(html.contains("<ol class=\"loweralpha\" type=\"a\" start=\"3\">"));
+        assert!(html.contains("<p>c</p>"));
+    }
+
+    #[test]
+    fn an_unordered_segment_split_from_an_olist_has_no_ordered_style() {
+        let html = body(". a\n.. nested\n\n[.foo]\n* c");
+        assert!(html.contains("<div class=\"ulist foo\">\n<ul>"));
+        assert!(!html.contains("ulist arabic foo"));
+        assert!(!html.contains("<ul class=\"arabic\">"));
+    }
+
+    #[test]
+    fn a_split_ulist_does_not_inherit_the_previous_lists_style() {
+        let html = body("[square]\n* a\n** nested\n\n[.foo]\n* c");
+        assert!(html.contains("<div class=\"ulist foo\">\n<ul>"));
+        assert!(!html.contains("ulist square foo"));
+    }
+}
+
+mod svg_images {
+    use super::{Options, convert_with};
+    use crate::SafeMode;
+
+    #[test]
+    fn an_interactive_svg_is_wrapped_in_an_object() {
+        let html = convert_with(
+            "= Doc\n\nimage::/i/chart.svg[Chart, opts=interactive, fallback=chart.png]",
+            &Options::new(),
+        );
+        assert!(html.contains(
+            "<object type=\"image/svg+xml\" data=\"/i/chart.svg\"><img src=\"chart.png\" alt=\"Chart\"></object>"
+        ));
+    }
+
+    #[test]
+    fn an_interactive_svg_without_a_fallback_renders_the_alt_text() {
+        let html = convert_with(
+            "= Doc\n\nimage::/i/chart.svg[Chart, opts=interactive]",
+            &Options::new(),
+        );
+        assert!(html.contains(
+            "<object type=\"image/svg+xml\" data=\"/i/chart.svg\"><span class=\"alt\">Chart</span></object>"
+        ));
+    }
+
+    #[test]
+    fn an_svg_alt_fallback_escapes_element_text() {
+        let html = convert_with(
+            "= Doc\n\nimage::/i/chart.svg[A <b> & \"c\", opts=interactive]",
+            &Options::new(),
+        );
+        assert!(html.contains("<span class=\"alt\">A &lt;b&gt; &amp; \"c\"</span>"));
+        assert!(!html.contains("<span class=\"alt\">A <b>"));
+    }
+
+    #[test]
+    fn an_inline_svg_is_read_and_rewritten() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        std::fs::create_dir_all(dir.path().join("img")).expect("mkdir");
+        std::fs::write(
+            dir.path().join("diagram.svg"),
+            "<?xml version=\"1.0\"?>\n<svg width=\"100\" height=\"50\" style=\"background:#fff\">\n<rect/>\n</svg>",
+        )
+        .expect("write");
+        let html = convert_with(
+            "= Doc\n\nimage::diagram.svg[Diagram, 40, 20, opts=inline]",
+            &Options::new().input_file(dir.path().join("doc.adoc")),
+        );
+        assert!(html.contains("<svg width=\"40\" height=\"20\">"));
+        assert!(!html.contains("<?xml"));
+    }
+
+    #[test]
+    fn inline_svg_decodes_imagesdir_for_file_lookup() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        std::fs::create_dir(dir.path().join("img&dir")).expect("mkdir");
+        std::fs::write(dir.path().join("img&dir/diagram.svg"), "<svg><rect/></svg>")
+            .expect("write svg");
+        let html = convert_with(
+            "= Doc\n:imagesdir: img&dir\n\nimage::diagram.svg[Diagram,opts=inline]",
+            &Options::new().input_file(dir.path().join("doc.adoc")),
+        );
+        assert!(html.contains("<svg><rect/></svg>"));
+        assert!(!html.contains("<span class=\"alt\">"));
+    }
+
+    #[test]
+    fn an_absolute_inline_svg_target_ignores_imagesdir() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        let target = dir.path().join("diagram.svg");
+        std::fs::write(&target, "<svg><rect/></svg>").expect("write svg");
+        let source = format!(
+            "= Doc\n:imagesdir: ignored\n\nimage::{}[Diagram,opts=inline]",
+            target.display()
+        );
+        let html = convert_with(&source, &Options::new());
+        assert!(html.contains("<svg><rect/></svg>"));
+    }
+
+    #[test]
+    fn inline_svg_removes_multiline_dimension_attributes() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        std::fs::write(
+            dir.path().join("diagram.svg"),
+            "<svg\nwidth=\"100\"\theight='50'\nstyle=\"fill:red\"><rect/></svg>",
+        )
+        .expect("write svg");
+        let html = convert_with(
+            "= Doc\n\nimage::diagram.svg[Diagram,40,20,opts=inline]",
+            &Options::new().input_file(dir.path().join("doc.adoc")),
+        );
+        assert!(html.contains("<svg width=\"40\" height=\"20\"><rect/></svg>"));
+        assert!(!html.contains("width=\"100\""));
+        assert!(!html.contains("height='50'"));
+        assert!(!html.contains("style=\"fill:red\""));
+    }
+
+    #[test]
+    fn secure_mode_renders_inline_svg_as_a_plain_image() {
+        let html = convert_with(
+            "= Doc\n\nimage::diagram.svg[Diagram,opts=inline]",
+            &Options::new().safe_mode(SafeMode::Secure),
+        );
+        assert!(html.contains("<img src=\"diagram.svg\" alt=\"Diagram\">"));
+        assert!(!html.contains("<span class=\"alt\">"));
+    }
+
+    #[test]
+    fn an_inline_svg_that_cannot_be_read_renders_the_alt_text() {
+        let html = convert_with(
+            "= Doc\n\nimage::/i/missing.svg[Alt, opts=inline]",
+            &Options::new(),
+        );
+        assert!(html.contains("<span class=\"alt\">Alt</span>"));
+    }
+
+    #[test]
+    fn a_plain_svg_renders_as_an_image() {
+        let html = convert_with("= Doc\n\nimage::/i/chart.svg[Chart]", &Options::new());
+        assert!(html.contains("<img src=\"/i/chart.svg\" alt=\"Chart\">"));
+    }
+}

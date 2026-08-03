@@ -26,8 +26,11 @@
 //! bare `<p>` paragraphs, `rem` image dimensions promoted to inline styles, and
 //! CJK line-break collapsing. See `README.md` for the full list.
 
+use std::path::Path;
+
 use asciidoc_parser::{
-    Document, HasSpan,
+    Document, HasSpan, SafeMode,
+    attributes::Attrlist,
     blocks::{
         AdmonitionBlock, Block, Break, BreakType, ColumnStyle, CompoundDelimitedContext,
         ContentModel, FindBlocks, Frame, Grid, HorizontalAlignment, IsBlock, ListBlock, ListItem,
@@ -41,7 +44,8 @@ use asciidoc_parser::{
 use crate::{
     Options,
     cjk::collapse_cjk_newlines,
-    html::{class_attribute, class_list, escape_attribute, id_attribute},
+    html::{class_attribute, class_list, escape_attribute, escape_text, id_attribute},
+    path::{FileResolver, decode_document_attribute, looks_like_uri, resolve_web_path},
     title::{self, Title},
 };
 
@@ -56,12 +60,13 @@ const HIGHLIGHT_JS_VERSION: &str = "11.11.1";
 /// `highlightjs-theme`.
 const DEFAULT_HIGHLIGHTJS_THEME: &str = "atom-one-light";
 
-/// Reads a document attribute's value, or `None` when it is unset or set
-/// without a value.
+/// Reads a document attribute's value, returning an empty string for a
+/// value-less set attribute and `None` only when it is unset.
 pub(crate) fn attribute_str(document: &Document<'_>, name: &str) -> Option<String> {
     match document.attribute_value(name) {
         InterpretedValue::Value(value) => Some(value),
-        InterpretedValue::Set | InterpretedValue::Unset => None,
+        InterpretedValue::Set => Some(String::new()),
+        InterpretedValue::Unset => None,
     }
 }
 
@@ -69,6 +74,28 @@ pub(crate) fn attribute_str(document: &Document<'_>, name: &str) -> Option<Strin
 /// unset — Asciidoctor's `node.attr 'name', 'default'`.
 fn attribute_or(document: &Document<'_>, name: &str, default: &str) -> String {
     attribute_str(document, name).unwrap_or_else(|| default.to_string())
+}
+
+/// The `asset-uri-scheme` document attribute, normalized to a `scheme:`
+/// prefix — empty when the attribute is set to an empty value, so the
+/// `scheme://` URL it prefixes stays well-formed.
+fn asset_uri_scheme(document: &Document<'_>) -> String {
+    match attribute_or(document, "asset-uri-scheme", "https") {
+        scheme if scheme.is_empty() => String::new(),
+        scheme => format!("{scheme}:"),
+    }
+}
+
+/// Escapes the double quotes of a *document-attribute* value destined for a
+/// quoted HTML attribute.
+///
+/// The parser substitutes such values ahead of time (special characters,
+/// attribute references), so the `&`, `<`, and `>` are already escaped and
+/// must not be touched again — that is the double-escaping bug from the meta
+/// tags. Quotes, however, are not part of the substitution's escape set, so
+/// they are handled here, keeping the attribute well-formed.
+fn escape_quotes(value: &str) -> String {
+    value.replace('"', "&quot;")
 }
 
 /// The active *client-side* syntax highlighter, resolved from the
@@ -82,6 +109,27 @@ fn attribute_or(document: &Document<'_>, name: &str, default: &str) -> String {
 enum Highlighter {
     /// `:source-highlighter: highlightjs` (also `highlight.js`).
     HighlightJs,
+}
+
+/// Semantic attributes carried by an ordered list segment.
+///
+/// Keeping these as data until the `<ol>` is emitted avoids passing around
+/// preformatted HTML fragments and centralizes escaping in [`Renderer::open_olist`].
+#[derive(Clone, Copy, Default)]
+struct OrderedListAttributes<'a> {
+    start: Option<&'a str>,
+    reversed: bool,
+}
+
+impl<'a> OrderedListAttributes<'a> {
+    fn from_attrlist(attrlist: Option<&'a Attrlist<'_>>) -> Self {
+        Self {
+            start: attrlist
+                .and_then(|attributes| attributes.named_attribute("start"))
+                .map(|attribute| attribute.value()),
+            reversed: attrlist.is_some_and(|attributes| attributes.has_option("reversed")),
+        }
+    }
 }
 
 impl Highlighter {
@@ -154,11 +202,21 @@ enum TableSection {
 /// discard them, matching Asciidoctor. Attribute-entry blocks likewise carry no
 /// output of their own.
 fn renders_nothing(block: &Block<'_>) -> bool {
-    if block.resolved_context().as_ref() == "comment" || block.declared_style() == Some("comment") {
+    // `////` comment blocks.
+    if block.resolved_context().as_ref() == "comment" {
         return true;
     }
 
     if block.resolved_context().as_ref() == "attribute" {
+        return true;
+    }
+
+    // A `[comment]`-styled *paragraph* is a comment block in Asciidoctor and
+    // renders to nothing. On a delimited block (a `----` listing, say) the
+    // style is decoration: Asciidoctor renders the block per its delimiter.
+    if matches!(block, Block::Simple(simple) if simple.style() == SimpleBlockStyle::Paragraph)
+        && block.declared_style() == Some("comment")
+    {
         return true;
     }
 
@@ -218,9 +276,19 @@ pub(crate) fn render_document(document: &Document<'_>, options: &Options) -> Str
         },
         cellbgcolor: attribute_str(document, "cellbgcolor"),
         max_width_attr: match attribute_str(document, "max-width") {
-            Some(width) => format!(" style=\"max-width: {};\"", escape_attribute(&width)),
+            Some(width) => format!(" style=\"max-width: {};\"", escape_quotes(&width)),
             None => String::new(),
         },
+        // Filesystem-backed block assets resolve against the primary input
+        // file's directory, or the process's current directory without one.
+        files: FileResolver::new(
+            options
+                .input_file_path()
+                .and_then(Path::parent)
+                .unwrap_or_else(|| Path::new("")),
+            options.effective_safe_mode(),
+        ),
+        standalone: options.is_standalone(),
     };
 
     if options.is_standalone() {
@@ -280,6 +348,14 @@ struct Renderer {
     /// The ` style="max-width: …;"` fragment stamped on the content and
     /// footnotes wrappers, or empty when `max-width` is unset.
     max_width_attr: String,
+
+    /// Resolves filesystem-backed assets and enforces the selected safe mode.
+    files: FileResolver,
+
+    /// Whether a complete page is being emitted. Standalone output gets the
+    /// Ruby converter's auto-set `iconfont-remote` attribute, which selects
+    /// the Font Awesome CDN link under `:icons: font`.
+    standalone: bool,
 }
 
 impl Renderer {
@@ -350,7 +426,7 @@ impl Renderer {
         } else {
             format!(
                 " lang=\"{}\"",
-                escape_attribute(&attribute_or(document, "lang", "en"))
+                escape_quotes(&attribute_or(document, "lang", "en"))
             )
         };
 
@@ -401,7 +477,7 @@ impl Renderer {
             if let Some(value) = attribute_str(document, name) {
                 self.line(&format!(
                     "<meta name=\"{name}\" content=\"{}\">",
-                    escape_attribute(&value)
+                    escape_quotes(&value)
                 ));
             }
         }
@@ -419,7 +495,88 @@ impl Renderer {
         };
         self.line(&format!("<title>{title}</title>"));
 
+        // The stylesheet and icon-font links come after the title, matching
+        // the Ruby converter's shell order. The document attributes involved
+        // are *already substituted* (special characters escaped) by the
+        // parser, so they are spliced into the markup verbatim; escaping them
+        // again would double-escape.
+        self.stylesheets(document);
+
         self.line("</head>");
+    }
+
+    /// Emits the stylesheet links: the `:stylesheet:` / `:webfonts:` /
+    /// `:icons: font` handling the Ruby converter performs in its document
+    /// shell. With none of those set (the site's normal state), nothing is
+    /// emitted beyond the hardcoded `/style.css` link above.
+    fn stylesheets(&mut self, document: &Document<'_>) {
+        match attribute_str(document, "stylesheet").as_deref() {
+            // The empty string and `DEFAULT` select the default stylesheet,
+            // which in this backend only contributes the optional webfonts
+            // link (Asciidoctor's `DEFAULT_STYLESHEET_KEYS`).
+            Some("" | "DEFAULT") => {
+                if let Some(webfonts) =
+                    attribute_str(document, "webfonts").filter(|webfonts| !webfonts.is_empty())
+                {
+                    let href = format!(
+                        "{}//fonts.googleapis.com/css?family={}",
+                        asset_uri_scheme(document),
+                        escape_quotes(&webfonts)
+                    );
+                    self.line(&format!("<link rel=\"stylesheet\" href=\"{href}\">"));
+                }
+            }
+            Some(stylesheet) => {
+                let stylesdir = attribute_or(document, "stylesdir", "");
+                if document.is_attribute_set("linkcss") {
+                    self.line(&format!(
+                        "<link rel=\"stylesheet\" href=\"{}\">",
+                        escape_quotes(&resolve_web_path(stylesheet, &stylesdir))
+                    ));
+                } else {
+                    // The file's contents are inlined; a missing file yields
+                    // an empty `<style>` element, matching Asciidoctor.
+                    let stylesheet = decode_document_attribute(stylesheet);
+                    let stylesdir = decode_document_attribute(&stylesdir);
+                    let contents = self.read_asset(&stylesheet, &stylesdir).unwrap_or_default();
+                    self.line(&format!("<style>\n{contents}\n</style>"));
+                }
+            }
+            None => {}
+        }
+
+        // `:icons: font` glyphs come from Font Awesome; without its stylesheet
+        // the `<i class="fa …">` elements render as nothing. The Ruby
+        // converter's CLI sets `iconfont-remote` for every standalone
+        // document, so the CDN link is the default here too — unless the
+        // document mentions the attribute itself, in which case its own state
+        // (an explicit `:iconfont-remote:` or `:iconfont-remote!:`) wins.
+        if self.icons_font {
+            let iconfont_remote = if document.has_attribute("iconfont-remote") {
+                document.is_attribute_set("iconfont-remote")
+            } else {
+                self.standalone
+            };
+            if iconfont_remote {
+                let cdn = format!(
+                    "{}//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css",
+                    asset_uri_scheme(document)
+                );
+                let href = attribute_or(document, "iconfont-cdn", &cdn);
+                self.line(&format!(
+                    "<link rel=\"stylesheet\" href=\"{}\">",
+                    escape_quotes(&href)
+                ));
+            } else {
+                let name = attribute_or(document, "iconfont-name", "font-awesome");
+                let stylesdir = attribute_or(document, "stylesdir", "");
+                let href = resolve_web_path(&format!("{name}.css"), &stylesdir);
+                self.line(&format!(
+                    "<link rel=\"stylesheet\" href=\"{}\">",
+                    escape_quotes(&href)
+                ));
+            }
+        }
     }
 
     /// Emits the favicon `<link>`, deriving its MIME type from the target's
@@ -440,8 +597,8 @@ impl Renderer {
 
         self.line(&format!(
             "<link rel=\"icon\" type=\"{}\" href=\"{}\">",
-            escape_attribute(&icon_type),
-            escape_attribute(&icon_href)
+            escape_quotes(&icon_type),
+            escape_quotes(&icon_href)
         ));
     }
 
@@ -548,11 +705,10 @@ impl Renderer {
             return;
         }
 
-        let asset_uri_scheme = match attribute_or(document, "asset-uri-scheme", "https") {
-            scheme if scheme.is_empty() => String::new(),
-            scheme => format!("{scheme}:"),
-        };
-        let cdn_base_url = format!("{asset_uri_scheme}//cdnjs.cloudflare.com/ajax/libs");
+        let cdn_base_url = format!(
+            "{}//cdnjs.cloudflare.com/ajax/libs",
+            asset_uri_scheme(document)
+        );
         let base_url = attribute_or(
             document,
             "highlightjsdir",
@@ -662,13 +818,31 @@ impl Renderer {
             Block::Section(section) => self.section(block, section),
             Block::Preamble(_) => self.preamble(block),
             Block::Break(brk) => self.break_block(brk),
-            Block::RawDelimited(_) => match block.resolved_context().as_ref() {
-                "listing" => self.listing(block),
-                "literal" => self.literal(block),
-                "pass" => self.pass_block(block),
-                "stem" => self.stem(block),
-                other => self.unsupported(other),
-            },
+            Block::RawDelimited(_) => {
+                // The delimiter decides what a raw delimited block is: a
+                // `----` block is a listing no matter what style it carries
+                // (`[sidebar]`/`[quote]`/`[stem]`/… over `----` still render
+                // as a listing, matching Asciidoctor). Three styles
+                // *specialize* the verbatim delimiters, however: `listing`
+                // upgrades a `....` block, `source` upgrades a `....` or
+                // `----` block to a source listing, and `literal` demotes a
+                // `----` block to a literal. On a passthrough all of them are
+                // decoration and the block stays a passthrough.
+                let raw_context = block.raw_context();
+                let context = match (block.declared_style(), raw_context.as_ref()) {
+                    (Some("listing"), "literal") => "listing",
+                    (Some("literal"), "listing") => "literal",
+                    (Some("source"), "listing" | "literal") => "listing",
+                    _ => raw_context.as_ref(),
+                };
+                match context {
+                    "listing" => self.listing(block),
+                    "literal" => self.literal(block),
+                    "pass" => self.pass_block(block),
+                    "stem" => self.stem(block),
+                    other => self.unsupported(other),
+                }
+            }
             Block::CompoundDelimited(compound) => match compound.context_kind() {
                 CompoundDelimitedContext::Open => self.open_block(block),
                 CompoundDelimitedContext::Sidebar => self.sidebar(block),
@@ -1098,7 +1272,7 @@ impl Renderer {
             } else {
                 format!(
                     "<img src=\"{}\" alt=\"{}\">",
-                    escape_attribute(&self.icon_uri(name)),
+                    self.icon_uri(name),
                     escape_attribute(admonition.label())
                 )
             }
@@ -1120,7 +1294,25 @@ impl Renderer {
     /// The URI of a named icon image, under `iconsdir` with the `icontype`
     /// extension.
     fn icon_uri(&self, name: &str) -> String {
-        media_uri(&format!("{name}.{}", self.icontype), &self.iconsdir)
+        escape_quotes(&resolve_web_path(
+            &escape_attribute(&format!("{name}.{}", self.icontype)),
+            &self.iconsdir,
+        ))
+    }
+
+    /// Reads a local site asset relative to the document base and `dir`.
+    /// URI-backed assets are not fetched by this filesystem-only backend.
+    fn read_asset(&self, target: &str, dir: &str) -> Option<String> {
+        if looks_like_uri(target)
+            || target.starts_with("//")
+            || looks_like_uri(dir)
+            || dir.starts_with("//")
+        {
+            return None;
+        }
+
+        let current_dir = (!dir.is_empty()).then(|| self.files.resolve_directory(dir));
+        self.files.read(current_dir.as_deref(), target).ok()
     }
 
     // ---------------------------------------------------------------------
@@ -1131,7 +1323,87 @@ impl Renderer {
     fn ulist<'src>(&mut self, block: &'src Block<'src>, list: &'src ListBlock<'src>) {
         let checklist = list.is_checklist();
         let style = block.declared_style().unwrap_or_default();
+        let interactive = block.has_option("interactive");
+        let items: Vec<&Block<'_>> = list.child_blocks().collect();
 
+        // `asciidoc-parser` merges an attribute-decorated list that follows a
+        // nested list into the previous list, hanging the list's attributes
+        // on its first item (see `split_list_at_attributes`). Render the
+        // pre-attribute items as this list and start a fresh one at the
+        // attributed item, carrying its attributes — the structure
+        // Asciidoctor produces. The merged segment keeps its own item
+        // markers, so a `. c` segment merged into a `*` list still renders as
+        // an ordered list.
+        match split_list_at_attributes(&items) {
+            Some(split) if split > 0 => {
+                self.open_ulist(block.id(), &block.roles(), checklist, style, block, true);
+                for &item in &items[..split] {
+                    self.list_item(item, checklist, interactive, false);
+                }
+                self.line("</ul>");
+                self.line("</div>");
+
+                let segment = &items[split..];
+                if item_is_ordered(segment[0]) {
+                    let item = segment[0];
+                    let item_style = item
+                        .declared_style()
+                        .or_else(|| ordered_list_marker_style(item))
+                        .unwrap_or("arabic");
+                    let attributes = OrderedListAttributes::from_attrlist(item.attrlist());
+                    self.open_olist(
+                        item.id(),
+                        &item.roles(),
+                        item_style,
+                        attributes,
+                        block,
+                        false,
+                    );
+                    for &item in segment {
+                        self.list_item(item, false, false, true);
+                    }
+                    self.line("</ol>");
+                    self.line("</div>");
+                } else {
+                    let item = segment[0];
+                    let item_style = item.declared_style().unwrap_or_default();
+                    self.open_ulist(
+                        item.id(),
+                        &item.roles(),
+                        checklist,
+                        item_style,
+                        block,
+                        false,
+                    );
+                    for &item in segment {
+                        self.list_item(item, checklist, interactive, true);
+                    }
+                    self.line("</ul>");
+                    self.line("</div>");
+                }
+            }
+            _ => {
+                self.open_ulist(block.id(), &block.roles(), checklist, style, block, true);
+                for item in items {
+                    self.list_item(item, checklist, interactive, false);
+                }
+                self.line("</ul>");
+                self.line("</div>");
+            }
+        }
+    }
+
+    /// Opens a `<div class="ulist …">`/`<ul>` pair, honoring `checklist` and
+    /// the list style, with the block's title on the first segment only.
+    fn open_ulist(
+        &mut self,
+        id: Option<&str>,
+        roles: &[&str],
+        checklist: bool,
+        style: &str,
+        block: &Block<'_>,
+        with_title: bool,
+    ) {
         // `['ulist', ('checklist')?, style, *roles]` — a checklist puts its
         // marker class right after `ulist`.
         let mut classes: Vec<&str> = vec!["ulist"];
@@ -1139,14 +1411,16 @@ impl Renderer {
             classes.push("checklist");
         }
         classes.push(style);
-        classes.extend(block.roles());
+        classes.extend(roles);
 
         self.line(&format!(
             "<div{} class=\"{}\">",
-            id_attribute(block.id()),
+            id_attribute(id),
             class_list(&classes)
         ));
-        self.block_title(block);
+        if with_title {
+            self.block_title(block);
+        }
 
         let ul_class = if checklist {
             " class=\"checklist\"".to_string()
@@ -1156,26 +1430,91 @@ impl Renderer {
             format!(" class=\"{}\"", escape_attribute(style))
         };
         self.line(&format!("<ul{ul_class}>"));
-
-        let interactive = block.has_option("interactive");
-        for item in list.child_blocks() {
-            self.list_item(item, checklist, interactive);
-        }
-
-        self.line("</ul>");
-        self.line("</div>");
     }
 
     /// An ordered list. Item text has CJK line breaks collapsed.
     fn olist<'src>(&mut self, block: &'src Block<'src>, list: &'src ListBlock<'src>) {
         let style = olist_style(block, list);
+        let items: Vec<&Block<'_>> = list.child_blocks().collect();
 
+        // The same merged-list repair as `ulist`: an attributed item begins a
+        // fresh list carrying the item's style and `start`/`reversed`
+        // options. A `*` segment merged into a `.` list renders as an
+        // unordered list again.
+        match split_list_at_attributes(&items) {
+            Some(split) if split > 0 => {
+                let attributes = OrderedListAttributes::from_attrlist(list.attrlist());
+                self.open_olist(block.id(), &block.roles(), style, attributes, block, true);
+                for &item in &items[..split] {
+                    self.list_item(item, false, false, false);
+                }
+                self.line("</ol>");
+                self.line("</div>");
+
+                let segment = &items[split..];
+                if item_is_ordered(segment[0]) {
+                    let item = segment[0];
+                    let item_style = item
+                        .declared_style()
+                        .or_else(|| ordered_list_marker_style(item))
+                        .unwrap_or(style);
+                    let attributes = OrderedListAttributes::from_attrlist(item.attrlist());
+                    self.open_olist(
+                        item.id(),
+                        &item.roles(),
+                        item_style,
+                        attributes,
+                        block,
+                        false,
+                    );
+                    for &item in segment {
+                        self.list_item(item, false, false, true);
+                    }
+                    self.line("</ol>");
+                    self.line("</div>");
+                } else {
+                    let item = segment[0];
+                    let item_style = item.declared_style().unwrap_or_default();
+                    self.open_ulist(item.id(), &item.roles(), false, item_style, block, false);
+                    for &item in segment {
+                        self.list_item(item, false, false, true);
+                    }
+                    self.line("</ul>");
+                    self.line("</div>");
+                }
+            }
+            _ => {
+                let attributes = OrderedListAttributes::from_attrlist(list.attrlist());
+                self.open_olist(block.id(), &block.roles(), style, attributes, block, true);
+                for item in items {
+                    self.list_item(item, false, false, false);
+                }
+                self.line("</ol>");
+                self.line("</div>");
+            }
+        }
+    }
+
+    /// Opens a `<div class="olist …">`/`<ol>` pair with explicit attributes —
+    /// shared by the main list and the repair-split segment. The block title
+    /// lands on the first segment only.
+    fn open_olist(
+        &mut self,
+        id: Option<&str>,
+        roles: &[&str],
+        style: &str,
+        attributes: OrderedListAttributes<'_>,
+        block: &Block<'_>,
+        with_title: bool,
+    ) {
         self.line(&format!(
             "<div{}{}>",
-            id_attribute(block.id()),
-            class_attribute(&format!("olist {style}"), &block.roles())
+            id_attribute(id),
+            class_attribute(&format!("olist {style}"), roles)
         ));
-        self.block_title(block);
+        if with_title {
+            self.block_title(block);
+        }
 
         let type_attr = match style {
             "loweralpha" => " type=\"a\"",
@@ -1184,28 +1523,16 @@ impl Renderer {
             "upperroman" => " type=\"I\"",
             _ => "",
         };
-        let start_attr = list
-            .attrlist()
-            .and_then(|attrlist| attrlist.named_attribute("start"))
-            .map(|attr| format!(" start=\"{}\"", escape_attribute(attr.value())))
+        let start_attr = attributes
+            .start
+            .map(|start| format!(" start=\"{}\"", escape_attribute(start)))
             .unwrap_or_default();
-        let reversed_attr = if block.has_option("reversed") {
-            " reversed"
-        } else {
-            ""
-        };
+        let reversed_attr = if attributes.reversed { " reversed" } else { "" };
 
         self.line(&format!(
             "<ol class=\"{}\"{type_attr}{start_attr}{reversed_attr}>",
             escape_attribute(style)
         ));
-
-        for item in list.child_blocks() {
-            self.list_item(item, false, false);
-        }
-
-        self.line("</ol>");
-        self.line("</div>");
     }
 
     /// A callout list: a plain `<ol>`, or a two-column `<table>` of numbered
@@ -1234,7 +1561,7 @@ impl Renderer {
         } else {
             self.line("<ol>");
             for item in list.child_blocks() {
-                self.list_item(item, false, false);
+                self.list_item(item, false, false, false);
             }
             self.line("</ol>");
         }
@@ -1247,10 +1574,7 @@ impl Renderer {
         let num_label = if self.icons_font {
             format!("<i class=\"conum\" data-value=\"{num}\"></i><b>{num}</b>")
         } else {
-            let src = escape_attribute(&media_uri(
-                &format!("callouts/{num}.{}", self.icontype),
-                &self.iconsdir,
-            ));
+            let src = self.icon_uri(&format!("callouts/{num}"));
             format!("<img src=\"{src}\" alt=\"{num}\">")
         };
 
@@ -1435,12 +1759,24 @@ impl Renderer {
 
     /// One `<li>…</li>`: the principal text as a bare `<p>` with CJK line
     /// breaks collapsed, followed by any attached blocks.
-    fn list_item<'src>(&mut self, item: &'src Block<'src>, checklist: bool, interactive: bool) {
+    ///
+    /// With `strip_attrs`, the item's id/roles are not emitted — used for the
+    /// items of a repair-split list, whose first item carries attributes that
+    /// were hoisted onto the new list wrapper.
+    fn list_item<'src>(
+        &mut self,
+        item: &'src Block<'src>,
+        checklist: bool,
+        interactive: bool,
+        strip_attrs: bool,
+    ) {
         let Block::ListItem(list_item) = item else {
             return;
         };
 
-        let li_open = if let Some(id) = item.id() {
+        let li_open = if strip_attrs {
+            "<li>".to_string()
+        } else if let Some(id) = item.id() {
             format!(
                 "<li id=\"{}\"{}>",
                 escape_attribute(id),
@@ -1661,7 +1997,7 @@ impl Renderer {
             String::new()
         };
         let style = match &self.cellbgcolor {
-            Some(color) => format!(" style=\"background-color: {};\"", escape_attribute(color)),
+            Some(color) => format!(" style=\"background-color: {};\"", escape_quotes(color)),
             None => String::new(),
         };
 
@@ -1797,7 +2133,13 @@ impl Renderer {
         };
 
         let target = media.resolved_target();
-        let src = media_uri(target, &self.imagesdir);
+        // `target` is a raw macro attribute, `imagesdir` an already-substituted
+        // document attribute — escaping the target once, before the join,
+        // yields a correctly single-escaped `src`.
+        let src = escape_quotes(&resolve_web_path(
+            &escape_attribute(target),
+            &self.imagesdir,
+        ));
         let alt = positional("alt", 1)
             .map(str::to_string)
             .unwrap_or_else(|| default_alt(target));
@@ -1824,11 +2166,36 @@ impl Renderer {
             ));
         }
 
-        let mut img = format!(
-            "<img src=\"{}\" alt=\"{}\"{html_attrs}>",
-            escape_attribute(&src),
-            escape_attribute(&alt),
-        );
+        // An SVG target can be inlined into the page or wrapped in an
+        // `<object>` — the `inline` and `interactive` options the Ruby
+        // converter supports. Both apply only to SVG targets.
+        let is_svg = (positional("format", 4).is_some_and(|format| format == "svg")
+            || target.contains(".svg"))
+            && self.files.safe_mode() < SafeMode::Secure;
+        let filesystem_imagesdir = decode_document_attribute(&self.imagesdir);
+        let mut img = if is_svg && macro_attrs.has_option("inline") {
+            self.read_asset(target, &filesystem_imagesdir)
+                .and_then(|svg| inline_svg(&svg, positional("width", 2), positional("height", 3)))
+                .unwrap_or_else(|| format!("<span class=\"alt\">{}</span>", escape_text(&alt)))
+        } else if is_svg && macro_attrs.has_option("interactive") {
+            let fallback = match named("fallback") {
+                Some(fallback) => format!(
+                    "<img src=\"{}\" alt=\"{}\"{html_attrs}>",
+                    escape_quotes(&resolve_web_path(
+                        &escape_attribute(fallback),
+                        &self.imagesdir,
+                    )),
+                    escape_attribute(&alt)
+                ),
+                None => format!("<span class=\"alt\">{}</span>", escape_text(&alt)),
+            };
+            format!("<object type=\"image/svg+xml\" data=\"{src}\"{html_attrs}>{fallback}</object>")
+        } else {
+            format!(
+                "<img src=\"{src}\" alt=\"{}\"{html_attrs}>",
+                escape_attribute(&alt),
+            )
+        };
 
         if let Some(link) = named("link") {
             let window = named("window");
@@ -1881,7 +2248,10 @@ impl Renderer {
             macro_attrs.named_attribute(name).map(|attr| attr.value())
         };
 
-        let src = media_uri(media.resolved_target(), &self.imagesdir);
+        let src = escape_quotes(&resolve_web_path(
+            &escape_attribute(media.resolved_target()),
+            &self.imagesdir,
+        ));
         let time_anchor = time_anchor(named("start"), named("end"));
 
         let autoplay = if macro_attrs.has_option("autoplay") {
@@ -1910,8 +2280,7 @@ impl Renderer {
         }
         self.line("<div class=\"content\">");
         self.line(&format!(
-            "<audio src=\"{}{time_anchor}\"{autoplay}{controls}{loop_attr}>",
-            escape_attribute(&src)
+            "<audio src=\"{src}{time_anchor}\"{autoplay}{controls}{loop_attr}>"
         ));
         self.line("Your browser does not support the audio tag.");
         self.line("</audio>");
@@ -2017,6 +2386,72 @@ fn as_list_item<'src>(block: &'src Block<'src>) -> Option<&'src ListItem<'src>> 
     }
 }
 
+/// The index of the first list item that carries list-level attributes, or
+/// `None` when no item does.
+///
+/// Asciidoctor attaches attributes written above a list to the *list* — a
+/// list item cannot carry an id, roles, a style, or a `start` option in the
+/// source (an attribute line on an item's own line is read as literal text).
+/// `asciidoc-parser` misbehaves only when such an attribute-decorated list
+/// follows a list whose last item has a nested list: it merges the new list
+/// into the old one and hangs the attributes on the merged segment's first
+/// item. The ulist/olist renderers split at that item, restoring the separate
+/// list Asciidoctor produces.
+fn split_list_at_attributes(items: &[&Block<'_>]) -> Option<usize> {
+    items.iter().position(|item| {
+        item.id().is_some()
+            || !item.roles().is_empty()
+            || item.declared_style().is_some()
+            || item
+                .attrlist()
+                .is_some_and(|attrlist| attrlist.named_attribute("start").is_some())
+            || item
+                .attrlist()
+                .is_some_and(|attrlist| attrlist.has_option("reversed"))
+    })
+}
+
+/// Whether `item`'s marker makes it an ordered-list item (`.`, `a.`, `i)`,
+/// `7.`, …) rather than an unordered or description item.
+fn item_is_ordered(item: &Block<'_>) -> bool {
+    matches!(
+        item,
+        Block::ListItem(list_item)
+            if matches!(
+                list_item.list_item_marker(),
+                ListItemMarker::Dots(_)
+                    | ListItemMarker::ArabicNumeral(_)
+                    | ListItemMarker::AlphaListLower(_)
+                    | ListItemMarker::AlphaListCapital(_)
+                    | ListItemMarker::RomanNumeralLower(_)
+                    | ListItemMarker::RomanNumeralUpper(_)
+            )
+    )
+}
+
+/// The numbering style an ordered-list item's marker implies — the per-item
+/// counterpart of the parser's `ListBlock::marker_style`.
+fn ordered_list_marker_style(item: &Block<'_>) -> Option<&'static str> {
+    let Block::ListItem(list_item) = item else {
+        return None;
+    };
+    match list_item.list_item_marker() {
+        ListItemMarker::Dots(span) => match span.data().len() {
+            2 => Some("loweralpha"),
+            3 => Some("lowerroman"),
+            4 => Some("upperalpha"),
+            5 => Some("upperroman"),
+            _ => Some("arabic"),
+        },
+        ListItemMarker::ArabicNumeral(_) => Some("arabic"),
+        ListItemMarker::AlphaListLower(_) => Some("loweralpha"),
+        ListItemMarker::AlphaListCapital(_) => Some("upperalpha"),
+        ListItemMarker::RomanNumeralLower(_) => Some("lowerroman"),
+        ListItemMarker::RomanNumeralUpper(_) => Some("upperroman"),
+        _ => None,
+    }
+}
+
 /// The rendered term text of a description-list item.
 fn dlist_term_text(list_item: &ListItem<'_>) -> Option<String> {
     match list_item.list_item_marker() {
@@ -2085,8 +2520,11 @@ fn time_anchor(start: Option<&str>, end: Option<&str>) -> String {
     if start.is_none() && end.is_none() {
         return String::new();
     }
-    let start = start.unwrap_or_default();
-    let end = end.map(|end| format!(",{end}")).unwrap_or_default();
+    let start = escape_attribute(start.unwrap_or_default());
+    let end = end
+        .map(escape_attribute)
+        .map(|end| format!(",{end}"))
+        .unwrap_or_default();
     format!("#t={start}{end}")
 }
 
@@ -2160,6 +2598,116 @@ fn default_alt(target: &str) -> String {
     }
 }
 
+/// Prepares an SVG document for inlining, mirroring Asciidoctor's
+/// `read_svg_contents`: strips everything before the `<svg` start tag, and —
+/// when `width`/`height` are given — rewrites the start tag, dropping its own
+/// `width`/`height`/`style` attributes and appending the requested ones.
+///
+/// Returns `None` when the file carries no `<svg` element (where Asciidoctor
+/// would emit the raw file; rendering the alt text is the safer failure).
+fn inline_svg(svg: &str, width: Option<&str>, height: Option<&str>) -> Option<String> {
+    let svg = strip_svg_preamble(svg)?;
+    let start_tag_end = svg.find('>')?;
+    let old_start_tag = &svg[..=start_tag_end];
+
+    let has_dimensions = width.is_some() || height.is_some();
+    let mut new_start_tag = old_start_tag.to_string();
+    if has_dimensions {
+        new_start_tag = strip_dimension_attributes(&new_start_tag);
+        for (dim, value) in [("width", width), ("height", height)] {
+            if let Some(value) = value {
+                // `chop` removes the trailing `>`; the attribute is appended
+                // before it.
+                new_start_tag = format!(
+                    "{} {dim}=\"{}\">",
+                    &new_start_tag[..new_start_tag.len() - 1],
+                    escape_attribute(value)
+                );
+            }
+        }
+    }
+
+    if has_dimensions {
+        Some(format!("{new_start_tag}{}", &svg[old_start_tag.len()..]))
+    } else {
+        Some(svg.to_string())
+    }
+}
+
+/// The slice of `svg` starting at its `<svg` start tag, or `None` when the
+/// file has none — the analog of Asciidoctor's `SvgPreambleRx` strip.
+fn strip_svg_preamble(svg: &str) -> Option<&str> {
+    let mut search_from = 0;
+    while let Some(relative) = svg[search_from..].find("<svg") {
+        let at = search_from + relative;
+        let after = at + "<svg".len();
+        let follows = svg.as_bytes().get(after);
+        if after >= svg.len()
+            || matches!(
+                follows,
+                Some(b' ' | b'\t' | b'\r' | b'\n' | b'\x0b' | b'\x0c' | b'>')
+            )
+        {
+            return Some(&svg[at..]);
+        }
+        search_from = at + 1;
+    }
+    None
+}
+
+/// Removes every ` width=…`, ` height=…`, or ` style=…` attribute from an SVG
+/// start tag — Asciidoctor's `DimensionAttributeRx` pass.
+fn strip_dimension_attributes(tag: &str) -> String {
+    let mut out = String::new();
+    let mut rest = tag;
+
+    while let Some((start, value_start)) = find_dimension_attribute(rest) {
+        let value = &rest[value_start..];
+        let Some(quote @ ('"' | '\'')) = value.chars().next() else {
+            out.push_str(&rest[..value_start]);
+            rest = &rest[value_start..];
+            continue;
+        };
+        let Some(closing_quote) = value[quote.len_utf8()..].find(quote) else {
+            out.push_str(&rest[..value_start]);
+            rest = &rest[value_start..];
+            continue;
+        };
+
+        out.push_str(&rest[..start]);
+        rest = &value[quote.len_utf8() + closing_quote + quote.len_utf8()..];
+    }
+
+    out.push_str(rest);
+    out
+}
+
+/// Finds the next whitespace-prefixed `width=`, `height=`, or `style=` and
+/// returns the attribute start plus the start of its quoted value.
+fn find_dimension_attribute(tag: &str) -> Option<(usize, usize)> {
+    for (start, whitespace) in tag.char_indices() {
+        if !whitespace.is_ascii_whitespace() {
+            continue;
+        }
+
+        let name_start = start + whitespace.len_utf8();
+        let candidate = &tag[name_start..];
+        let Some(name) = ["width", "height", "style"]
+            .into_iter()
+            .find(|name| candidate.starts_with(name))
+        else {
+            continue;
+        };
+
+        let equals = name_start + name.len();
+        if tag.as_bytes().get(equals) == Some(&b'=') {
+            return Some((start, equals + 1));
+        }
+    }
+
+    None
+}
+
 /// The `target`/`rel` attributes a link's `window` and `nofollow`/`noopener`
 /// options contribute.
 fn link_constraint_attrs(window: Option<&str>, nofollow: bool, noopener: bool) -> String {
@@ -2182,57 +2730,6 @@ fn link_constraint_attrs(window: Option<&str>, nofollow: bool, noopener: bool) -
             None => String::new(),
         },
     }
-}
-
-/// Whether `target` looks like an absolute URI (a scheme followed by `://`),
-/// which media resolution passes through untouched.
-fn looks_like_uri(target: &str) -> bool {
-    match target.find("://") {
-        Some(index) if index > 0 => target[..index]
-            .chars()
-            .all(|ch| ch.is_ascii_alphanumeric() || ch == '+' || ch == '.' || ch == '-'),
-        _ => target.starts_with("data:") || target.starts_with("mailto:"),
-    }
-}
-
-/// Resolves a media target against `imagesdir` into a web path.
-fn media_uri(target: &str, imagesdir: &str) -> String {
-    if looks_like_uri(target) {
-        return target.replace(' ', "%20");
-    }
-
-    let target = target.replace('\\', "/");
-    let dir = imagesdir.replace('\\', "/");
-    let joined = if dir.is_empty() || target.starts_with('/') {
-        target
-    } else {
-        format!("{}/{}", dir.trim_end_matches('/'), target)
-    };
-
-    let (root, rest) = if let Some(rest) = joined.strip_prefix('/') {
-        ("/", rest)
-    } else if let Some(rest) = joined.strip_prefix("./") {
-        ("./", rest)
-    } else {
-        ("", joined.as_str())
-    };
-
-    let mut segments: Vec<&str> = Vec::new();
-    for segment in rest.split('/') {
-        match segment {
-            "" | "." => {}
-            ".." => match segments.last() {
-                Some(&last) if last != ".." => {
-                    segments.pop();
-                }
-                _ if root == "/" => {}
-                _ => segments.push(".."),
-            },
-            other => segments.push(other),
-        }
-    }
-
-    format!("{root}{}", segments.join("/")).replace(' ', "%20")
 }
 
 /// Splits a cell's rendered content into `<p class="table">` paragraphs,

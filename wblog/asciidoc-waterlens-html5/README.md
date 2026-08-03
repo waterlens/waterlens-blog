@@ -53,6 +53,8 @@ done
 diff -r /tmp/ruby /tmp/rust
 ```
 
+(Whitespace and the generator `<meta>` tag are expected to differ.)
+
 ## Constructs where `asciidoc-parser` differs from Asciidoctor
 
 Reaching full parity took five source edits, because these five constructs are
@@ -87,3 +89,23 @@ The title handling in `src/title.rs` works around a sixth gap — the parser
 applies only *header* substitutions to the document title, so `= xref:.[Home]`
 would keep its macro in source form. That one is worked around by reparsing the
 raw title as a one-paragraph document; see the module docs for why.
+
+Two further parser gaps are *partially* repaired in the renderer, with the
+residuals documented here:
+
+- **An attribute-decorated list after a nested list** (`* a`, `** nested`,
+  blank line, `[.foo]`, `* c`) is merged by the parser into the previous
+  list, with the attributes hung on the merged segment's first item. The
+  ulist/olist renderers split the list back out at that item, restoring the
+  wrapper attributes (`id`, roles, style, `start`, `reversed`). A segment
+  whose markers differ from the list's own (`[.foo]` before `. c` inside a
+  `*` list) is re-typed from its markers. One residual remains: the split
+  list stays at the nesting depth the parser merged it into, while
+  Asciidoctor hoists it to the top level — a cosmetic indentation difference
+  in a rare shape. A description list merged the same way (`[.foo]` before
+  `t:: d`) loses its `::` structure in the parse and cannot be repaired.
+- **Inline attribute-set directives** (`{set:name:value}`, which set an
+  attribute mid-document for later `{name}` references) are not processed by
+  the parser, so the directive text reaches the output literally. This cannot
+  be fixed in the renderer, because the parser has already substituted (or
+  failed to substitute) the surrounding text.

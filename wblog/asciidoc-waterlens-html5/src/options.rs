@@ -4,6 +4,8 @@ use std::path::{Path, PathBuf};
 
 use asciidoc_parser::{Parser, ReferenceTime, SafeMode, parser::ModificationContext};
 
+use crate::include::FileIncludeHandler;
+
 /// What an attribute directive does to the named attribute.
 #[derive(Clone, Debug)]
 enum Action {
@@ -168,21 +170,39 @@ impl Options {
         self.standalone
     }
 
+    /// The recorded primary input file, if any.
+    pub(crate) fn input_file_path(&self) -> Option<&Path> {
+        self.input_file.as_deref()
+    }
+
+    /// The effective safe mode for parsing and filesystem-backed rendering.
+    pub(crate) fn effective_safe_mode(&self) -> SafeMode {
+        self.safe_mode.unwrap_or(SafeMode::Unsafe)
+    }
+
     /// Turns `parser` into one configured by these options.
     pub(crate) fn apply(&self, mut parser: Parser) -> Parser {
         // The safe mode is established first: `with_safe_mode` also populates
         // the `safe-mode-*` intrinsic attributes, which a bare `Parser` does
         // not set on its own.
-        parser = parser.with_safe_mode(self.safe_mode.unwrap_or(SafeMode::Unsafe));
+        let safe_mode = self.effective_safe_mode();
+        parser = parser.with_safe_mode(safe_mode);
 
         if let Some(reference_time) = self.reference_time.clone() {
             parser = parser.with_reference_time(reference_time);
         }
 
-        if let Some(input_file) = &self.input_file
-            && let Some(name) = input_file.to_str()
-        {
-            parser = parser.with_primary_file_name(name);
+        if let Some(input_file) = &self.input_file {
+            if let Some(name) = input_file.to_str() {
+                parser = parser.with_primary_file_name(name);
+            }
+            // `include::` directives resolve against the primary file's own
+            // directory, the way Asciidoctor resolves them against the
+            // including document's directory. Install the handler even when
+            // the OS path is not valid UTF-8; only the parser's diagnostic
+            // file name requires a `str`.
+            parser =
+                parser.with_include_file_handler(FileIncludeHandler::new(input_file, safe_mode));
         }
 
         for directive in &self.attributes {
