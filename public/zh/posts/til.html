@@ -26,6 +26,339 @@
       <p>不定时更新，记录我在浏览网页、阅读论文、逛社媒时看到的细碎知识和技巧。</p>
       <p>使用倒序方式记录。</p>
       <section class="sect1">
+        <h2 id="date-20260809"><a href="#date-20260809">2026 年 8 月 9 日</a></h2>
+        <p><a href="https://cambium.inria.fr/~fpottier/publis/chargueraud-pottier-sek.pdf">A Catenable, Splittable, Transient Sequence Data Structure</a></p>
+        <p>Transient 数据结构：混合 Ephemeral 和 Persistent 的数据结构，并提供在两者之间进行快速转换的能力。这篇论文提出了一种具有以下时空复杂度特征的 Transient 序列结构：</p>
+        <div class="table-wrapper">
+          <table class="table frame-all grid-all stretch">
+            <colgroup>
+              <col style="width: 5.8823%;">
+              <col style="width: 23.5294%;">
+              <col style="width: 23.5294%;">
+              <col style="width: 23.5294%;">
+              <col style="width: 23.5295%;">
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="table halign-left valign-top">操作</th>
+                <th class="table halign-left valign-top">Transient K-ary Tree</th>
+                <th class="table halign-left valign-top">Sek Persistent</th>
+                <th class="table halign-left valign-top">Sek Ephemeral</th>
+                <th class="table halign-left valign-top">Finger tree</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table"><code>get</code> (随机访问)</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(\log_K n)\)</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(K \log_K n)\)，packed 时 \(O(\log_K n)\)</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">同 persistent</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(\log n)\) (带 size measure)</p>
+                </td>
+              </tr>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table"><code>set</code></p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(K \log_K n)\) 最坏；已拥有节点 \(O(\log_K n)\)；K 个连续槽 \(O(\log_K n)\)/格</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(K \log_K n)\)</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(K \log_K n)\) 最坏</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(\log n)\)</p>
+                </td>
+              </tr>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table"><code>push</code></p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">—</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(K \log_K n)\) 最坏；顶层单调更新 \(O(1)\)</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(\log_K N)\) 摊还 (≈常数)</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(1)\) 摊还</p>
+                </td>
+              </tr>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table"><code>pop</code></p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">—</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(\log_K n)\) 最坏；顶层 \(O(1)\)；\(n \le T+1\) 时 \(O(T)\)</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(\log_K N)\) 摊还</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(1)\) 摊还</p>
+                </td>
+              </tr>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table"><code>concat</code></p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">—</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(K \log_K n + \log^2_K n)\)</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">同 persistent</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(\log n)\) 摊还</p>
+                </td>
+              </tr>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table"><code>split</code></p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">—</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(K \log_K n + \log^2_K n)\)</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">同 persistent</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(\log n)\) 摊还</p>
+                </td>
+              </tr>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table"><code>snapshot</code></p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(1)\)</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(1)\)；\(n \le T\) 时 \(O(n)\)</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(1)\)；\(n \le T\) 时 \(O(n)\)</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">天然 persistent</p>
+                </td>
+              </tr>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table"><code>edit</code></p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(1)\)</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">孤立 \(O(K)\)；摊还 \(O(K \log_K N)\)</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">—</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">—</p>
+                </td>
+              </tr>
+              <tr>
+                <td class="table halign-left valign-top">
+                  <p class="table">空间 (OCaml)</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(\left(1+\frac{7}{K-1}\right)n\)</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(\left(2+\frac{22}{K-1}\right)n + O(K \log_K n)\)</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">同 persistent</p>
+                </td>
+                <td class="table halign-left valign-top">
+                  <p class="table">\(O(n)\) (论文未直接对比)</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>为了支持这样的 Transient 序列，需要先构建一个有效的 Transient Array 实现。</p>
+        <section class="sect2">
+          <h3 id="_transient_array">Transient Array</h3>
+          <p>朴素的数组实现在编辑时，需要 \(O(n)\) 的时空成本。不可变树（persistent 平衡树）的各种操作复杂度则正比于树的深度。其中代价最昂贵的更新操作需要 \(O(K\log_K n)\)，因为不可变 K 叉树更新走的是 copy-on-write，每层都要用 \(O(K)\) 的时间进行复制。</p>
+          <p>为了缓解这个问题，需要使用一种基于 Unique ID 的方式，选择性地复制树的一部分。 L’orange 的方法如下：给予每个 Ephemeral 数组一个 ID，并给予每个节点一个 ID。如果一个节点的 ID 与数组的 ID 相同，则说明这个节点是唯一的（unique），可以直接修改而不需要复制。在这种实现中，如果 persistent 数组被转换为一个新的 ephemeral 数组时，后者会收到一个新的 ID。对于反向的转换，则直接给予 ephemeral 数组新 ID 并返回底层的树作为结果。</p>
+          <p>作为 Transient Array 实现，尽管 Transient K-ary Tree 的最坏复杂度不尽如人意，但是由于对数组的访问和修改经常是局部的，可以在单个 chunk 中完成，因此只有第一次操作的开销会变为最差结果。对 K 的选取，主要考虑本机支持的 SIMD 指令集的宽度。</p>
+        </section>
+        <section class="sect2">
+          <h3 id="_transient_sequence">Transient Sequence</h3>
+          <p>在 Transient Array 的基础上，论文进而构建出 Transient Sequence。</p>
+          <p>作者认为有这么几个主要的挑战：</p>
+          <div class="olist arabic">
+            <ol class="arabic">
+              <li>
+                <p><code>concat</code> 和 <code>split</code> 操作导致需要树的再平衡操作</p>
+              </li>
+              <li>
+                <p><code>split</code> 会导致分割处的元素不再满填充一个 K 叉树的节点。<code>concat</code> 更坏，可能导致到处都是非满节点。</p>
+              </li>
+              <li>
+                <p>因此需要 compaction</p>
+              </li>
+              <li>
+                <p>K 叉树的结构并不适合频繁修改头尾节点，因为这些节点在最深处。我们可能希望将首尾元素提高到更靠近树根的地方。</p>
+              </li>
+            </ol>
+          </div>
+          <p>作者还提及了 RRB trees，认为其并未很好的解决挑战四。作者们提出了受到 chunked sequence（类似 finger tree）启发的解决方案：将首尾元素提升到树的根部。</p>
+        </section>
+        <section class="sect2">
+          <h3 id="_functional_chunked_sequence">Functional Chunked Sequence</h3>
+          <div class="imageblock centered">
+            <div class="content"><img src="/resource/til/functional-chunked-sequence.svg" alt="Functional chunked sequence" style="width: 32rem;"></div>
+          </div>
+          <p>三个不变量：</p>
+          <div class="olist arabic">
+            <ol class="arabic">
+              <li>
+                <p>如果中间序列是非空的，则首尾的 chunk 必须是非空的。</p>
+              </li>
+              <li>
+                <p>所有在（非空）中间序列的 chunk 必须是非空的。</p>
+              </li>
+              <li>
+                <p>在（非空）中间序列中的所有连续两个 chunks 都必须存储超过 K 个元素，否则它们应该被合并进单个 chunk。</p>
+              </li>
+            </ol>
+          </div>
+          <p>每个 chunk 和 level 都需要存储它的权重，也就是原子元素个数（不是子节点的个数），用于快速导航。</p>
+        </section>
+        <section class="sect2">
+          <h3 id="_ephemeral_chunked_sequence">Ephemeral Chunked Sequence</h3>
+          <p>和 Functional 版本类似，只不过不需要在修改时 copy chunk 或者要求更新单调（往从未被使用过的空槽位写入，这样原有 view 看到的数据还是不变的）。</p>
+        </section>
+        <section class="sect2">
+          <h3 id="_sek_tree">Sek Tree</h3>
+          <div class="imageblock centered">
+            <div class="content"><img src="/resource/til/functional-chunked-sequence-one-level.svg" alt="One level of a functional chunked sequence" style="width: 32rem;"></div>
+          </div>
+          <p>层级操作：</p>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p><code>push-front</code>：<code>f</code> 没满 → 新建 <code>f'</code>（x 加在 f 前面）返回 <code>(f', m, b)</code>。<code>f</code> 满了分两情况：</p>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p><code>b</code> 空（由不变量 1 推出 <code>m</code> 也空）→ 返回 <code>(f', m, f)</code>，<code>f'</code> 是只含 x 的单例 chunk；</p>
+                    </li>
+                    <li>
+                      <p><code>b</code> 非空 → 把满的 <code>f</code> 整个递归推进 middle（作为 m 的一个元素），再建单例 <code>f'</code>。每层 \(O(K)\)，级联到底最坏 \(O(K \log_K n)\)。</p>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+              <li>
+                <p><code>pop-front</code>：<code>f</code> 空（<code>m</code> 必空）→ 从 <code>b</code> pop 出元素。<code>f</code> 非空 → 从 f pop 出 x，但 <code>f'</code> 变空且 <code>m</code> 非空会违反不变量 1，此时对 m 递归 pop-front，靠不变量 2 保证提上来的 <code>f''</code> 非空，返回 <code>(f'', m', b)</code>。每层 \(O(1)\)，最坏级联 \(O(\log_K n)\)。</p>
+              </li>
+              <li>
+                <p><code>populate-sides</code>：保证结果满足不变量 1（<code>m'</code> 非空 ⇒ <code>f'</code>、<code>b'</code> 非空）。<code>m</code> 非空且 <code>f</code> 空时，从 m 里 pop-front 提一个 chunk 上来填 f，back 侧对称。最多两次 pop，\(O(\log_K n)\)。它是 split/concat 里反复用到的"修复器"。</p>
+              </li>
+              <li>
+                <p><code>get-from-chunk</code>：在 chunk 内部线性扫描累加 weight，定位第 i 个原子元素，\(O(K)\)。特例：chunk 是 packed（所有元素都是最大权 \(K^d\)）时，直接除法算出位置，\(O(1)\)；判定 packed 只需查 weight == n·K^d。不用 concat 构造的序列必然全 packed → get 白赚 \(O(\log_K n)\)。</p>
+              </li>
+              <li>
+                <p><code>get</code>：按下标三分类。<code>i &lt; w_f</code> 走 front；<code>i &gt;= w_f + w_m</code> 走 back；否则递归进 middle。每层 \(O(K)\)（packed 时 \(O(1)\)），总 \(O(K \log_K n)\)。</p>
+              </li>
+              <li>
+                <p><code>set</code>：同 get 定位，每层拷一个 chunk → 每层 \(O(K)\)，总 \(O(K \log_K n)\)。</p>
+              </li>
+              <li>
+                <p><code>split</code>：2-way split 由 3-way split 实现。3-way split 返回 <code>(s1, e, s2)</code>，<code>e</code> 是含第 i 个原子元素的 chunk，再 push 进 <code>s2</code> 前端变 2-way。3-way 内部：下标在 front/back 里就局部切；在 middle 里就递归 3-way split，把返回的 chunk <code>c</code> 切成三片 <code>(c1, e, c2)</code>，组装 <code>(f, m1, c1)</code> 和 <code>(c2, m2, b)</code>，两侧各调一次 <code>populate-sides</code> 修不变量。每层 \(O(K)\) + 两次 \(O(\log_K n)\) 的 populate-sides → \(O(K \log_K n + \log^2_K n)\)。</p>
+              </li>
+              <li>
+                <p><code>update-front</code>（<code>update-back</code> 对称）：语义上等价 pop+push，但零递归实现。<code>f</code> 非空就只改 f 首元素，<code>f</code> 空（m 必空）就改 b 首元素，形状不变、不变量不破 → \(O(K)\)。这是 concat 里 merge 的关键零件。</p>
+              </li>
+              <li>
+                <p><code>concat</code>：先保证 <code>f1</code>、<code>b2</code> 非空（必要时交换），然后返回 <code>(f1, merge(m1, [b1; f2], m2), b2)</code>。代价全部转移给 merge。</p>
+              </li>
+              <li>
+                <p><code>merge</code>：合并两条 chunk 序列 <code>m1</code>、<code>m2</code> 和长度 ≤4 的中间列表 <code>L</code>，输出满足密度不变量 3 的序列。三个分支：</p>
+                <div class="ulist">
+                  <ul>
+                    <li>
+                      <p>分支 1：<code>m1</code>、<code>m2</code> 都空 → <code>L</code> 里相邻且合计 ≤K 的 chunk 尽量融合，≤4 个 chunk 直接拼成序列；</p>
+                    </li>
+                    <li>
+                      <p>分支 2：恰一个空（设 m1）→ <code>L;q</code>（q = m2 首 chunk）融合压缩，用 <code>update-front</code> 把 m2 首 chunk 换成 <code>L'</code> 末元素，其余元素 push 到 m2 前端；</p>
+                    </li>
+                    <li>
+                      <p>分支 3：都非空 → <code>p</code> = m1 末 chunk、<code>q</code> = m2 首 chunk，在 <code>p;L;q</code> 上融合 → <code>r1…​rj</code>（1 ≤ j ≤ 6，已满足密度不变量）。j=1 时 <code>update-back</code> 换 p、<code>pop-front</code> 取 q；j≥2 时 <code>r1</code> 换 p、<code>rj</code> 换 q，中间 <code>r2…​r_{j-1}</code> 作为新 <code>L'</code> 递归传给下一层。每层 \(O(K)\) 常数次操作 + 至多一次 pop-front（\(O(\log_K n)\)），共 \(O(\log_K n)\) 层 → \(O(K \log_K n + \log^2_K n)\)；只有终结分支有有界次 push。</p>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </section>
+        <section class="sect2">
+          <h3 id="_加速_push_和_pop具有_transience_和_persistence_的_chunked_sequence">加速 <code>push</code> 和 <code>pop</code>：具有 transience 和 persistence 的 chunked sequence</h3>
+          <div class="ulist">
+            <ul>
+              <li>
+                <p>持久 chunk 的单调原地更新；</p>
+              </li>
+              <li>
+                <p>唯一所有权 ID</p>
+              </li>
+            </ul>
+          </div>
+          <p>对于第一点，将 front 和 back chunk 分离为 support 和 view，support 实际存储数据，view 划定 support 额度已经占用的前缀。多个 persistent chunk 可以共享同一个 support，view 只读。<code>push/pop</code> 可以只创建新的 view 然后更改单个 support，因此可以保持复杂度在 \(O(1)\)。</p>
+          <p>通过使用 range 来表示 view，实际上将 chunk 用作了一个环形缓冲区，使得双端操作都可以享受常数复杂度。</p>
+        </section>
+        <section class="sect2">
+          <h3 id="_优化_ephemeral_sek">优化 Ephemeral Sek</h3>
+          <div class="olist arabic">
+            <ol class="arabic">
+              <li>
+                <p>unbox Level 构造子：约定 ephemeral 树的根必是 Level，于是把 ptree 的 Level 参数直接展开成 etree 记录的字段。可以省一次指针跳转，不用 ref tree 包装。空序列用 front/back 都空表示。</p>
+              </li>
+              <li>
+                <p>删掉 weight 字段：ephemeral 的 weight 不再存储，用时现算（front + ifront + middle + iback + back 的 weight 相加），节省 push/pop 的一次写。</p>
+              </li>
+              <li>
+                <p>顶层 front/back 直接是 'a support 而非 'a chunk：约定顶层两端 chunk 永远归该 ephemeral 序列唯一拥有，所以不需要 id 字段、不需要每次 push/pop 比较 ID、省一层间接。</p>
+              </li>
+              <li>
+                <p>新增 ifront / iback（inner front / inner back）两个内层 chunk：各必须是空或满，夹在 front/back 与 middle 之间；空的内层 chunk 用一次分配好的 dummy 表示。</p>
+              </li>
+            </ol>
+          </div>
+          <p>对于第四个“技巧”，解释如下：单层 front/back chunk 可能在边界情况下频繁在满和空状态件切换并触发级联操作，导致复杂度始终最坏。增加一级缓冲可以较好地缓解问题。</p>
+        </section>
+      </section>
+      <section class="sect1">
         <h2 id="date-20260802"><a href="#date-20260802">2026 年 8 月 2 日</a></h2>
         <p><a href="https://dl.acm.org/doi/10.1145/3798227">Class-Dictionary Specialization with Rank-2 Polymorphic Functions</a></p>
         <p>动机：GHC 的基于启发式算法的 inliner 对于含有递归的 rank-2 polymorphic 函数的 inlining 或者 specialization 无能为力。这是由于担心 inlining 过程造成不终止。而 rank-2 polymorphic 的函数其参数或者返回值本身带有 ad-hoc polymorphic 的 forall 量化的场景非常常见，因此无法优化会导致性能损失。</p>
@@ -66,7 +399,7 @@ mkT f = case cast f of
   gmapT :: (∀β. Data β ⇒ β → β) → α → α   -- 把变换应用到直接子项</code></pre>
               </div>
             </div>
-            <p>每个类型的实例告知它的子项结构。比如 <code>Data [α]</code> 的实例：<code>gmapT f (x:xs) = f x : f xs</code>。注意 gmapT 是 rank-2 多态——参数 f 必须能应用到不同类型的子项上（<code>x :: α</code> 和 <code>xs :: [α]</code> 类型不同）。gmapT 本身不递归，只处理直接子项。</p>
+            <p>每个类型的实例告知它的子项结构。比如 <code>Data [α]</code> 的实例：<code>gmapT f (x:xs) = f x : f xs</code>。注意 gmapT 是 rank-2 多态：参数 f 必须能应用到不同类型的子项上（<code>x :: α</code> 和 <code>xs :: [α]</code> 类型不同）。gmapT 本身不递归，只处理直接子项。</p>
             <div class="literal">
               <div class="content">
                 <pre>        Node            gmapT f 之后：

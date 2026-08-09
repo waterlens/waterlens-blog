@@ -12,6 +12,176 @@
 
 使用倒序方式记录。
 
+[#date-20260809]
+== <<#date-20260809, 2026 年 8 月 9 日>>
+
+https://cambium.inria.fr/~fpottier/publis/chargueraud-pottier-sek.pdf[A Catenable, Splittable, Transient Sequence Data Structure]
+
+Transient 数据结构：混合 Ephemeral 和 Persistent 的数据结构，并提供在两者之间进行快速转换的能力。
+这篇论文提出了一种具有以下时空复杂度特征的 Transient 序列结构：
+
+[cols="1,4,4,4,4", options="header"]
+|===
+| 操作
+| Transient K-ary Tree
+| Sek Persistent
+| Sek Ephemeral
+| Finger tree
+
+| ``get`` (随机访问)
+| stem:[O(\log_K n)]
+| stem:[O(K \log_K n)]，packed 时 stem:[O(\log_K n)]
+| 同 persistent
+| stem:[O(\log n)] (带 size measure)
+
+| ``set``
+| stem:[O(K \log_K n)] 最坏；已拥有节点 stem:[O(\log_K n)]；K 个连续槽 stem:[O(\log_K n)]/格
+| stem:[O(K \log_K n)]
+| stem:[O(K \log_K n)] 最坏
+| stem:[O(\log n)]
+
+| ``push``
+| —
+| stem:[O(K \log_K n)] 最坏；顶层单调更新 stem:[O(1)]
+| stem:[O(\log_K N)] 摊还 (≈常数)
+| stem:[O(1)] 摊还
+
+| ``pop``
+| —
+| stem:[O(\log_K n)] 最坏；顶层 stem:[O(1)]；stem:[n \le T+1] 时 stem:[O(T)]
+| stem:[O(\log_K N)] 摊还
+| stem:[O(1)] 摊还
+
+| ``concat``
+| —
+| stem:[O(K \log_K n + \log^2_K n)]
+| 同 persistent
+| stem:[O(\log n)] 摊还
+
+| ``split``
+| —
+| stem:[O(K \log_K n + \log^2_K n)]
+| 同 persistent
+| stem:[O(\log n)] 摊还
+
+| ``snapshot``
+| stem:[O(1)]
+| stem:[O(1)]；stem:[n \le T] 时 stem:[O(n)]
+| stem:[O(1)]；stem:[n \le T] 时 stem:[O(n)]
+| 天然 persistent
+
+| ``edit``
+| stem:[O(1)]
+| 孤立 stem:[O(K)]；摊还 stem:[O(K \log_K N)]
+| —
+| —
+
+| 空间 (OCaml)
+| stem:[\left(1+\frac{7}{K-1}\right)n]
+| stem:[\left(2+\frac{22}{K-1}\right)n + O(K \log_K n)]
+| 同 persistent
+| stem:[O(n)] (论文未直接对比)
+|===
+
+为了支持这样的 Transient 序列，需要先构建一个有效的 Transient Array 实现。
+
+=== Transient Array
+
+朴素的数组实现在编辑时，需要 stem:[O(n)] 的时空成本。
+不可变树（persistent 平衡树）的各种操作复杂度则正比于树的深度。其中代价最昂贵的更新操作需要 stem:[O(K\log_K n)]，因为不可变 K 叉树更新走的是 copy-on-write，每层都要用 stem:[O(K)] 的时间进行复制。
+
+为了缓解这个问题，需要使用一种基于 Unique ID 的方式，选择性地复制树的一部分。
+L’orange 的方法如下：给予每个 Ephemeral 数组一个 ID，并给予每个节点一个 ID。
+如果一个节点的 ID 与数组的 ID 相同，则说明这个节点是唯一的（unique），可以直接修改而不需要复制。
+在这种实现中，如果 persistent 数组被转换为一个新的 ephemeral 数组时，后者会收到一个新的 ID。
+对于反向的转换，则直接给予 ephemeral 数组新 ID 并返回底层的树作为结果。
+
+作为 Transient Array 实现，尽管 Transient K-ary Tree 的最坏复杂度不尽如人意，但是由于对数组的访问和修改经常是局部的，可以在单个 chunk 中完成，因此只有第一次操作的开销会变为最差结果。对 K 的选取，主要考虑本机支持的 SIMD 指令集的宽度。
+
+=== Transient Sequence
+
+在 Transient Array 的基础上，论文进而构建出 Transient Sequence。
+
+作者认为有这么几个主要的挑战：
+
+. ``concat`` 和 ``split`` 操作导致需要树的再平衡操作
+. ``split`` 会导致分割处的元素不再满填充一个 K 叉树的节点。``concat`` 更坏，可能导致到处都是非满节点。
+. 因此需要 compaction
+. K 叉树的结构并不适合频繁修改头尾节点，因为这些节点在最深处。我们可能希望将首尾元素提高到更靠近树根的地方。
+
+作者还提及了 RRB trees，认为其并未很好的解决挑战四。作者们提出了受到 chunked sequence（类似 finger tree）启发的解决方案：将首尾元素提升到树的根部。
+
+=== Functional Chunked Sequence
+
+[.centered]
+image::/resource/til/functional-chunked-sequence.svg[Functional chunked sequence, 32rem]
+
+
+三个不变量：
+
+1. 如果中间序列是非空的，则首尾的 chunk 必须是非空的。
+2. 所有在（非空）中间序列的 chunk 必须是非空的。
+3. 在（非空）中间序列中的所有连续两个 chunks 都必须存储超过 K 个元素，否则它们应该被合并进单个 chunk。
+
+每个 chunk 和 level 都需要存储它的权重，也就是原子元素个数（不是子节点的个数），用于快速导航。
+
+=== Ephemeral Chunked Sequence
+
+和 Functional 版本类似，只不过不需要在修改时 copy chunk 或者要求更新单调
+（往从未被使用过的空槽位写入，这样原有 view 看到的数据还是不变的）。
+
+=== Sek Tree
+
+[.centered]
+image::/resource/til/functional-chunked-sequence-one-level.svg[One level of a functional chunked sequence, 32rem]
+
+层级操作：
+
+* ``push-front``：`f` 没满 → 新建 `f'`（x 加在 f 前面）返回 `(f', m, b)`。`f` 满了分两情况：
+  ** `b` 空（由不变量 1 推出 `m` 也空）→ 返回 `(f', m, f)`，`f'` 是只含 x 的单例 chunk；
+  ** `b` 非空 → 把满的 `f` 整个递归推进 middle（作为 m 的一个元素），再建单例 `f'`。
+  每层 stem:[O(K)]，级联到底最坏 stem:[O(K \log_K n)]。
+
+* ``pop-front``：`f` 空（`m` 必空）→ 从 `b` pop 出元素。`f` 非空 → 从 f pop 出 x，但 `f'` 变空且 `m` 非空会违反不变量 1，此时对 m 递归 pop-front，靠不变量 2 保证提上来的 `f''` 非空，返回 `(f'', m', b)`。每层 stem:[O(1)]，最坏级联 stem:[O(\log_K n)]。
+
+* ``populate-sides``：保证结果满足不变量 1（`m'` 非空 ⇒ `f'`、`b'` 非空）。`m` 非空且 `f` 空时，从 m 里 pop-front 提一个 chunk 上来填 f，back 侧对称。最多两次 pop，stem:[O(\log_K n)]。它是 split/concat 里反复用到的"修复器"。
+
+* ``get-from-chunk``：在 chunk 内部线性扫描累加 weight，定位第 i 个原子元素，stem:[O(K)]。特例：chunk 是 packed（所有元素都是最大权 stem:[K^d]）时，直接除法算出位置，stem:[O(1)]；判定 packed 只需查 weight == n·K^d。不用 concat 构造的序列必然全 packed → get 白赚 stem:[O(\log_K n)]。
+
+* ``get``：按下标三分类。`i < w_f` 走 front；`i >= w_f + w_m` 走 back；否则递归进 middle。每层 stem:[O(K)]（packed 时 stem:[O(1)]），总 stem:[O(K \log_K n)]。
+
+* ``set``：同 get 定位，每层拷一个 chunk → 每层 stem:[O(K)]，总 stem:[O(K \log_K n)]。
+
+* ``split``：2-way split 由 3-way split 实现。3-way split 返回 `(s1, e, s2)`，`e` 是含第 i 个原子元素的 chunk，再 push 进 `s2` 前端变 2-way。3-way 内部：下标在 front/back 里就局部切；在 middle 里就递归 3-way split，把返回的 chunk `c` 切成三片 `(c1, e, c2)`，组装 `(f, m1, c1)` 和 `(c2, m2, b)`，两侧各调一次 ``populate-sides`` 修不变量。每层 stem:[O(K)] + 两次 stem:[O(\log_K n)] 的 populate-sides → stem:[O(K \log_K n + \log^2_K n)]。
+
+* ``update-front``（``update-back`` 对称）：语义上等价 pop+push，但零递归实现。`f` 非空就只改 f 首元素，`f` 空（m 必空）就改 b 首元素，形状不变、不变量不破 → stem:[O(K)]。这是 concat 里 merge 的关键零件。
+
+* ``concat``：先保证 `f1`、`b2` 非空（必要时交换），然后返回 `(f1, merge(m1, [b1; f2], m2), b2)`。代价全部转移给 merge。
+
+* ``merge``：合并两条 chunk 序列 `m1`、`m2` 和长度 ≤4 的中间列表 `L`，输出满足密度不变量 3 的序列。三个分支：
+  ** 分支 1：`m1`、`m2` 都空 → `L` 里相邻且合计 ≤K 的 chunk 尽量融合，≤4 个 chunk 直接拼成序列；
+  ** 分支 2：恰一个空（设 m1）→ `L;q`（q = m2 首 chunk）融合压缩，用 ``update-front`` 把 m2 首 chunk 换成 `L'` 末元素，其余元素 push 到 m2 前端；
+  ** 分支 3：都非空 → `p` = m1 末 chunk、`q` = m2 首 chunk，在 `p;L;q` 上融合 → `r1...rj`（1 ≤ j ≤ 6，已满足密度不变量）。j=1 时 ``update-back`` 换 p、``pop-front`` 取 q；j≥2 时 `r1` 换 p、`rj` 换 q，中间 `r2...r_{j-1}` 作为新 `L'` 递归传给下一层。
+  每层 stem:[O(K)] 常数次操作 + 至多一次 pop-front（stem:[O(\log_K n)]），共 stem:[O(\log_K n)] 层 → stem:[O(K \log_K n + \log^2_K n)]；只有终结分支有有界次 push。
+
+=== 加速 ``push`` 和 ``pop``：具有 transience 和 persistence 的 chunked sequence
+
+* 持久 chunk 的单调原地更新；
+* 唯一所有权 ID
+
+对于第一点，将 front 和 back chunk 分离为 support 和 view，support 实际存储数据，view 划定 support 额度已经占用的前缀。多个 persistent chunk 可以共享同一个 support，view 只读。``push/pop`` 可以只创建新的 view 然后更改单个 support，因此可以保持复杂度在 stem:[O(1)]。
+
+通过使用 range 来表示 view，实际上将 chunk 用作了一个环形缓冲区，使得双端操作都可以享受常数复杂度。
+
+=== 优化 Ephemeral Sek
+
+1. unbox Level 构造子：约定 ephemeral 树的根必是 Level，于是把 ptree 的 Level 参数直接展开成 etree 记录的字段。可以省一次指针跳转，不用 ref tree 包装。空序列用 front/back 都空表示。
+2. 删掉 weight 字段：ephemeral 的 weight 不再存储，用时现算（front + ifront + middle + iback + back 的 weight 相加），节省 push/pop 的一次写。
+3. 顶层 front/back 直接是 'a support 而非 'a chunk：约定顶层两端 chunk 永远归该 ephemeral 序列唯一拥有，所以不需要 id 字段、不需要每次 push/pop 比较 ID、省一层间接。
+4. 新增 ifront / iback（inner front / inner back）两个内层 chunk：各必须是空或满，夹在 front/back 与 middle 之间；空的内层 chunk 用一次分配好的 dummy 表示。
+
+对于第四个“技巧”，解释如下：单层 front/back chunk 可能在边界情况下频繁在满和空状态件切换并触发级联操作，导致复杂度始终最坏。增加一级缓冲可以较好地缓解问题。
+
 [#date-20260802]
 == <<#date-20260802, 2026 年 8 月 2 日>>
 
@@ -49,7 +219,7 @@ class Typeable α ⇒ Data α where
   gmapT :: (∀β. Data β ⇒ β → β) → α → α   -- 把变换应用到直接子项
 ----
 
-每个类型的实例告知它的子项结构。比如 `Data [α]` 的实例：`gmapT f (x:xs) = f x : f xs`。注意 gmapT 是 rank-2 多态——参数 f 必须能应用到不同类型的子项上（`x pass:[::] α` 和 `xs pass:[::] [α]` 类型不同）。gmapT 本身不递归，只处理直接子项。
+每个类型的实例告知它的子项结构。比如 `Data [α]` 的实例：`gmapT f (x:xs) = f x : f xs`。注意 gmapT 是 rank-2 多态：参数 f 必须能应用到不同类型的子项上（`x pass:[::] α` 和 `xs pass:[::] [α]` 类型不同）。gmapT 本身不递归，只处理直接子项。
 
 ....
         Node            gmapT f 之后：
