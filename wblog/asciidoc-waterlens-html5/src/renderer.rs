@@ -54,7 +54,7 @@ const BACKEND_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// The `highlight.js` release the `hljs` syntax highlighter adapter links from
 /// the CDN.
-const HIGHLIGHT_JS_VERSION: &str = "11.11.1";
+const HIGHLIGHT_JS_VERSION: &str = "11.12.0";
 
 /// The default `highlight.js` colour scheme, used when the document sets no
 /// `highlightjs-theme`.
@@ -443,7 +443,7 @@ impl Renderer {
             "<link href=\"https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&amp;display=swap\" rel=\"stylesheet\">",
         );
         self.line(
-            "<link href=\"https://cdn.jsdelivr.net/npm/hack-font@3/build/web/hack.css\" rel=\"stylesheet\">",
+            "<link href=\"https://cdn.jsdelivr.net/npm/hack-font@3.3.0/build/web/hack.css\" rel=\"stylesheet\">",
         );
         self.line("<link rel=\"stylesheet\" href=\"/style.css\">");
 
@@ -452,19 +452,21 @@ impl Renderer {
         // enables `stem`.
         if document.is_attribute_set("stem") {
             self.line(
-                r#"<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+" crossorigin="anonymous">"#,
+                r#"<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.18.7/dist/katex.min.css" integrity="sha384-JctiRyLzXCrSoOOzFlSoWLdyzQl7OrrRnhyeBmzB6ZWtcjccUyc8lCQJqIbs3uQX" crossorigin="anonymous">"#,
             );
             self.line(
-                r#"<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg" crossorigin="anonymous"></script>"#,
+                r#"<script defer src="https://cdn.jsdelivr.net/npm/katex@0.18.7/dist/katex.min.js" integrity="sha384-+7Keh381hSkXmXqnjC0JBM/kzsN6TFj+wMKychSLjTvJ8/0ElMde2uKl8i6p6Buj" crossorigin="anonymous"></script>"#,
             );
             self.line(
-                r#"<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>"#,
+                r#"<script defer src="https://cdn.jsdelivr.net/npm/katex@0.18.7/dist/contrib/auto-render.min.js" integrity="sha384-bjyGPfbij8/NDKJhSGZNP/khQVgtHUE5exjm4Ydllo42FwIgYsdLO2lXGmRBf5Mz" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>"#,
             );
         }
 
         if document.is_attribute_set("mermaid") {
+            // Mermaid 12 changes the defaults; retain the site's existing
+            // diagram layout and appearance explicitly.
             self.line(
-                r#"<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js" onload="mermaid.initialize({ startOnLoad: true });"></script>"#,
+                r#"<script src="https://cdn.jsdelivr.net/npm/mermaid@12.0.0/dist/mermaid.min.js" onload="mermaid.initialize({ startOnLoad: true, layout: 'dagre', theme: 'default', look: 'classic' });"></script>"#,
             );
         }
 
@@ -890,7 +892,7 @@ impl Renderer {
         if block.content_model() == ContentModel::Compound {
             self.blocks(block.child_blocks());
         } else {
-            let content = block.rendered_content().unwrap_or_default();
+            let content = block.rendered_html_content().unwrap_or_default();
             self.line(content);
         }
     }
@@ -904,7 +906,7 @@ impl Renderer {
     /// titled paragraph gets the wrapper. Its text has CJK line breaks
     /// collapsed.
     fn paragraph<'src>(&mut self, block: &'src Block<'src>) {
-        let content = collapse_cjk_newlines(block.rendered_content().unwrap_or_default());
+        let content = collapse_cjk_newlines(block.rendered_html_content().unwrap_or_default());
         let id = block.id();
         let roles = block.roles();
 
@@ -1056,7 +1058,7 @@ impl Renderer {
     /// A passthrough block (`++++`): its content is emitted raw and
     /// unescaped, with no wrapping element.
     fn pass_block<'src>(&mut self, block: &'src Block<'src>) {
-        let content = block.rendered_content().unwrap_or_default();
+        let content = block.rendered_html_content().unwrap_or_default();
         let mut lines: Vec<&str> = content.split('\n').collect();
         strip_surrounding_blank_lines(&mut lines);
         self.line(&lines.join("\n"));
@@ -1084,7 +1086,10 @@ impl Renderer {
         self.block_title(block);
         self.line("<div class=\"content\">");
 
-        let mut equation = block.rendered_content().unwrap_or_default().to_string();
+        let mut equation = block
+            .rendered_html_content()
+            .unwrap_or_default()
+            .to_string();
         if stem_type == StemType::AsciiMath && equation.contains('\n') {
             equation = rewrite_asciimath_breaks(&equation, open, close);
         }
@@ -1103,7 +1108,7 @@ impl Renderer {
     /// characters are escaped) and normalized indentation, leaving only the
     /// leading and trailing blank lines to trim.
     fn verbatim_content<'src>(&self, block: &'src Block<'src>) -> String {
-        let content = block.rendered_content().unwrap_or_default();
+        let content = block.rendered_html_content().unwrap_or_default();
         let mut lines: Vec<&str> = content.split('\n').collect();
         strip_surrounding_blank_lines(&mut lines);
         lines.join("\n")
@@ -1218,7 +1223,7 @@ impl Renderer {
             QuoteType::Verse => {
                 self.open_block_wrapper(block, "verse");
                 self.block_title(block);
-                let content = block.rendered_content().unwrap_or_default();
+                let content = block.rendered_html_content().unwrap_or_default();
                 self.line(&format!("<pre class=\"content\">{content}</pre>"));
             }
         }
@@ -1584,7 +1589,7 @@ impl Renderer {
         let mut blocks = list_item.child_blocks();
         let text = blocks
             .next()
-            .and_then(|block| block.rendered_content())
+            .and_then(|block| block.rendered_html_content())
             .unwrap_or_default()
             .to_string();
 
@@ -1738,7 +1743,7 @@ impl Renderer {
             .is_some_and(|first| first.resolved_context().as_ref() == "paragraph");
 
         let attached = if foldable {
-            let text = blocks[0].rendered_content().unwrap_or_default();
+            let text = blocks[0].rendered_html_content().unwrap_or_default();
             if !text.is_empty() {
                 let text = if collapse {
                     collapse_cjk_newlines(text)
@@ -1793,7 +1798,7 @@ impl Renderer {
         let principal = collapse_cjk_newlines(
             blocks
                 .next()
-                .and_then(|block| block.rendered_content())
+                .and_then(|block| block.rendered_html_content())
                 .unwrap_or_default(),
         );
 
@@ -1959,14 +1964,14 @@ impl Renderer {
             }
             TableCellContent::Simple(simple) => {
                 if is_head {
-                    simple.rendered().to_string()
+                    simple.rendered_html().to_string()
                 } else if cell.style() == ColumnStyle::Literal {
                     format!(
                         "<div class=\"literal\"><pre>{}</pre></div>",
-                        simple.rendered()
+                        simple.rendered_html()
                     )
                 } else {
-                    cell_paragraphs(cell, simple.rendered())
+                    cell_paragraphs(cell, simple.rendered_html())
                 }
             }
         };
@@ -2455,7 +2460,7 @@ fn ordered_list_marker_style(item: &Block<'_>) -> Option<&'static str> {
 /// The rendered term text of a description-list item.
 fn dlist_term_text(list_item: &ListItem<'_>) -> Option<String> {
     match list_item.list_item_marker() {
-        ListItemMarker::DefinedTerm { term, .. } => Some(term.rendered().to_string()),
+        ListItemMarker::DefinedTerm { term, .. } => Some(term.rendered_html().to_string()),
         _ => None,
     }
 }

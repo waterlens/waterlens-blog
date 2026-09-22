@@ -252,7 +252,7 @@ mod verbatim {
     // `contains`-only check cannot see it.
     #[test]
     fn highlight_js_links_its_assets_after_the_footer() {
-        let cdn = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1";
+        let cdn = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.12.0";
         let html = super::page(
             "= Doc\n:source-highlighter: highlightjs\n:highlightjs-languages: ocaml, scheme\n\nBody.",
         );

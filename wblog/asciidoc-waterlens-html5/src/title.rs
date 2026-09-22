@@ -117,7 +117,7 @@ fn render_inline(source: &str, document: &Document<'_>, options: &Options) -> Op
         return None;
     }
 
-    Some(first.rendered_content()?.to_string())
+    Some(first.rendered_html_content()?.to_string())
 }
 
 /// The subtitle separator: the `title-separator` attribute (defaulting to a
