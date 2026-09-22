@@ -26,6 +26,52 @@
       <p>不定时更新，记录我在浏览网页、阅读论文、逛社媒时看到的细碎知识和技巧。</p>
       <p>使用倒序方式记录。</p>
       <section class="sect1">
+        <h2 id="date-20260921"><a href="#date-20260921">2026 年 9 月 21 日</a></h2>
+        <p><a href="https://dl.acm.org/doi/10.1145/3808282">Parameterized Algorithms and Complexity for Function Merging with Branch Reordering</a></p>
+        <div class="dlist">
+          <dl>
+            <dt class="hdlist1">函数匹配问题</dt>
+            <dd>
+              <p>从 \(n\) 个函数中最优地选择一对进行合并。</p>
+            </dd>
+            <dt class="hdlist1">函数合并问题</dt>
+            <dd>
+              <p>给定一对函数 \(F_1\) 和 \(F_2\)，创造合并后的函数 \(F^*\)，其中公共部分只保留一份实现共享。</p>
+            </dd>
+          </dl>
+        </div>
+        <p>论文着眼于如何在给定待合并函数的情况下进行参数化后的最优合并。基础工具是序列对齐，输入 \(S_1, S_2\)，通过动态规划计算出最优对齐 \(\operatorname{SA}(S_1, S_2)\)，复杂度 \(O(n_1 n_2)\)。</p>
+        <p>之前的 SOTA 基于对函数线性化后进行 SA 算法，局限性在于对单个函数只给了单一线性化方式，而考虑到分支的存在，可能会有多个线性化可能，从而错过最优匹配。</p>
+        <div class="dlist">
+          <dl>
+            <dt class="hdlist1">branching factor</dt>
+            <dd>
+              <p>任一分支结构中分支数的最大值。</p>
+            </dd>
+            <dt class="hdlist1">nesting depth</dt>
+            <dd>
+              <p>嵌套分支结构的最大层数。loop 被当作只有一个分支的分支结构（分支即循环体）。</p>
+            </dd>
+          </dl>
+        </div>
+        <p>这两个参数会主导问题的复杂度，也天然适合做参数化分析。</p>
+        <p>因此本篇将“给定 \(F_1, F_2\)，重排各自的分支结构（以得到不同的线性化），结果分别为 \(F'_1\) 和 \(F'_2\)，使得 \(\operatorname{SA}(F'_1, F'_2)\) 最大”设定为主要的研究问题。</p>
+        <p>主要的成果：</p>
+        <div class="ulist">
+          <ul>
+            <li>
+              <p>FPT（四个参数）：\(O(2^{b_1 d_1 + b_2 d_2}(b_1 + b_2)^2(d_1 + d_2) \cdot n_1 n_2)\)（Thm 3.4）。基于 DP，是经典 SA 算法的推广。</p>
+            </li>
+            <li>
+              <p>FPT（三个参数）：\(2^{O(b_2 d_2 + b_1)}(n_1 n_2)^3(n_1 + n_2)\)（Thm 3.6）。即便其中一个函数嵌套深度无界仍属 FPT，做法是把问题归约到 WPDS 上的 reachability。</p>
+            </li>
+            <li>
+              <p>即便限制为 \(d_1 = 1\)、\(b_2 = d_2 = 0\)，问题仍 NP-hard（Thm 4.2）→ 参数化里 \(d_1, b_2, d_2\) 不足以撑起 FPT，除非 \(P = NP\)。</p>
+            </li>
+          </ul>
+        </div>
+      </section>
+      <section class="sect1">
         <h2 id="date-20260809"><a href="#date-20260809">2026 年 8 月 9 日</a></h2>
         <p><a href="https://cambium.inria.fr/~fpottier/publis/chargueraud-pottier-sek.pdf">A Catenable, Splittable, Transient Sequence Data Structure</a></p>
         <p>Transient 数据结构：混合 Ephemeral 和 Persistent 的数据结构，并提供在两者之间进行快速转换的能力。这篇论文提出了一种具有以下时空复杂度特征的 Transient 序列结构：</p>
